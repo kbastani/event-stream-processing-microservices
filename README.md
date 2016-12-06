@@ -1,5 +1,7 @@
 # Event Stream Processing Microservice Example
 
+[![Build Status](https://travis-ci.org/kbastani/event-stream-processing-microservices.svg?branch=master)](https://travis-ci.org/kbastani/event-stream-processing-microservices)
+
 In an event-driven microservices architecture, the concept of a domain event is central to the behavior of each service. Popular practices such as _CQRS_ (Command Query Responsibility Segregation) in combination with _Event Sourcing_ are becoming more common in applications as microservice architectures continue to rise in popularity.
 
 This reference architecture and sample project demonstrates an end-to-end example of building event-driven microservices that use Spring Boot and Spring Cloud. The project aims to show what an ideal development process might look like for building microservices that handle both HTTP and AMQP protocols for exchanging messages.
