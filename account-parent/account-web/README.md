@@ -1,0 +1,3 @@
+# Account Microservice: Web Role
+
+The `account-web` module is a web application that produces a REST API that can be used by consumers to interact with and manage domain objects in the `Account` context. _Domain Events_ can be triggered directly over HTTP, and will also be produced in the response to actions that alter the state of the `Account` object. This web service also provides built-in hypermedia support for looking up the event logs on an aggregate domain object. 
