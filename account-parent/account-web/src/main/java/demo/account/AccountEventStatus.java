@@ -7,7 +7,6 @@ package demo.account;
  */
 public enum AccountEventStatus {
     ACCOUNT_CREATED,
-    ACCOUNT_PENDING,
     ACCOUNT_CONFIRMED,
     ACCOUNT_ACTIVE,
     ACCOUNT_SUSPENDED,

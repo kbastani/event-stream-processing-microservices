@@ -1,6 +1,7 @@
 package demo.event;
 
 import demo.account.Account;
+import demo.account.AccountController;
 import demo.account.AccountEventType;
 import demo.log.Log;
 import demo.log.LogRepository;
@@ -13,6 +14,8 @@ import org.springframework.util.Assert;
 
 import java.util.Arrays;
 import java.util.Objects;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The {@link EventService} provides transactional service methods for {@link AccountEvent}
@@ -53,7 +56,8 @@ public class EventService {
                             .slash(event.getId())
                             .slash("logs")
                             .withRel("logs"),
-                    entityLinks.linkFor(Account.class, event.getAccount().getId())
+                    linkTo(AccountController.class)
+                            .slash("accounts")
                             .slash(event.getAccount().getId())
                             .withRel("account"))
             );

@@ -2,6 +2,7 @@ package demo.state;
 
 import demo.account.AccountEventStatus;
 import demo.account.AccountEventType;
+import demo.command.*;
 import demo.event.AccountEvent;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -84,6 +85,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for created account...");
+                try {
+                    new CreateAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }
@@ -94,6 +100,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for confirmed account...");
+                try {
+                    new ConfirmAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }
@@ -104,6 +115,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for activated account...");
+                try {
+                    new ActivateAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }
@@ -114,6 +130,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for archived account...");
+                try {
+                    new ArchiveAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }
@@ -124,6 +145,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for suspended account...");
+                try {
+                    new SuspendAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }
@@ -134,6 +160,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for unarchived account...");
+                try {
+                    new UnarchiveAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }
@@ -144,6 +175,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
                 log.info("Executing workflow for unsuspended account...");
+                try {
+                    new UnsuspendAccountCommand(context).apply(accountEvent);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
         };
     }

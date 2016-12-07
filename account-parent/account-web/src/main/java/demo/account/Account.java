@@ -26,7 +26,7 @@ public class Account extends BaseEntity {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<AccountEvent> events = new HashSet<>();
 
-    @Transient
+    @Enumerated(value = EnumType.STRING)
     private AccountEventStatus status;
 
     public Account() {

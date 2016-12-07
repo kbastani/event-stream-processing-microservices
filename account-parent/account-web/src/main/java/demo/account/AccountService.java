@@ -3,12 +3,17 @@ package demo.account;
 import demo.event.AccountEvent;
 import demo.event.EventService;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
+import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.util.Arrays;
 import java.util.Objects;
+
+import static demo.account.AccountEventStatus.*;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The {@link AccountService} provides transactional support for managing {@link Account}
@@ -99,7 +104,8 @@ public class AccountService {
                     entityLinks.linkFor(AccountEvent.class, event.getId())
                             .slash(event.getId())
                             .withSelfRel(),
-                    entityLinks.linkFor(Account.class, accountId)
+                    linkTo(AccountController.class)
+                            .slash("accounts")
                             .slash(accountId)
                             .withRel("account"),
                     entityLinks.linkFor(AccountEvent.class, event.getId())
@@ -112,18 +118,115 @@ public class AccountService {
         return eventResource;
     }
 
+    /**
+     * Apply an {@link AccountCommand} to the {@link Account} with a specified identifier.
+     *
+     * @param id             is the unique identifier of the {@link Account}
+     * @param accountCommand is the command to apply to the {@link Account}
+     * @return a hypermedia resource containing the updated {@link Account}
+     */
+    public Resource<Account> applyCommand(Long id, AccountCommand accountCommand) {
+        Resource<Account> account = getAccountResource(id);
+
+        if (account != null) {
+
+            AccountEventStatus status = account.getContent().getStatus();
+
+            switch (accountCommand) {
+                case CONFIRM_ACCOUNT:
+                    Assert.isTrue(status == ACCOUNT_CREATED, "The account has already been confirmed");
+
+                    // Confirm the account
+                    Account updateAccount = account.getContent();
+                    updateAccount.setStatus(ACCOUNT_CONFIRMED);
+                    account = updateAccountResource(id, updateAccount);
+                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED));
+                    break;
+                case ACTIVATE_ACCOUNT:
+                    Assert.isTrue(status != ACCOUNT_ACTIVE, "The account is already active");
+                    Assert.isTrue(Arrays.asList(ACCOUNT_CONFIRMED, ACCOUNT_SUSPENDED, ACCOUNT_ARCHIVED)
+                            .contains(status), "The account cannot be activated");
+
+                    // Activate the account
+                    account.getContent().setStatus(ACCOUNT_ACTIVE);
+                    account = updateAccountResource(id, account.getContent());
+                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED));
+                    break;
+                case SUSPEND_ACCOUNT:
+                    Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be suspended");
+
+                    // Suspend the account
+                    account.getContent().setStatus(ACCOUNT_SUSPENDED);
+                    account = updateAccountResource(id, account.getContent());
+                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED));
+                    break;
+                case ARCHIVE_ACCOUNT:
+                    Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be archived");
+
+                    // Archive the account
+                    account.getContent().setStatus(ACCOUNT_ARCHIVED);
+                    account = updateAccountResource(id, account.getContent());
+                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED));
+                    break;
+                default:
+                    Assert.notNull(accountCommand,
+                            "The provided command cannot be applied to this account in its current state");
+            }
+        }
+
+        return account;
+    }
+
+    public AccountCommandsResource getCommandsResource(Long id) {
+        // Get the account resource for the identifier
+        Resource<Account> accountResource = getAccountResource(id);
+
+        // Create a new account commands hypermedia resource
+        AccountCommandsResource commandResource = new AccountCommandsResource();
+
+        // Add account command hypermedia links
+        if (accountResource != null) {
+            commandResource.add(
+                    getCommandLinkBuilder(id)
+                            .slash("confirm")
+                            .withRel("confirm"),
+                    getCommandLinkBuilder(id)
+                            .slash("activate")
+                            .withRel("activate"),
+                    getCommandLinkBuilder(id)
+                            .slash("suspend")
+                            .withRel("suspend"),
+                    getCommandLinkBuilder(id)
+                            .slash("archive")
+                            .withRel("archive")
+            );
+        }
+
+        return commandResource;
+    }
+
+    private LinkBuilder getCommandLinkBuilder(Long id) {
+        return linkTo(AccountController.class)
+                .slash("accounts")
+                .slash(id)
+                .slash("commands");
+    }
+
     private Resource<Account> getAccountResource(Account account) {
         Resource<Account> accountResource;
 
         // Prepare hypermedia response
         accountResource = new Resource<>(account,
-                entityLinks.linkFor(Account.class, account.getId())
+                linkTo(AccountController.class)
+                        .slash("accounts")
                         .slash(account.getId())
                         .withSelfRel(),
                 entityLinks.linkFor(Account.class, account.getId())
                         .slash(account.getId())
                         .slash("events")
-                        .withRel("events")
+                        .withRel("events"),
+                getCommandLinkBuilder(account.getId())
+                        .withRel("commands")
         );
 
         return accountResource;
