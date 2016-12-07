@@ -32,55 +32,63 @@ public class AccountService {
         this.entityLinks = entityLinks;
     }
 
+    /**
+     * Retrieves a hypermedia resource for {@link Account} with the specified identifier.
+     *
+     * @param id is the unique identifier for looking up the {@link Account} entity
+     * @return a hypermedia resource for the fetched {@link Account}
+     */
     public Resource<Account> getAccountResource(Long id) {
         Resource<Account> accountResource = null;
+
+        // Get the account for the provided id
         Account account = getAccount(id);
 
-        if (account != null) {
+        // If the account exists, wrap the hypermedia response
+        if (account != null)
             accountResource = getAccountResource(account);
-        }
+
 
         return accountResource;
     }
 
-    private Resource<Account> getAccountResource(Account account) {
-        Resource<Account> accountResource;
-        accountResource = new Resource<>(account,
-                entityLinks.linkFor(Account.class, account.getId())
-                        .slash(account.getId())
-                        .withSelfRel(),
-                entityLinks.linkFor(Account.class, account.getId())
-                        .slash(account.getId())
-                        .slash("events")
-                        .withRel("events")
-        );
-        return accountResource;
-    }
-
-    private Account getAccount(Long id) {
-        return accountRepository.findOne(id);
-    }
-
+    /**
+     * Creates a new {@link Account} entity and persists the result to the repository.
+     *
+     * @param account is the {@link Account} model used to create a new account
+     * @return a hypermedia resource for the newly created {@link Account}
+     */
     public Resource<Account> createAccountResource(Account account) {
-        return getAccountResource(createAccount(account));
+        Assert.notNull(account, "Account body must not be null");
+        Assert.notNull(account.getUserId(), "UserId is required");
+        Assert.notNull(account.getAccountNumber(), "AccountNumber is required");
+        Assert.notNull(account.getDefaultAccount(), "DefaultAccount is required");
+
+        // Create the new account
+        account = createAccount(account);
+
+        return getAccountResource(account);
     }
 
-    private Account createAccount(Account account) {
-        account = accountRepository.save(account);
-        return account;
-    }
-
+    /**
+     * Update a {@link Account} entity for the provided identifier.
+     *
+     * @param id      is the unique identifier for the {@link Account} update
+     * @param account is the entity representation containing any updated {@link Account} fields
+     * @return a hypermedia resource for the updated {@link Account}
+     */
     public Resource<Account> updateAccountResource(Long id, Account account) {
         return getAccountResource(updateAccount(id, account));
     }
 
-    private Account updateAccount(Long id, Account account) {
-        Assert.notNull(id);
-        Assert.notNull(account);
-        Assert.isTrue(Objects.equals(id, account.getId()));
-        return accountRepository.save(account);
-    }
-
+    /**
+     * Appends an {@link AccountEvent} domain event to the event log of the {@link Account}
+     * aggregate with the specified accountId.
+     *
+     * @param accountId is the unique identifier for the {@link Account}
+     * @param event     is the {@link AccountEvent} that attempts to alter the state of the {@link Account}
+     * @return a hypermedia resource for the newly appended {@link AccountEvent}
+     */
     public Resource<AccountEvent> appendEventResource(Long accountId, AccountEvent event) {
         Resource<AccountEvent> eventResource = null;
 
@@ -102,6 +110,51 @@ public class AccountService {
         }
 
         return eventResource;
+    }
+
+    private Resource<Account> getAccountResource(Account account) {
+        Resource<Account> accountResource;
+
+        // Prepare hypermedia response
+        accountResource = new Resource<>(account,
+                entityLinks.linkFor(Account.class, account.getId())
+                        .slash(account.getId())
+                        .withSelfRel(),
+                entityLinks.linkFor(Account.class, account.getId())
+                        .slash(account.getId())
+                        .slash("events")
+                        .withRel("events")
+        );
+
+        return accountResource;
+    }
+
+    private Account getAccount(Long id) {
+        return accountRepository.findOne(id);
+    }
+
+    private Account createAccount(Account account) {
+        // Assert for uniqueness constraint
+        Assert.isNull(accountRepository.findAccountByUserId(account.getUserId()),
+                "An account with the supplied userId already exists");
+        Assert.isNull(accountRepository.findAccountByAccountNumber(account.getAccountNumber()),
+                "An account with the supplied account number already exists");
+
+        // Save the account to the repository
+        account = accountRepository.save(account);
+
+        // Trigger the account creation event
+        appendEventResource(account.getId(),
+                new AccountEvent(AccountEventType.ACCOUNT_CREATED));
+
+        return account;
+    }
+
+    private Account updateAccount(Long id, Account account) {
+        Assert.notNull(id);
+        Assert.notNull(account);
+        Assert.isTrue(Objects.equals(id, account.getId()));
+        return accountRepository.save(account);
     }
 
     private AccountEvent appendEvent(Long accountId, AccountEvent event) {

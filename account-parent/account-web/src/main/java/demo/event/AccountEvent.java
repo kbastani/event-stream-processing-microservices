@@ -2,7 +2,6 @@ package demo.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.account.Account;
-import demo.account.AccountEventStatus;
 import demo.account.AccountEventType;
 import demo.domain.BaseEntity;
 import demo.log.Log;
@@ -32,9 +31,6 @@ public class AccountEvent extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AccountEventType type;
 
-    @Enumerated(EnumType.STRING)
-    private AccountEventStatus status;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     private Account account;
@@ -46,9 +42,8 @@ public class AccountEvent extends BaseEntity {
     public AccountEvent() {
     }
 
-    public AccountEvent(AccountEventType type, AccountEventStatus status) {
+    public AccountEvent(AccountEventType type) {
         this.type = type;
-        this.status = status;
     }
 
     public Long getId() {
@@ -65,14 +60,6 @@ public class AccountEvent extends BaseEntity {
 
     public void setType(AccountEventType type) {
         this.type = type;
-    }
-
-    public AccountEventStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AccountEventStatus status) {
-        this.status = status;
     }
 
     public Account getAccount() {
@@ -93,10 +80,10 @@ public class AccountEvent extends BaseEntity {
 
     @Override
     public String toString() {
-        return "Event{" +
+        return "AccountEvent{" +
                 "id=" + id +
                 ", type=" + type +
-                ", status=" + status +
+                ", account=" + account +
                 ", logs=" + logs +
                 "} " + super.toString();
     }

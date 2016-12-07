@@ -2,9 +2,11 @@ package demo.state;
 
 import demo.account.AccountEventStatus;
 import demo.account.AccountEventType;
+import demo.event.AccountEvent;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
@@ -78,37 +80,92 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> createAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for created account...");
+            }
+        };
     }
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> confirmAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for confirmed account...");
+            }
+        };
     }
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> activateAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for activated account...");
+            }
+        };
     }
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> archiveAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for archived account...");
+            }
+        };
     }
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> suspendAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for suspended account...");
+            }
+        };
     }
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> unarchiveAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for unarchived account...");
+            }
+        };
     }
 
     @Bean
     public Action<AccountEventStatus, AccountEventType> unsuspendAccount() {
-        return context -> log.info(context.getMessage());
+        return context -> {
+            AccountEvent accountEvent = replicateEvent(context);
+            if (accountEvent != null) {
+                log.info("Executing workflow for unsuspended account...");
+            }
+        };
+    }
+
+    /**
+     * Checks the event payload's headers for an {@link AccountEvent} object, which
+     * signals to the state machine that the included event has not yet been processed.
+     *
+     * @param context the state machine context that may include an {@link AccountEvent}
+     * @return an {@link AccountEvent} only if this event has not yet been processed, otherwise returns null
+     */
+    private AccountEvent replicateEvent(StateContext<AccountEventStatus, AccountEventType> context) {
+        AccountEvent currentEvent = null;
+        log.info(context.getMessage());
+
+        // The state machine is replicated only if an account event is provided in the headers
+        if (context.getMessageHeader("event") != null) {
+            currentEvent = (AccountEvent) context.getMessageHeader("event");
+            log.info("State machine replication completed: " + currentEvent.toString());
+        }
+
+        return currentEvent;
     }
 }
 

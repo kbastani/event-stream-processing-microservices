@@ -1,20 +1,17 @@
 package demo.event;
 
-import demo.account.AccountEventStatus;
 import demo.account.AccountEventType;
 import demo.domain.BaseEntity;
 
 public class AccountEvent extends BaseEntity {
 
     private AccountEventType type;
-    private AccountEventStatus status;
 
     public AccountEvent() {
     }
 
-    public AccountEvent(AccountEventType type, AccountEventStatus status) {
+    public AccountEvent(AccountEventType type) {
         this.type = type;
-        this.status = status;
     }
 
     public AccountEventType getType() {
@@ -25,19 +22,10 @@ public class AccountEvent extends BaseEntity {
         this.type = type;
     }
 
-    public AccountEventStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AccountEventStatus status) {
-        this.status = status;
-    }
-
     @Override
     public String toString() {
         return "AccountEvent{" +
                 "type=" + type +
-                ", status=" + status +
                 "} " + super.toString();
     }
 }

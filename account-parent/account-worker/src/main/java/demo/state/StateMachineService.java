@@ -18,7 +18,8 @@ public class StateMachineService {
     }
 
     public StateMachine<AccountEventStatus, AccountEventType> getStateMachine() {
-        StateMachine<AccountEventStatus, AccountEventType> stateMachine = factory.getStateMachine(UUID.randomUUID().toString());
+        StateMachine<AccountEventStatus, AccountEventType> stateMachine =
+                factory.getStateMachine(UUID.randomUUID().toString());
         stateMachine.start();
         return stateMachine;
     }

@@ -1,6 +1,6 @@
 package demo.log;
 
-import demo.account.AccountEventAction;
+import demo.account.AccountEventType;
 import demo.domain.BaseEntity;
 
 import javax.persistence.*;
@@ -16,12 +16,12 @@ public class Log extends BaseEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private AccountEventAction action;
+    private AccountEventType action;
 
     public Log() {
     }
 
-    public Log(AccountEventAction action) {
+    public Log(AccountEventType action) {
         this.action = action;
     }
 
@@ -33,11 +33,11 @@ public class Log extends BaseEntity {
         this.id = id;
     }
 
-    public AccountEventAction getAction() {
+    public AccountEventType getAction() {
         return action;
     }
 
-    public void setAction(AccountEventAction action) {
+    public void setAction(AccountEventType action) {
         this.action = action;
     }
 
