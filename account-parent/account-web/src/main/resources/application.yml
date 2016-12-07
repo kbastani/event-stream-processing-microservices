@@ -1,0 +1,12 @@
+spring:
+  profiles:
+    active: development
+---
+spring:
+  profiles: development
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: account
+          contentType: 'application/json'

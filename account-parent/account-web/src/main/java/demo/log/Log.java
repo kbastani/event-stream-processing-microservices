@@ -1,7 +1,7 @@
 package demo.log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import demo.account.AccountEventType;
+import demo.event.AccountEventType;
 import demo.domain.BaseEntity;
 
 import javax.persistence.*;

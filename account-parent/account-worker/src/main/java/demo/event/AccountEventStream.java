@@ -1,8 +1,7 @@
 package demo.event;
 
-import demo.account.AccountEventStatus;
-import demo.account.AccountEventType;
-import demo.account.AccountEvents;
+import demo.account.Account;
+import demo.account.AccountStatus;
 import demo.state.StateMachineService;
 import org.apache.log4j.Logger;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -22,7 +21,7 @@ import java.util.Map;
 
 /**
  * The {@link AccountEventStream} monitors for a variety of {@link AccountEvent} domain
- * events for an {@link demo.account.Account}.
+ * events for an {@link Account}.
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
@@ -46,7 +45,7 @@ public class AccountEventStream {
         logger.info("Account event received: " + accountEvent.toString());
 
         // Create a new ephemeral account state machine
-        StateMachine<AccountEventStatus, AccountEventType> stateMachine =
+        StateMachine<AccountStatus, AccountEventType> stateMachine =
                 stateMachineService.getStateMachine();
 
         // Traverse the hypermedia link for the attached account

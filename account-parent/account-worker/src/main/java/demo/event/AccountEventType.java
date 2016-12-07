@@ -1,4 +1,4 @@
-package demo.account;
+package demo.event;
 
 public enum AccountEventType {
     ACCOUNT_CREATED,

@@ -1,8 +1,6 @@
 package demo.account;
 
-import demo.event.AccountEvent;
-import demo.event.EventService;
-import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
+import demo.event.*;
 import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resource;
 import org.springframework.stereotype.Service;
@@ -12,7 +10,7 @@ import org.springframework.util.Assert;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static demo.account.AccountEventStatus.*;
+import static demo.account.AccountStatus.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
@@ -30,13 +28,10 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final EventService eventService;
-    private final RepositoryEntityLinks entityLinks;
 
-    public AccountService(AccountRepository accountRepository, EventService eventService,
-                          RepositoryEntityLinks entityLinks) {
+    public AccountService(AccountRepository accountRepository, EventService eventService) {
         this.accountRepository = accountRepository;
         this.eventService = eventService;
-        this.entityLinks = entityLinks;
     }
 
     /**
@@ -103,10 +98,9 @@ public class AccountService {
 
         if (event != null) {
             eventResource = new Resource<>(event,
-                    linkTo(AccountController.class)
-                            .slash("accounts")
-                            .slash(accountId)
+                    linkTo(EventController.class)
                             .slash("events")
+                            .slash(event.getEventId())
                             .withSelfRel(),
                     linkTo(AccountController.class)
                             .slash("accounts")
@@ -130,11 +124,11 @@ public class AccountService {
 
         Assert.notNull(account, "The account for the supplied id could not be found");
 
-        AccountEventStatus status = account.getContent().getStatus();
+        AccountStatus status = account.getContent().getStatus();
 
         switch (accountCommand) {
             case CONFIRM_ACCOUNT:
-                Assert.isTrue(status == ACCOUNT_CREATED, "The account has already been confirmed");
+                Assert.isTrue(status == ACCOUNT_PENDING, "The account has already been confirmed");
 
                 // Confirm the account
                 Account updateAccount = account.getContent();
@@ -302,10 +296,23 @@ public class AccountService {
      * @return the updated {@link Account} entity
      */
     private Account updateAccount(Long id, Account account) {
-        Assert.notNull(id);
-        Assert.notNull(account);
-        Assert.isTrue(Objects.equals(id, account.getAccountId()));
-        return accountRepository.save(account);
+        Assert.notNull(id, "Account id must be present in the resource URL");
+        Assert.notNull(account, "Account request body cannot be null");
+
+        if(account.getAccountId() != null) {
+            Assert.isTrue(Objects.equals(id, account.getAccountId()),
+                    "The account id in the request body must match the resource URL");
+        } else {
+            account.setAccountId(id);
+        }
+
+        Account currentAccount = getAccount(id);
+        currentAccount.setStatus(account.getStatus());
+        currentAccount.setDefaultAccount(account.getDefaultAccount());
+        currentAccount.setAccountNumber(account.getAccountNumber());
+        currentAccount.setUserId(account.getUserId());
+
+        return accountRepository.save(currentAccount);
     }
 
     /**

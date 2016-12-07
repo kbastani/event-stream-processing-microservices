@@ -1,7 +1,7 @@
 package demo.command;
 
-import demo.account.AccountEventStatus;
-import demo.account.AccountEventType;
+import demo.account.AccountStatus;
+import demo.event.AccountEventType;
 import demo.event.AccountEvent;
 import org.apache.log4j.Logger;
 import org.springframework.statemachine.StateContext;
@@ -10,9 +10,9 @@ public abstract class AccountCommand {
 
     final private Logger log = Logger.getLogger(AccountCommand.class);
 
-    final private StateContext<AccountEventStatus, AccountEventType> context;
+    final private StateContext<AccountStatus, AccountEventType> context;
 
-    public AccountCommand(StateContext<AccountEventStatus, AccountEventType> context) {
+    public AccountCommand(StateContext<AccountStatus, AccountEventType> context) {
         this.context = context;
     }
 

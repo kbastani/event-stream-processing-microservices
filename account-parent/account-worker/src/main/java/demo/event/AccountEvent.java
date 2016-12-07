@@ -1,6 +1,5 @@
 package demo.event;
 
-import demo.account.AccountEventType;
 import demo.domain.BaseEntity;
 
 public class AccountEvent extends BaseEntity {

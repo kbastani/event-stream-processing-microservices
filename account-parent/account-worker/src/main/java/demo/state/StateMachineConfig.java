@@ -1,7 +1,7 @@
 package demo.state;
 
-import demo.account.AccountEventStatus;
-import demo.account.AccountEventType;
+import demo.account.AccountStatus;
+import demo.event.AccountEventType;
 import demo.command.*;
 import demo.event.AccountEvent;
 import org.apache.log4j.Logger;
@@ -18,69 +18,69 @@ import java.util.EnumSet;
 
 @Configuration
 @EnableStateMachineFactory
-public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<AccountEventStatus, AccountEventType> {
+public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<AccountStatus, AccountEventType> {
 
     final private Logger log = Logger.getLogger(StateMachineConfig.class);
 
     @Override
-    public void configure(StateMachineStateConfigurer<AccountEventStatus, AccountEventType> states)
+    public void configure(StateMachineStateConfigurer<AccountStatus, AccountEventType> states)
             throws Exception {
         // Describe initial condition of account status
         states.withStates()
-                .initial(AccountEventStatus.ACCOUNT_CREATED)
-                .states(EnumSet.allOf(AccountEventStatus.class));
+                .initial(AccountStatus.ACCOUNT_CREATED)
+                .states(EnumSet.allOf(AccountStatus.class));
     }
 
     @Override
-    public void configure(StateMachineTransitionConfigurer<AccountEventStatus, AccountEventType> transitions)
+    public void configure(StateMachineTransitionConfigurer<AccountStatus, AccountEventType> transitions)
             throws Exception {
         // Describe state machine transitions for accounts
         transitions
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_CREATED)
-                .target(AccountEventStatus.ACCOUNT_PENDING)
+                .source(AccountStatus.ACCOUNT_CREATED)
+                .target(AccountStatus.ACCOUNT_PENDING)
                 .event(AccountEventType.ACCOUNT_CREATED)
                 .action(createAccount())
                 .and()
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_PENDING)
-                .target(AccountEventStatus.ACCOUNT_CONFIRMED)
+                .source(AccountStatus.ACCOUNT_PENDING)
+                .target(AccountStatus.ACCOUNT_CONFIRMED)
                 .event(AccountEventType.ACCOUNT_CONFIRMED)
                 .action(confirmAccount())
                 .and()
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_CONFIRMED)
-                .target(AccountEventStatus.ACCOUNT_ACTIVE)
+                .source(AccountStatus.ACCOUNT_CONFIRMED)
+                .target(AccountStatus.ACCOUNT_ACTIVE)
                 .event(AccountEventType.ACCOUNT_ACTIVATED)
                 .action(activateAccount())
                 .and()
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_ACTIVE)
-                .target(AccountEventStatus.ACCOUNT_ARCHIVED)
+                .source(AccountStatus.ACCOUNT_ACTIVE)
+                .target(AccountStatus.ACCOUNT_ARCHIVED)
                 .event(AccountEventType.ACCOUNT_ARCHIVED)
                 .action(archiveAccount())
                 .and()
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_ACTIVE)
-                .target(AccountEventStatus.ACCOUNT_SUSPENDED)
+                .source(AccountStatus.ACCOUNT_ACTIVE)
+                .target(AccountStatus.ACCOUNT_SUSPENDED)
                 .event(AccountEventType.ACCOUNT_SUSPENDED)
                 .action(suspendAccount())
                 .and()
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_ARCHIVED)
-                .target(AccountEventStatus.ACCOUNT_ACTIVE)
+                .source(AccountStatus.ACCOUNT_ARCHIVED)
+                .target(AccountStatus.ACCOUNT_ACTIVE)
                 .event(AccountEventType.ACCOUNT_ACTIVATED)
                 .action(unarchiveAccount())
                 .and()
                 .withExternal()
-                .source(AccountEventStatus.ACCOUNT_SUSPENDED)
-                .target(AccountEventStatus.ACCOUNT_ACTIVE)
+                .source(AccountStatus.ACCOUNT_SUSPENDED)
+                .target(AccountStatus.ACCOUNT_ACTIVE)
                 .event(AccountEventType.ACCOUNT_ACTIVATED)
                 .action(unsuspendAccount());
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> createAccount() {
+    public Action<AccountStatus, AccountEventType> createAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -95,7 +95,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> confirmAccount() {
+    public Action<AccountStatus, AccountEventType> confirmAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -110,7 +110,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> activateAccount() {
+    public Action<AccountStatus, AccountEventType> activateAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -125,7 +125,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> archiveAccount() {
+    public Action<AccountStatus, AccountEventType> archiveAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -140,7 +140,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> suspendAccount() {
+    public Action<AccountStatus, AccountEventType> suspendAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -155,7 +155,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> unarchiveAccount() {
+    public Action<AccountStatus, AccountEventType> unarchiveAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -170,7 +170,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     }
 
     @Bean
-    public Action<AccountEventStatus, AccountEventType> unsuspendAccount() {
+    public Action<AccountStatus, AccountEventType> unsuspendAccount() {
         return context -> {
             AccountEvent accountEvent = replicateEvent(context);
             if (accountEvent != null) {
@@ -191,7 +191,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
      * @param context the state machine context that may include an {@link AccountEvent}
      * @return an {@link AccountEvent} only if this event has not yet been processed, otherwise returns null
      */
-    private AccountEvent replicateEvent(StateContext<AccountEventStatus, AccountEventType> context) {
+    private AccountEvent replicateEvent(StateContext<AccountStatus, AccountEventType> context) {
         AccountEvent currentEvent = null;
         log.info(context.getMessage());
 

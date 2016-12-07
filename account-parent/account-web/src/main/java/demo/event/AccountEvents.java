@@ -1,19 +1,27 @@
-package demo.account;
+package demo.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import demo.event.AccountEvent;
-import demo.event.EventController;
+import demo.account.Account;
+import demo.account.AccountController;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resources;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
+/**
+ * The {@link AccountEvents} is a hypermedia collection of {@link AccountEvent} resources.
+ *
+ * @author kbastani
+ */
 public class AccountEvents extends Resources<AccountEvent> {
 
     private Long accountId;
 
     /**
-     * Creates an empty {@link Resources} instance.
+     * Create a new {@link AccountEvents} hypermedia resources collection for an {@link Account}.
+     *
+     * @param accountId is the unique identifier for the {@link Account}
+     * @param content   is the collection of {@link AccountEvents} attached to the {@link Account}
      */
     public AccountEvents(Long accountId, Iterable<AccountEvent> content) {
         this(content);
@@ -45,10 +53,15 @@ public class AccountEvents extends Resources<AccountEvent> {
      * @param content must not be {@literal null}.
      * @param links   the links to be added to the {@link Resources}.
      */
-    public AccountEvents(Iterable<AccountEvent> content, Link... links) {
+    private AccountEvents(Iterable<AccountEvent> content, Link... links) {
         super(content, links);
     }
 
+    /**
+     * Get the {@link Account} identifier that the {@link AccountEvents} apply to.
+     *
+     * @return the account identifier
+     */
     @JsonIgnore
     public Long getAccountId() {
         return accountId;

@@ -26,17 +26,17 @@ public class Account extends BaseEntity {
     private String accountNumber;
     private Boolean defaultAccount;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     private Set<AccountEvent> events = new HashSet<>();
 
     @Enumerated(value = EnumType.STRING)
-    private AccountEventStatus status;
+    private AccountStatus status;
 
     public Account() {
-        status = AccountEventStatus.ACCOUNT_CREATED;
+        status = AccountStatus.ACCOUNT_CREATED;
     }
 
-    public Account(String accountNumber, Boolean defaultAccount, AccountEventStatus status) {
+    public Account(String accountNumber, Boolean defaultAccount, AccountStatus status) {
         this.accountNumber = accountNumber;
         this.defaultAccount = defaultAccount;
         this.status = status;
@@ -83,11 +83,11 @@ public class Account extends BaseEntity {
         this.events = events;
     }
 
-    public AccountEventStatus getStatus() {
+    public AccountStatus getStatus() {
         return status;
     }
 
-    public void setStatus(AccountEventStatus status) {
+    public void setStatus(AccountStatus status) {
         this.status = status;
     }
 

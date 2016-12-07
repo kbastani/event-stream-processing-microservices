@@ -2,8 +2,6 @@ package demo.event;
 
 import demo.account.Account;
 import demo.account.AccountController;
-import demo.account.AccountEventType;
-import demo.account.AccountEvents;
 import demo.log.Log;
 import demo.log.LogRepository;
 import org.springframework.cloud.stream.messaging.Source;
@@ -119,6 +117,17 @@ public class EventService {
     }
 
     /**
+     * Get {@link AccountEvents} for the supplied {@link Account} identifier.
+     *
+     * @param id is the unique identifier of the {@link Account}
+     * @return a list of {@link AccountEvent} wrapped in a hypermedia {@link AccountEvents} resource
+     */
+    public AccountEvents getEvents(Long id) {
+        Page<AccountEvent> events = eventRepository.findAccountEventsByAccountId(id, new PageRequest(0, Integer.MAX_VALUE));
+        return new AccountEvents(id, events);
+    }
+
+    /**
      * Gets a hypermedia resource for a {@link Log} entity.
      *
      * @param log   is the {@link Log} descirbing an action performed on an {@link AccountEvent}
@@ -148,10 +157,6 @@ public class EventService {
                         .slash("events")
                         .slash(event.getEventId())
                         .withSelfRel(),
-                entityLinks.linkFor(AccountEvent.class)
-                        .slash(event.getId())
-                        .slash("logs")
-                        .withRel("logs"),
                 linkTo(AccountController.class)
                         .slash("accounts")
                         .slash(event.getAccount().getAccountId())
@@ -168,16 +173,5 @@ public class EventService {
     private AccountEvent addEvent(AccountEvent event) {
         event = eventRepository.save(event);
         return event;
-    }
-
-    /**
-     * Get {@link AccountEvents} for the supplied {@link Account} identifier.
-     *
-     * @param id is the unique identifier of the {@link Account}
-     * @return a list of {@link AccountEvent} wrapped in a hypermedia {@link AccountEvents} resource
-     */
-    public AccountEvents getEvents(Long id) {
-        Page<AccountEvent> events = eventRepository.findAccountEventsByAccountId(id, new PageRequest(0, Integer.MAX_VALUE));
-        return new AccountEvents(id, events);
     }
 }

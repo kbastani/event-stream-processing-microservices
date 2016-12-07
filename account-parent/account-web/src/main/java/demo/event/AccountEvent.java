@@ -2,7 +2,6 @@ package demo.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.account.Account;
-import demo.account.AccountEventType;
 import demo.domain.BaseEntity;
 import demo.log.Log;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -33,11 +32,11 @@ public class AccountEvent extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AccountEventType type;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
     @JsonIgnore
     private Account account;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<Log> logs = new HashSet<>();
 

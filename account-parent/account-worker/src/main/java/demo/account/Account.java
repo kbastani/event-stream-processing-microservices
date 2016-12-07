@@ -6,7 +6,7 @@ public class Account extends BaseEntity {
     private Long userId;
     private String accountNumber;
     private Boolean defaultAccount;
-    private AccountEventStatus status;
+    private AccountStatus status;
 
     public Account() {
     }
@@ -35,11 +35,11 @@ public class Account extends BaseEntity {
         this.defaultAccount = defaultAccount;
     }
 
-    public AccountEventStatus getStatus() {
+    public AccountStatus getStatus() {
         return status;
     }
 
-    public void setStatus(AccountEventStatus status) {
+    public void setStatus(AccountStatus status) {
         this.status = status;
     }
 

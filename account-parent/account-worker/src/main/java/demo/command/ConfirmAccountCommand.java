@@ -1,8 +1,8 @@
 package demo.command;
 
 import demo.account.Account;
-import demo.account.AccountEventStatus;
-import demo.account.AccountEventType;
+import demo.account.AccountStatus;
+import demo.event.AccountEventType;
 import demo.event.AccountEvent;
 import org.apache.log4j.Logger;
 import org.springframework.hateoas.MediaTypes;
@@ -15,10 +15,15 @@ public class ConfirmAccountCommand extends AccountCommand {
 
     final private Logger log = Logger.getLogger(ConfirmAccountCommand.class);
 
-    public ConfirmAccountCommand(StateContext<AccountEventStatus, AccountEventType> context) {
+    public ConfirmAccountCommand(StateContext<AccountStatus, AccountEventType> context) {
         super(context);
     }
 
+    /**
+     * Applies the {@link AccountEvent} to the {@link Account} aggregate.
+     *
+     * @param event is the {@link AccountEvent} for this context
+     */
     @Override
     public void apply(AccountEvent event) throws Exception {
         super.apply(event);

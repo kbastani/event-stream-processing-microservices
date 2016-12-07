@@ -1,11 +1,11 @@
 package demo.command;
 
-import demo.account.AccountEventStatus;
-import demo.account.AccountEventType;
+import demo.account.AccountStatus;
+import demo.event.AccountEventType;
 import org.springframework.statemachine.StateContext;
 
 public class ArchiveAccountCommand extends AccountCommand {
-    public ArchiveAccountCommand(StateContext<AccountEventStatus, AccountEventType> context) {
+    public ArchiveAccountCommand(StateContext<AccountStatus, AccountEventType> context) {
         super(context);
     }
 }
