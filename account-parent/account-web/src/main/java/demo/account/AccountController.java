@@ -38,6 +38,13 @@ public class AccountController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @GetMapping(path = "/accounts/{id}/events")
+    public ResponseEntity getAccountEvents(@PathVariable Long id) {
+        return Optional.ofNullable(accountService.getAccountEventResources(id))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new IllegalArgumentException("Could not get account events"));
+    }
+
     @PostMapping(path = "/accounts/{id}/events")
     public ResponseEntity createAccount(@PathVariable Long id, @RequestBody AccountEvent event) {
         return Optional.ofNullable(accountService.appendEventResource(id, event))

@@ -1,10 +1,10 @@
-package demo.event;
+package demo;
 
 import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableBinding(ProducerChannels.class)
-public class StreamConfig {
-
+@EnableBinding(Source.class)
+public class AccountStreamConfig {
 }

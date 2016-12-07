@@ -21,6 +21,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  * Events can be appended to an {@link Account}, which contains a append-only log of
  * actions that can be used to support remediation for distributed transactions that encountered
  * a partial failure.
+ *
+ * @author kbastani
  */
 @Service
 @Transactional
@@ -101,17 +103,15 @@ public class AccountService {
 
         if (event != null) {
             eventResource = new Resource<>(event,
-                    entityLinks.linkFor(AccountEvent.class, event.getId())
-                            .slash(event.getId())
+                    linkTo(AccountController.class)
+                            .slash("accounts")
+                            .slash(accountId)
+                            .slash("events")
                             .withSelfRel(),
                     linkTo(AccountController.class)
                             .slash("accounts")
                             .slash(accountId)
-                            .withRel("account"),
-                    entityLinks.linkFor(AccountEvent.class, event.getId())
-                            .slash(event.getId())
-                            .slash("logs")
-                            .withRel("logs")
+                            .withRel("account")
             );
         }
 
@@ -128,55 +128,61 @@ public class AccountService {
     public Resource<Account> applyCommand(Long id, AccountCommand accountCommand) {
         Resource<Account> account = getAccountResource(id);
 
-        if (account != null) {
+        Assert.notNull(account, "The account for the supplied id could not be found");
 
-            AccountEventStatus status = account.getContent().getStatus();
+        AccountEventStatus status = account.getContent().getStatus();
 
-            switch (accountCommand) {
-                case CONFIRM_ACCOUNT:
-                    Assert.isTrue(status == ACCOUNT_CREATED, "The account has already been confirmed");
+        switch (accountCommand) {
+            case CONFIRM_ACCOUNT:
+                Assert.isTrue(status == ACCOUNT_CREATED, "The account has already been confirmed");
 
-                    // Confirm the account
-                    Account updateAccount = account.getContent();
-                    updateAccount.setStatus(ACCOUNT_CONFIRMED);
-                    account = updateAccountResource(id, updateAccount);
-                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED));
-                    break;
-                case ACTIVATE_ACCOUNT:
-                    Assert.isTrue(status != ACCOUNT_ACTIVE, "The account is already active");
-                    Assert.isTrue(Arrays.asList(ACCOUNT_CONFIRMED, ACCOUNT_SUSPENDED, ACCOUNT_ARCHIVED)
-                            .contains(status), "The account cannot be activated");
+                // Confirm the account
+                Account updateAccount = account.getContent();
+                updateAccount.setStatus(ACCOUNT_CONFIRMED);
+                account = updateAccountResource(id, updateAccount);
+                appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED));
+                break;
+            case ACTIVATE_ACCOUNT:
+                Assert.isTrue(status != ACCOUNT_ACTIVE, "The account is already active");
+                Assert.isTrue(Arrays.asList(ACCOUNT_CONFIRMED, ACCOUNT_SUSPENDED, ACCOUNT_ARCHIVED)
+                        .contains(status), "The account cannot be activated");
 
-                    // Activate the account
-                    account.getContent().setStatus(ACCOUNT_ACTIVE);
-                    account = updateAccountResource(id, account.getContent());
-                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED));
-                    break;
-                case SUSPEND_ACCOUNT:
-                    Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be suspended");
+                // Activate the account
+                account.getContent().setStatus(ACCOUNT_ACTIVE);
+                account = updateAccountResource(id, account.getContent());
+                appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED));
+                break;
+            case SUSPEND_ACCOUNT:
+                Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be suspended");
 
-                    // Suspend the account
-                    account.getContent().setStatus(ACCOUNT_SUSPENDED);
-                    account = updateAccountResource(id, account.getContent());
-                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED));
-                    break;
-                case ARCHIVE_ACCOUNT:
-                    Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be archived");
+                // Suspend the account
+                account.getContent().setStatus(ACCOUNT_SUSPENDED);
+                account = updateAccountResource(id, account.getContent());
+                appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED));
+                break;
+            case ARCHIVE_ACCOUNT:
+                Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be archived");
 
-                    // Archive the account
-                    account.getContent().setStatus(ACCOUNT_ARCHIVED);
-                    account = updateAccountResource(id, account.getContent());
-                    appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED));
-                    break;
-                default:
-                    Assert.notNull(accountCommand,
-                            "The provided command cannot be applied to this account in its current state");
-            }
+                // Archive the account
+                account.getContent().setStatus(ACCOUNT_ARCHIVED);
+                account = updateAccountResource(id, account.getContent());
+                appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED));
+                break;
+            default:
+                Assert.notNull(accountCommand,
+                        "The provided command cannot be applied to this account in its current state");
         }
 
         return account;
     }
 
+    /**
+     * Get the {@link AccountCommand} hypermedia resource that lists the available commands that can be applied
+     * to an {@link Account} entity.
+     *
+     * @param id is the {@link Account} identifier to provide command links for
+     * @return an {@link AccountCommandsResource} with a collection of embedded command links
+     */
     public AccountCommandsResource getCommandsResource(Long id) {
         // Get the account resource for the identifier
         Resource<Account> accountResource = getAccountResource(id);
@@ -205,6 +211,22 @@ public class AccountService {
         return commandResource;
     }
 
+    /**
+     * Get {@link AccountEvents} for the supplied {@link Account} identifier.
+     *
+     * @param id is the unique identifier of the {@link Account}
+     * @return a list of {@link AccountEvent} wrapped in a hypermedia {@link AccountEvents} resource
+     */
+    public AccountEvents getAccountEventResources(Long id) {
+        return eventService.getEvents(id);
+    }
+
+    /**
+     * Generate a {@link LinkBuilder} for generating the {@link AccountCommandsResource}.
+     *
+     * @param id is the unique identifier for a {@link Account}
+     * @return a {@link LinkBuilder} for the {@link AccountCommandsResource}
+     */
     private LinkBuilder getCommandLinkBuilder(Long id) {
         return linkTo(AccountController.class)
                 .slash("accounts")
@@ -212,6 +234,12 @@ public class AccountService {
                 .slash("commands");
     }
 
+    /**
+     * Get a hypermedia enriched {@link Account} entity.
+     *
+     * @param account is the {@link Account} to enrich with hypermedia links
+     * @return is a hypermedia enriched resource for the supplied {@link Account} entity
+     */
     private Resource<Account> getAccountResource(Account account) {
         Resource<Account> accountResource;
 
@@ -219,23 +247,36 @@ public class AccountService {
         accountResource = new Resource<>(account,
                 linkTo(AccountController.class)
                         .slash("accounts")
-                        .slash(account.getId())
+                        .slash(account.getAccountId())
                         .withSelfRel(),
-                entityLinks.linkFor(Account.class, account.getId())
-                        .slash(account.getId())
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(account.getAccountId())
                         .slash("events")
                         .withRel("events"),
-                getCommandLinkBuilder(account.getId())
+                getCommandLinkBuilder(account.getAccountId())
                         .withRel("commands")
         );
 
         return accountResource;
     }
 
+    /**
+     * Get an {@link Account} entity for the supplied identifier.
+     *
+     * @param id is the unique identifier of a {@link Account} entity
+     * @return an {@link Account} entity
+     */
     private Account getAccount(Long id) {
         return accountRepository.findOne(id);
     }
 
+    /**
+     * Create a new {@link Account} entity.
+     *
+     * @param account is the {@link Account} to create
+     * @return the newly created {@link Account}
+     */
     private Account createAccount(Account account) {
         // Assert for uniqueness constraint
         Assert.isNull(accountRepository.findAccountByUserId(account.getUserId()),
@@ -247,32 +288,40 @@ public class AccountService {
         account = accountRepository.save(account);
 
         // Trigger the account creation event
-        appendEventResource(account.getId(),
+        appendEventResource(account.getAccountId(),
                 new AccountEvent(AccountEventType.ACCOUNT_CREATED));
 
         return account;
     }
 
+    /**
+     * Update an {@link Account} entity with the supplied identifier.
+     *
+     * @param id      is the unique identifier of the {@link Account} entity
+     * @param account is the {@link Account} containing updated fields
+     * @return the updated {@link Account} entity
+     */
     private Account updateAccount(Long id, Account account) {
         Assert.notNull(id);
         Assert.notNull(account);
-        Assert.isTrue(Objects.equals(id, account.getId()));
+        Assert.isTrue(Objects.equals(id, account.getAccountId()));
         return accountRepository.save(account);
     }
 
+    /**
+     * Append a new {@link AccountEvent} to the {@link Account} reference for the supplied identifier.
+     *
+     * @param accountId is the unique identifier for the {@link Account}
+     * @param event     is the {@link AccountEvent} to append to the {@link Account} entity
+     * @return the newly appended {@link AccountEvent}
+     */
     private AccountEvent appendEvent(Long accountId, AccountEvent event) {
-        Account account = accountRepository.findOne(accountId);
-        if (account != null) {
-            event.setAccount(account);
-            event = eventService.createEvent(event).getContent();
-            if (event != null) {
-                account.getEvents().add(event);
-                accountRepository.save(account);
-            }
-        } else {
-            event = null;
-        }
-
+        Account account = getAccount(accountId);
+        Assert.notNull(account, "The account with the supplied id does not exist");
+        event.setAccount(account);
+        event = eventService.createEvent(event).getContent();
+        account.getEvents().add(event);
+        accountRepository.save(account);
         return event;
     }
 }

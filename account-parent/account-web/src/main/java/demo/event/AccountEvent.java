@@ -19,6 +19,8 @@ import java.util.Set;
  * This event resource also provides a transaction log that can be used to append
  * actions to the event. The collection of {@link Log} items can be used to remediate
  * partial failures.
+ *
+ * @author kbastani
  */
 @Entity
 @RestResource(path = "events", rel = "events")
@@ -46,11 +48,12 @@ public class AccountEvent extends BaseEntity {
         this.type = type;
     }
 
-    public Long getId() {
+    @JsonIgnore
+    public Long getEventId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setEventId(Long id) {
         this.id = id;
     }
 

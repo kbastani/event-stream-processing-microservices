@@ -1,5 +1,6 @@
 package demo.account;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.domain.BaseEntity;
 import demo.event.AccountEvent;
 
@@ -12,6 +13,8 @@ import java.util.Set;
  * a user's account. The status of an account is event sourced using
  * events logged to the {@link AccountEvent} collection attached to
  * this resource.
+ *
+ * @author kbastani
  */
 @Entity
 public class Account extends BaseEntity {
@@ -39,11 +42,12 @@ public class Account extends BaseEntity {
         this.status = status;
     }
 
-    public Long getId() {
+    @JsonIgnore
+    public Long getAccountId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setAccountId(Long id) {
         this.id = id;
     }
 

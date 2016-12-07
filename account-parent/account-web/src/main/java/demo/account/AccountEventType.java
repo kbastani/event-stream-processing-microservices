@@ -1,5 +1,11 @@
 package demo.account;
 
+/**
+ * The {@link AccountEventType} represents a collection of possible events that describe
+ * state transitions of {@link AccountEventStatus} on the {@link Account} aggregate.
+ *
+ * @author kbastani
+ */
 public enum AccountEventType {
     ACCOUNT_CREATED,
     ACCOUNT_CONFIRMED,

@@ -1,5 +1,6 @@
 package demo.log;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.account.AccountEventType;
 import demo.domain.BaseEntity;
 
@@ -25,11 +26,12 @@ public class Log extends BaseEntity {
         this.action = action;
     }
 
-    public Long getId() {
+    @JsonIgnore
+    public Long getLogId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setLogId(Long id) {
         this.id = id;
     }
 
