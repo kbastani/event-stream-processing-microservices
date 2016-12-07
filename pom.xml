@@ -5,9 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.kbastani</groupId>
-    <artifactId>event-stream-processing-microservices</artifactId>
+    <artifactId>event-stream-processing-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <name>├── event-stream-processing-parent</name>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -17,8 +19,12 @@
     </parent>
 
     <modules>
-        <module>microservices-parent</module>
-        <module>stream-modules-parent</module>
+        <module>account-parent</module>
+        <module>inventory-parent</module>
+        <module>invoice-parent</module>
+        <module>order-parent</module>
+        <module>user-parent</module>
+        <module>warehouse-parent</module>
     </modules>
 
     <dependencies>

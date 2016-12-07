@@ -3,16 +3,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>account-stream-module</artifactId>
+    <artifactId>order-web</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>account-stream-module</name>
-    <description>Demo project for Spring Boot</description>
+    <name>│   │   └── order-web</name>
 
     <parent>
         <groupId>org.kbastani</groupId>
-        <artifactId>stream-modules-parent</artifactId>
+        <artifactId>order-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
@@ -24,11 +23,7 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <version>2.2.0</version>
-        </dependency>
+
     </dependencies>
 
     <build>
