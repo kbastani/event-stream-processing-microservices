@@ -1,7 +1,16 @@
 package demo.account;
 
 import demo.domain.BaseEntity;
+import demo.event.AccountEvent;
 
+/**
+ * The {@link Account} domain object contains information related to
+ * a user's account. The status of an account is event sourced using
+ * events logged to the {@link AccountEvent} collection attached to
+ * this resource.
+ *
+ * @author kbastani
+ */
 public class Account extends BaseEntity {
     private Long userId;
     private String accountNumber;

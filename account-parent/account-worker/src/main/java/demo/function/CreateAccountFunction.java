@@ -1,4 +1,4 @@
-package demo.command;
+package demo.function;
 
 import demo.account.Account;
 import demo.account.AccountStatus;
@@ -12,14 +12,26 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.function.Consumer;
 
-public class CreateAccountCommand extends AccountCommand {
+/**
+ * The {@link AccountFunction} is an abstraction used to map actions that are triggered by
+ * state transitions on a {@link demo.account.Account} resource on to a function. Mapped functions
+ * can take multiple forms and reside either remotely or locally on the classpath of this application.
+ *
+ * @author kbastani
+ */
+public class CreateAccountFunction extends AccountFunction {
 
-    final private Logger log = Logger.getLogger(CreateAccountCommand.class);
+    final private Logger log = Logger.getLogger(CreateAccountFunction.class);
 
-    public CreateAccountCommand(StateContext<AccountStatus, AccountEventType> context) {
-        super(context);
+    public CreateAccountFunction(StateContext<AccountStatus, AccountEventType> context) {
+        super(context, null);
+    }
+
+    public CreateAccountFunction(StateContext<AccountStatus, AccountEventType> context,
+                                 Consumer<AccountEvent> function) {
+        super(context, function);
     }
 
     /**
@@ -28,12 +40,12 @@ public class CreateAccountCommand extends AccountCommand {
      * @param event is the {@link AccountEvent} for this context
      */
     @Override
-    public void apply(AccountEvent event) throws Exception {
-        super.apply(event);
+    public void apply(AccountEvent event) {
+        log.info("Executing workflow for a created account...");
 
         // Create a traverson for the root account
         Traverson traverson = new Traverson(
-                new URI(event.getLink("account").getHref()),
+                URI.create(event.getLink("account").getHref()),
                 MediaTypes.HAL_JSON
         );
 
@@ -53,7 +65,8 @@ public class CreateAccountCommand extends AccountCommand {
                     .toEntity(Account.class)
                     .getBody();
 
-            log.info("Account confirmed: " + account);
+            log.info(event.getType() + ": " +
+                    event.getLink("account").getHref());
         }
     }
 
@@ -63,16 +76,15 @@ public class CreateAccountCommand extends AccountCommand {
      * @param event   is the {@link AccountEvent} for this context
      * @param account is the {@link Account} attached to the {@link AccountEvent} resource
      * @return an {@link Account} with its updated state set to pending
-     * @throws URISyntaxException is thrown if the {@link Account} hypermedia link cannot be parsed
      */
-    private Account setAccountPendingStatus(AccountEvent event, Account account) throws URISyntaxException {
+    private Account setAccountPendingStatus(AccountEvent event, Account account) {
         // Set the account status to pending
         account.setStatus(AccountStatus.ACCOUNT_PENDING);
         RestTemplate restTemplate = new RestTemplate();
 
         // Create a new request entity
         RequestEntity<Account> requestEntity = RequestEntity.put(
-                new URI(event.getLink("account").getHref()))
+                URI.create(event.getLink("account").getHref()))
                 .contentType(MediaTypes.HAL_JSON)
                 .body(account);
 

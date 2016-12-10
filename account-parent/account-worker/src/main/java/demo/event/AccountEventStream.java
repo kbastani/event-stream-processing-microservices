@@ -15,19 +15,20 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The {@link AccountEventStream} monitors for a variety of {@link AccountEvent} domain
  * events for an {@link Account}.
+ *
+ * @author kbastani
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
 public class AccountEventStream {
 
-    final private Logger logger = Logger.getLogger(AccountEventStream.class);
+    final private Logger log = Logger.getLogger(AccountEventStream.class);
     final private StateMachineService stateMachineService;
 
     public AccountEventStream(StateMachineService stateMachineService) {
@@ -35,35 +36,37 @@ public class AccountEventStream {
     }
 
     /**
-     * Listen for a stream of {@link AccountEvent}
+     * Listens to a stream of incoming {@link AccountEvent} messages. For each
+     * new message received, replicate an in-memory {@link StateMachine} that
+     * reproduces the current state of the {@link Account} resource that is the
+     * subject of the {@link AccountEvent}.
      *
      * @param accountEvent
-     * @throws URISyntaxException
      */
     @StreamListener(Sink.INPUT)
-    public void streamAccountEvents(AccountEvent accountEvent) throws URISyntaxException {
-        logger.info("Account event received: " + accountEvent.toString());
+    public void streamListerner(AccountEvent accountEvent) {
+        log.info("Account event received: " + accountEvent.getLink("self").getHref());
 
-        // Create a new ephemeral account state machine
+        // Generate a state machine for computing the state of the account resource
         StateMachine<AccountStatus, AccountEventType> stateMachine =
                 stateMachineService.getStateMachine();
 
-        // Traverse the hypermedia link for the attached account
+        // Follow the hypermedia link to fetch the attached account
         Traverson traverson = new Traverson(
-                new URI(accountEvent.getLink("account").getHref()),
+                URI.create(accountEvent.getLink("account").getHref()),
                 MediaTypes.HAL_JSON
         );
 
-        // Traverse the hypermedia link to retrieve the event log for the account
+        // Get the event log for the attached account resource
         AccountEvents events = traverson.follow("events")
                 .toEntity(AccountEvents.class)
                 .getBody();
 
-        // Create message headers
+        // Prepare account event message headers
         Map<String, Object> headerMap = new HashMap<>();
         headerMap.put("event", accountEvent);
 
-        // Replicate the current state of the domain aggregate using state machine transitions
+        // Replicate the current state of the account resource
         events.getContent()
                 .stream()
                 .sorted((a1, a2) -> a1.getCreatedAt().compareTo(a2.getCreatedAt()))
@@ -76,8 +79,7 @@ public class AccountEventStream {
                     }
 
                     // Send the event to the state machine
-                    stateMachine.sendEvent(MessageBuilder
-                            .createMessage(e.getType(), headers));
+                    stateMachine.sendEvent(MessageBuilder.createMessage(e.getType(), headers));
                 });
 
         // Destroy the state machine
