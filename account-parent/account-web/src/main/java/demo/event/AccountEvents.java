@@ -4,7 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.account.Account;
 import demo.account.AccountController;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resources;
+
+import java.io.Serializable;
+import java.util.List;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -13,7 +17,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  *
  * @author kbastani
  */
-public class AccountEvents extends Resources<AccountEvent> {
+public class AccountEvents extends Resources<AccountEvent> implements Serializable {
 
     private Long accountId;
 
@@ -23,7 +27,7 @@ public class AccountEvents extends Resources<AccountEvent> {
      * @param accountId is the unique identifier for the {@link Account}
      * @param content   is the collection of {@link AccountEvents} attached to the {@link Account}
      */
-    public AccountEvents(Long accountId, Iterable<AccountEvent> content) {
+    public AccountEvents(Long accountId, List<AccountEvent> content) {
         this(content);
         this.accountId = accountId;
 
@@ -38,10 +42,11 @@ public class AccountEvents extends Resources<AccountEvent> {
                         .slash(accountId)
                         .withRel("account"));
 
+        LinkBuilder linkBuilder = linkTo(EventController.class);
+
         // Add hypermedia links to each item of the collection
-        content.forEach(event -> event.add(
-                linkTo(EventController.class)
-                        .slash("events")
+        content.stream().parallel().forEach(event -> event.add(
+                linkBuilder.slash("events")
                         .slash(event.getEventId())
                         .withSelfRel()
         ));

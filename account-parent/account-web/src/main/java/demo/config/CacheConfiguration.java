@@ -10,6 +10,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
@@ -36,7 +38,9 @@ public class CacheConfiguration {
     @Bean
     public CacheManager cacheManager(RedisTemplate redisTemplate) {
         RedisCacheManager cacheManager = new RedisCacheManager(redisTemplate);
-        cacheManager.setDefaultExpiration(3000);
+        cacheManager.setDefaultExpiration(50000);
+        cacheManager.setCacheNames(Arrays.asList("accounts", "events"));
+        cacheManager.setUsePrefix(true);
         return cacheManager;
     }
 }

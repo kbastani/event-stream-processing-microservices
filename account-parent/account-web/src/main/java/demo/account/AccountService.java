@@ -3,6 +3,7 @@ package demo.account;
 import demo.event.AccountEvent;
 import demo.event.AccountEventType;
 import demo.event.EventService;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,6 +29,7 @@ import static demo.account.AccountStatus.ACCOUNT_ARCHIVED;
  */
 @Service
 @Transactional
+@CacheConfig(cacheNames = {"accounts"})
 public class AccountService {
 
     private final AccountRepository accountRepository;
@@ -44,7 +46,7 @@ public class AccountService {
      * @param account is the {@link Account} to create
      * @return the newly created {@link Account}
      */
-    @CacheEvict(value = "account", key = "#account.getAccountId().toString()")
+    @CacheEvict(cacheNames = "accounts", key = "#account.getAccountId().toString()")
     public Account createAccount(Account account) {
         // Assert for uniqueness constraint
         Assert.isNull(accountRepository.findAccountByUserId(account.getUserId()),
@@ -68,7 +70,7 @@ public class AccountService {
      * @param id is the unique identifier of a {@link Account} entity
      * @return an {@link Account} entity
      */
-    @Cacheable(value = "account", key = "#id.toString()")
+    @Cacheable(cacheNames = "accounts", key = "#id.toString()")
     public Account getAccount(Long id) {
         return accountRepository.findOne(id);
     }
@@ -80,7 +82,7 @@ public class AccountService {
      * @param account is the {@link Account} containing updated fields
      * @return the updated {@link Account} entity
      */
-    @CachePut(value = "account", key = "#id.toString()")
+    @CachePut(cacheNames = "accounts", key = "#id.toString()")
     public Account updateAccount(Long id, Account account) {
         Assert.notNull(id, "Account id must be present in the resource URL");
         Assert.notNull(account, "Account request body cannot be null");
@@ -109,7 +111,7 @@ public class AccountService {
      *
      * @param id is the unique identifier for the {@link Account}
      */
-    @CacheEvict(value = "account", key = "#id.toString()")
+    @CacheEvict(cacheNames = "accounts", key = "#id.toString()")
     public Boolean deleteAccount(Long id) {
         Assert.state(accountRepository.exists(id),
                 "The account with the supplied id does not exist");
@@ -141,7 +143,7 @@ public class AccountService {
      * @param accountCommand is the command to apply to the {@link Account}
      * @return a hypermedia resource containing the updated {@link Account}
      */
-    @CachePut(value = "account", key = "#id.toString()")
+    @CachePut(cacheNames = "accounts", key = "#id.toString()")
     public Account applyCommand(Long id, AccountCommand accountCommand) {
         Account account = getAccount(id);
 

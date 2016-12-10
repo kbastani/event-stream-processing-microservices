@@ -57,7 +57,7 @@ public class AccountController {
 
     @GetMapping(path = "/accounts/{id}/events")
     public ResponseEntity getAccountEvents(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountEventResources(id))
+        return Optional.of(getAccountEventResources(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("Could not get account events"));
     }
@@ -228,7 +228,7 @@ public class AccountController {
      * @return a list of {@link AccountEvent} wrapped in a hypermedia {@link AccountEvents} resource
      */
     private AccountEvents getAccountEventResources(Long id) {
-        return eventService.getEvents(id);
+        return new AccountEvents(id, eventService.getAccountEvents(id));
     }
 
     /**

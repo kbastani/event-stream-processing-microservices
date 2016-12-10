@@ -2,8 +2,10 @@ package demo.event;
 
 import demo.account.Account;
 import demo.account.AccountController;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.stream.messaging.Source;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Resource;
 import org.springframework.integration.support.MessageBuilder;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -26,6 +29,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  */
 @Service
 @Transactional
+@CacheConfig(cacheNames = {"events"})
 public class EventService {
 
     private final EventRepository eventRepository;
@@ -42,6 +46,7 @@ public class EventService {
      * @param event is the {@link AccountEvent} to publish to the account stream
      * @return a hypermedia {@link AccountEvent} resource
      */
+    @CacheEvict(cacheNames = "events", key = "#event.getAccount().getAccountId().toString()")
     public AccountEvent createEvent(AccountEvent event) {
         // Save new event
         event = addEvent(event);
@@ -73,6 +78,7 @@ public class EventService {
      * @param event is the {@link AccountEvent} to update
      * @return the updated {@link AccountEvent}
      */
+    @CacheEvict(cacheNames = "events", key = "#event.getAccount().getAccountId().toString()")
     public AccountEvent updateEvent(Long id, AccountEvent event) {
         Assert.notNull(id);
         Assert.isTrue(event.getId() == null || Objects.equals(id, event.getId()));
@@ -86,9 +92,10 @@ public class EventService {
      * @param id is the unique identifier of the {@link Account}
      * @return a list of {@link AccountEvent} wrapped in a hypermedia {@link AccountEvents} resource
      */
-    public AccountEvents getEvents(Long id) {
-        Page<AccountEvent> events = eventRepository.findAccountEventsByAccountId(id, new PageRequest(0, Integer.MAX_VALUE));
-        return new AccountEvents(id, events);
+    @Cacheable(cacheNames = "events", key = "#id.toString()")
+    public List<AccountEvent> getAccountEvents(Long id) {
+        return eventRepository.findAccountEventsByAccountId(id,
+                new PageRequest(0, Integer.MAX_VALUE)).getContent();
     }
 
     /**
@@ -116,6 +123,7 @@ public class EventService {
      * @param event is the {@link AccountEvent} to append to an {@link Account} entity
      * @return the newly appended {@link AccountEvent} entity
      */
+    @CacheEvict(cacheNames = "events", key = "#event.getAccount().getAccountId().toString()")
     private AccountEvent addEvent(AccountEvent event) {
         event = eventRepository.save(event);
         return event;
