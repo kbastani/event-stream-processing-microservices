@@ -42,7 +42,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
      * Configures the initial conditions of a new in-memory {@link StateMachine} for {@link Account}.
      *
      * @param states is the {@link StateMachineStateConfigurer} used to describe the initial condition
-     * @throws Exception
      */
     @Override
     public void configure(StateMachineStateConfigurer<AccountStatus, AccountEventType> states) {
@@ -173,22 +172,23 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     public Action<AccountStatus, AccountEventType> confirmAccount() {
         return context -> {
             // Map the account action to a Java 8 lambda function
-            ConfirmAccountFunction accountFunction = new ConfirmAccountFunction(context,
-                    event -> {
-                        // Get the account resource for the event
-                        Traverson traverson = new Traverson(
-                                URI.create(event.getLink("account").getHref()),
-                                MediaTypes.HAL_JSON
-                        );
+            ConfirmAccountFunction accountFunction;
 
-                        // Follow the command resource to activate the account
-                        Account account = traverson.follow("commands")
-                                .follow("activate")
-                                .toEntity(Account.class)
-                                .getBody();
+            accountFunction = new ConfirmAccountFunction(context, event -> {
+                // Get the account resource for the event
+                Traverson traverson = new Traverson(
+                        URI.create(event.getLink("account").getHref()),
+                        MediaTypes.HAL_JSON
+                );
 
-                        log.info(event.getType() + ": " + event.getLink("account").getHref());
-                    });
+                // Follow the command resource to activate the account
+                Account account = traverson.follow("commands")
+                        .follow("activate")
+                        .toEntity(Account.class)
+                        .getBody();
+
+                log.info(event.getType() + ": " + event.getLink("account").getHref());
+            });
 
             applyEvent(context, accountFunction);
         };

@@ -26,7 +26,7 @@ public class CreateAccountFunction extends AccountFunction {
     final private Logger log = Logger.getLogger(CreateAccountFunction.class);
 
     public CreateAccountFunction(StateContext<AccountStatus, AccountEventType> context) {
-        super(context, null);
+        this(context, null);
     }
 
     public CreateAccountFunction(StateContext<AccountStatus, AccountEventType> context,
