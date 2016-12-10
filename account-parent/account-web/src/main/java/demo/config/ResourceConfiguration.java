@@ -10,7 +10,7 @@ import org.springframework.hateoas.ResourceProcessor;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 @Configuration
-public class AccountResourceConfig {
+public class ResourceConfiguration {
 
     /**
      * Enriches the {@link Account} resource with hypermedia links.

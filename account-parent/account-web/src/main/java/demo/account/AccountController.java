@@ -31,14 +31,14 @@ public class AccountController {
     public ResponseEntity createAccount(@RequestBody Account account) {
         return Optional.ofNullable(createAccountResource(account))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
-                .orElseThrow(() -> new IllegalArgumentException("Account creation failed"));
+                .orElseThrow(() -> new RuntimeException("Account creation failed"));
     }
 
     @PutMapping(path = "/accounts/{id}")
     public ResponseEntity updateAccount(@RequestBody Account account, @PathVariable Long id) {
         return Optional.ofNullable(updateAccountResource(id, account))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("Account update failed"));
+                .orElseThrow(() -> new RuntimeException("Account update failed"));
     }
 
     @GetMapping(path = "/accounts/{id}")
@@ -48,25 +48,32 @@ public class AccountController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @DeleteMapping(path = "/accounts/{id}")
+    public ResponseEntity deleteAccount(@PathVariable Long id) {
+        return Optional.ofNullable(accountService.deleteAccount(id))
+                .map(e -> new ResponseEntity<>(HttpStatus.NO_CONTENT))
+                .orElseThrow(() -> new RuntimeException("Account deletion failed"));
+    }
+
     @GetMapping(path = "/accounts/{id}/events")
     public ResponseEntity getAccountEvents(@PathVariable Long id) {
         return Optional.ofNullable(getAccountEventResources(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("Could not get account events"));
+                .orElseThrow(() -> new RuntimeException("Could not get account events"));
     }
 
     @PostMapping(path = "/accounts/{id}/events")
     public ResponseEntity createAccount(@PathVariable Long id, @RequestBody AccountEvent event) {
         return Optional.ofNullable(appendEventResource(id, event))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
-                .orElseThrow(() -> new IllegalArgumentException("Append account event failed"));
+                .orElseThrow(() -> new RuntimeException("Append account event failed"));
     }
 
     @GetMapping(path = "/accounts/{id}/commands")
     public ResponseEntity getAccountCommands(@PathVariable Long id) {
         return Optional.ofNullable(getCommandsResource(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("The account could not be found"));
+                .orElseThrow(() -> new RuntimeException("The account could not be found"));
     }
 
     @GetMapping(path = "/accounts/{id}/commands/confirm")
@@ -74,7 +81,7 @@ public class AccountController {
         return Optional.ofNullable(getAccountResource(
                 accountService.applyCommand(id, AccountCommand.CONFIRM_ACCOUNT)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("The command could not be applied"));
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @GetMapping(path = "/accounts/{id}/commands/activate")
@@ -82,7 +89,7 @@ public class AccountController {
         return Optional.ofNullable(getAccountResource(
                 accountService.applyCommand(id, AccountCommand.ACTIVATE_ACCOUNT)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("The command could not be applied"));
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @GetMapping(path = "/accounts/{id}/commands/suspend")
@@ -90,7 +97,7 @@ public class AccountController {
         return Optional.ofNullable(getAccountResource(
                 accountService.applyCommand(id, AccountCommand.SUSPEND_ACCOUNT)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("The command could not be applied"));
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @GetMapping(path = "/accounts/{id}/commands/archive")
@@ -98,7 +105,7 @@ public class AccountController {
         return Optional.ofNullable(getAccountResource(
                 accountService.applyCommand(id, AccountCommand.ARCHIVE_ACCOUNT)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElseThrow(() -> new IllegalArgumentException("The command could not be applied"));
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     /**

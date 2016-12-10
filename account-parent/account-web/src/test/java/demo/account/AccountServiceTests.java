@@ -70,6 +70,7 @@ public class AccountServiceTests {
         accountEvent.setEventId(1L);
 
         given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.exists(1L)).willReturn(true);
         given(this.accountRepository.save(account)).willReturn(account);
         given(this.eventService.createEvent(new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED)))
                 .willReturn(accountEvent);
@@ -91,6 +92,7 @@ public class AccountServiceTests {
         accountEvent.setEventId(1L);
 
         given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.exists(1L)).willReturn(true);
         given(this.accountRepository.save(account)).willReturn(account);
         given(this.eventService.createEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED)))
                 .willReturn(accountEvent);
@@ -112,6 +114,7 @@ public class AccountServiceTests {
         accountEvent.setEventId(1L);
 
         given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.exists(1L)).willReturn(true);
         given(this.accountRepository.save(account)).willReturn(account);
         given(this.eventService.createEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED)))
                 .willReturn(accountEvent);
@@ -133,6 +136,7 @@ public class AccountServiceTests {
         accountEvent.setEventId(1L);
 
         given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.exists(1L)).willReturn(true);
         given(this.accountRepository.save(account)).willReturn(account);
         given(this.eventService.createEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED)))
                 .willReturn(accountEvent);
@@ -154,6 +158,7 @@ public class AccountServiceTests {
         accountEvent.setEventId(1L);
 
         given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.exists(1L)).willReturn(true);
         given(this.accountRepository.save(account)).willReturn(account);
         given(this.eventService.createEvent(new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED)))
                 .willReturn(accountEvent);
@@ -175,6 +180,7 @@ public class AccountServiceTests {
         accountEvent.setEventId(1L);
 
         given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.exists(1L)).willReturn(true);
         given(this.accountRepository.save(account)).willReturn(account);
         given(this.eventService.createEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED)))
                 .willReturn(accountEvent);

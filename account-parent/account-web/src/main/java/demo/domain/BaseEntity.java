@@ -7,10 +7,11 @@ import org.springframework.hateoas.ResourceSupport;
 
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
+import java.io.Serializable;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class BaseEntity extends ResourceSupport {
+public class BaseEntity extends ResourceSupport implements Serializable {
 
     @CreatedDate
     private Long createdAt;
