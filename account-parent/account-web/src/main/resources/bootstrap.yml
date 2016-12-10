@@ -1,5 +1,4 @@
 spring:
   application:
     name: account-web
-server:
-  port: 0
+---

@@ -10,3 +10,5 @@ spring:
         output:
           destination: account
           contentType: 'application/json'
+server:
+  port: 0

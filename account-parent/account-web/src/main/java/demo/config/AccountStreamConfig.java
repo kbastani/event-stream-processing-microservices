@@ -1,4 +1,4 @@
-package demo;
+package demo.config;
 
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;

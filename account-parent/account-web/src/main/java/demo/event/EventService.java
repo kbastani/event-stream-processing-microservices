@@ -50,23 +50,18 @@ public class EventService {
      * @param event is the {@link AccountEvent} to publish to the account stream
      * @return a hypermedia {@link AccountEvent} resource
      */
-    public Resource<AccountEvent> createEvent(AccountEvent event) {
-        Resource<AccountEvent> eventResource = null;
-
+    public AccountEvent createEvent(AccountEvent event) {
         // Save new event
         event = addEvent(event);
         Assert.notNull(event, "The event could not be appended to the account");
 
-        // Create account event resource
-        eventResource = getAccountEventResource(event);
-
         // Append the account event to the stream
         accountStreamSource.output()
                 .send(MessageBuilder
-                        .withPayload(eventResource)
+                        .withPayload(getAccountEventResource(event))
                         .build());
 
-        return eventResource;
+        return event;
     }
 
     /**

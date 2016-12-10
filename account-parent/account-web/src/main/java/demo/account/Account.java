@@ -36,6 +36,13 @@ public class Account extends BaseEntity {
         status = AccountStatus.ACCOUNT_CREATED;
     }
 
+    public Account(Long userId, String accountNumber, Boolean defaultAccount) {
+        this();
+        this.accountNumber = accountNumber;
+        this.defaultAccount = defaultAccount;
+        this.userId = userId;
+    }
+
     public Account(String accountNumber, Boolean defaultAccount, AccountStatus status) {
         this.accountNumber = accountNumber;
         this.defaultAccount = defaultAccount;

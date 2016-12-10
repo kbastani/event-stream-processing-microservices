@@ -1,4 +1,4 @@
-package demo;
+package demo.config;
 
 import demo.account.Account;
 import demo.account.AccountController;
