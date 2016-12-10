@@ -34,6 +34,6 @@ public class EventController {
     public ResponseEntity getEvent(@PathVariable Long id) {
         return Optional.ofNullable(eventService.getEvent(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
-                .orElse(new ResponseEntity<AccountEvent>(HttpStatus.NOT_FOUND));
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }

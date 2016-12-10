@@ -67,8 +67,8 @@ public class EventService {
      * @param id is the unique identifier for the {@link AccountEvent}
      * @return an {@link AccountEvent}
      */
-    public AccountEvent getEvent(Long id) {
-        return eventRepository.findOne(id);
+    public Resource<AccountEvent> getEvent(Long id) {
+        return getAccountEventResource(eventRepository.findOne(id));
     }
 
     /**
