@@ -12,12 +12,14 @@ The `account-worker` is a _Spring Cloud Stream_ application that drives the stat
 
 The code snippet below describes a single state machine transition.
 
-    // Describe state machine transitions for accounts
-    transitions.withExternal()
-            .source(AccountStatus.ACCOUNT_CREATED)
-            .target(AccountStatus.ACCOUNT_PENDING)
-            .event(AccountEventType.ACCOUNT_CREATED)
-            .action(createAccount())
+```java
+// Describe state machine transitions for accounts
+transitions.withExternal()
+        .source(AccountStatus.ACCOUNT_CREATED)
+        .target(AccountStatus.ACCOUNT_PENDING)
+        .event(AccountEventType.ACCOUNT_CREATED)
+        .action(createAccount())
+```
 
 The `/src/main/java/demo/config/StateMachineConfig.java` class configures a state machine using the _Spring Statemachine_ project. The snippet above describes the first transition of a state machine for the `Account` resource. Here we see that the source state is `ACCOUNT_CREATED` and the target state is `ACCOUNT_PENDING`. We also see that the state transition is triggered by an `ACCOUNT_CREATED` event. Finally, we see that an action method named `createAccount` is mapped to this state transition.
 
@@ -27,11 +29,13 @@ Each time an `AccountEvent` is received by the stream listener in the `AccountEv
 
 As we saw earlier in the configuration of state machine transitions, an action can be mapped to a function. In the `StateMachineConfig` class we'll find multiple bean definitions that correspond to transition actions. For example, earlier we saw the method triggered for a transition triggered by an `ACCOUNT_CREATED` event that mapped to an action named `createAccount`. Let's see the definition of that method.
 
-    @Bean
-    public Action<AccountStatus, AccountEventType> createAccount() {
-        return context -> applyEvent(context,
-          new CreateAccountFunction(context));
-    }
+```java
+@Bean
+public Action<AccountStatus, AccountEventType> createAccount() {
+    return context -> applyEvent(context,
+      new CreateAccountFunction(context));
+}
+```
 
 The `createAccount` method returns an executable action that passes the state context to a method named `applyEvent`. The `applyEvent` method is a step function that replicates the current state of an `Account` resource.
 
@@ -39,44 +43,48 @@ Since a state machine is replicated in-memory each time an `AccountEvent` is pro
 
 When the state machine is finished replicating, it will attempt to apply the `AccountEvent` for this context to an action mapped function. We can find each of the function classes for state transitions inside the `/src/main/java/demo/function` package.
 
-    .
-    ├── /src/main/java/demo/function
-        ├── AccountFunction.java
-        ├── ActivateAccountFunction.java
-        ├── ArchiveAccountFunction.java
-        ├── ConfirmAccountFunction.java
-        ├── CreateAccountFunction.java
-        ├── SuspendAccountFunction.java
-        ├── UnarchiveAccountFunction.java
-        └── UnsuspendAccountFunction.java
+```bash
+.
+├── /src/main/java/demo/function
+    ├── AccountFunction.java
+    ├── ActivateAccountFunction.java
+    ├── ArchiveAccountFunction.java
+    ├── ConfirmAccountFunction.java
+    ├── CreateAccountFunction.java
+    ├── SuspendAccountFunction.java
+    ├── UnarchiveAccountFunction.java
+    └── UnsuspendAccountFunction.java
+```
 
 The `AccountFunction` abstract class is extended by each of the other classes inside of the `function` package. Since we're using hypermedia to drive the state of the application, each function is immutable and stateless. In this reference application we can either define the task inside an `AccountFunction` class, or we can use a `Consumer<T>`, which is a Java 8 lambda expression, to apply an `AccountEvent` to an `Account` resource.
 
 Let's go back to the `StateMachineConfig` class and look at an example of an action mapped function that uses a lambda expression.
 
-    @Bean
-    public Action<AccountStatus, AccountEventType> confirmAccount() {
-        return context -> {
-            // Map the account action to a Java 8 lambda function
-            ConfirmAccountFunction accountFunction;
+```java
+@Bean
+public Action<AccountStatus, AccountEventType> confirmAccount() {
+    return context -> {
+        // Map the account action to a Java 8 lambda function
+        ConfirmAccountFunction accountFunction;
 
-            accountFunction = new ConfirmAccountFunction(context, event -> {
-                // Get the account resource for the event
-                Traverson traverson = new Traverson(
-                        URI.create(event.getLink("account").getHref()),
-                        MediaTypes.HAL_JSON
-                );
+        accountFunction = new ConfirmAccountFunction(context, event -> {
+            // Get the account resource for the event
+            Traverson traverson = new Traverson(
+                    URI.create(event.getLink("account").getHref()),
+                    MediaTypes.HAL_JSON
+            );
 
-                // Follow the command resource to activate the account
-                Account account = traverson.follow("commands")
-                        .follow("activate")
-                        .toEntity(Account.class)
-                        .getBody();
-            });
+            // Follow the command resource to activate the account
+            Account account = traverson.follow("commands")
+                    .follow("activate")
+                    .toEntity(Account.class)
+                    .getBody();
+        });
 
-            applyEvent(context, accountFunction);
-        };
-    }
+        applyEvent(context, accountFunction);
+    };
+}
+```
 
 The snippet above shows the definition of the `confirmAccount` action. Here we see a stateless function that uses a `Traverson` client to follow hypermedia links of the `AccountEvent` resource in a workflow that activates the `Account`. Since the embedded hypermedia links provide the full context of an `AccountEvent` resource, we can implement this function from anywhere—_even as a serverless function_!
 

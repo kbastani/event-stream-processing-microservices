@@ -14,6 +14,7 @@ Demonstrated concepts:
 - Compensating Transactions
 - Eventual Consistency
 - Hypermedia Event Logs
+- Serverless Functions
 
 Spring projects used:
 
