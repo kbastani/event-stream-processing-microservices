@@ -44,9 +44,14 @@ public class AccountServiceTests {
 
     @Test
     public void createAccountReturnsAccount() throws Exception {
-        Account expected = new Account(1L, "123456789", true);
-        expected.setUserId(1L);
-        Account actual = accountService.createAccount(expected);
+        Account account = new Account(1L, "123456789", true);
+        account.setUserId(1L);
+        account.setAccountId(1L);
+
+        given(this.accountRepository.findOne(1L)).willReturn(account);
+        given(this.accountRepository.save(account)).willReturn(account);
+
+        Account actual = accountService.createAccount(account);
 
         assertThat(actual).isNotNull();
         assertThat(actual.getStatus()).isEqualTo(AccountStatus.ACCOUNT_CREATED);
