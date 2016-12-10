@@ -3,12 +3,8 @@ package demo.event;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.account.Account;
 import demo.domain.BaseEntity;
-import demo.log.Log;
-import org.springframework.data.rest.core.annotation.RestResource;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * The domain event {@link AccountEvent} tracks the type and state of events as
@@ -16,13 +12,11 @@ import java.util.Set;
  * to event source the aggregate state of {@link Account}.
  * <p>
  * This event resource also provides a transaction log that can be used to append
- * actions to the event. The collection of {@link Log} items can be used to remediate
- * partial failures.
+ * actions to the event.
  *
  * @author kbastani
  */
 @Entity
-@RestResource(path = "events", rel = "events")
 public class AccountEvent extends BaseEntity {
 
     @Id
@@ -32,13 +26,9 @@ public class AccountEvent extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AccountEventType type;
 
-    @OneToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JsonIgnore
     private Account account;
-
-    @OneToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<Log> logs = new HashSet<>();
 
     public AccountEvent() {
     }
@@ -72,21 +62,12 @@ public class AccountEvent extends BaseEntity {
         this.account = account;
     }
 
-    public Set<Log> getLogs() {
-        return logs;
-    }
-
-    public void setLogs(Set<Log> logs) {
-        this.logs = logs;
-    }
-
     @Override
     public String toString() {
         return "AccountEvent{" +
                 "id=" + id +
                 ", type=" + type +
                 ", account=" + account +
-                ", logs=" + logs +
                 "} " + super.toString();
     }
 }

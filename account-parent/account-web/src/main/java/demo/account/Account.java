@@ -82,6 +82,7 @@ public class Account extends BaseEntity {
         this.defaultAccount = defaultAccount;
     }
 
+    @JsonIgnore
     public Set<AccountEvent> getEvents() {
         return events;
     }

@@ -2,12 +2,9 @@ package demo.event;
 
 import demo.account.Account;
 import demo.account.AccountController;
-import demo.log.Log;
-import demo.log.LogRepository;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 import org.springframework.hateoas.Resource;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -32,15 +29,10 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 public class EventService {
 
     private final EventRepository eventRepository;
-    private final LogRepository logRepository;
-    private final RepositoryEntityLinks entityLinks;
     private final Source accountStreamSource;
 
-    public EventService(EventRepository eventRepository, LogRepository logRepository,
-                        RepositoryEntityLinks entityLinks, Source accountStreamSource) {
+    public EventService(EventRepository eventRepository, Source accountStreamSource) {
         this.eventRepository = eventRepository;
-        this.logRepository = logRepository;
-        this.entityLinks = entityLinks;
         this.accountStreamSource = accountStreamSource;
     }
 
@@ -89,29 +81,6 @@ public class EventService {
     }
 
     /**
-     * Append a {@link Log} to an {@link AccountEvent} entity.
-     *
-     * @param eventId is the unique identifier for an {@link AccountEvent}
-     * @param log     is the {@link Log} descirbing an action performed on an {@link AccountEvent}
-     * @return a hypermedia resource for the appended {@link Log}
-     */
-    public Resource<Log> appendEventLog(Long eventId, Log log) {
-        Assert.notNull(eventId);
-        Assert.notNull(log);
-
-        Resource<Log> logResource = null;
-        AccountEvent event = getEvent(eventId);
-
-        Assert.notNull(event, "The event with the supplied id could not be found");
-
-        log = logRepository.save(log);
-        event.getLogs().add(log);
-        logResource = getLogResource(log, event);
-
-        return logResource;
-    }
-
-    /**
      * Get {@link AccountEvents} for the supplied {@link Account} identifier.
      *
      * @param id is the unique identifier of the {@link Account}
@@ -120,24 +89,6 @@ public class EventService {
     public AccountEvents getEvents(Long id) {
         Page<AccountEvent> events = eventRepository.findAccountEventsByAccountId(id, new PageRequest(0, Integer.MAX_VALUE));
         return new AccountEvents(id, events);
-    }
-
-    /**
-     * Gets a hypermedia resource for a {@link Log} entity.
-     *
-     * @param log   is the {@link Log} descirbing an action performed on an {@link AccountEvent}
-     * @param event is the {@link AccountEvent} to associate with the {@link Log}
-     * @return a hypermedia resource for the appended {@link Log}
-     */
-    private Resource<Log> getLogResource(Log log, AccountEvent event) {
-        return new Resource<>(log, Arrays.asList(
-                entityLinks.linkFor(Log.class)
-                        .slash(log.getLogId())
-                        .withSelfRel(),
-                entityLinks.linkFor(AccountEvent.class)
-                        .slash(event.getId())
-                        .withRel("event")
-        ));
     }
 
     /**

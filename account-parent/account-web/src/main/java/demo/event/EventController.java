@@ -1,6 +1,5 @@
 package demo.event;
 
-import demo.log.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +35,5 @@ public class EventController {
         return Optional.ofNullable(eventService.getEvent(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElse(new ResponseEntity<AccountEvent>(HttpStatus.NOT_FOUND));
-    }
-
-    @PostMapping(path = "/events/{id}/logs")
-    public ResponseEntity appendEventLog(@PathVariable Long id, @RequestBody Log log) {
-        return Optional.ofNullable(eventService.appendEventLog(id, log))
-                .map(l -> new ResponseEntity<>(l, HttpStatus.CREATED))
-                .orElseThrow(() -> new IllegalArgumentException("Append to event log failed"));
     }
 }
