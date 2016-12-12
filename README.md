@@ -24,6 +24,14 @@ Spring projects used:
 - [Spring Cloud Data Flow](https://cloud.spring.io/spring-cloud-dataflow/)
 - [Spring Statemachine](https://projects.spring.io/spring-statemachine/)
 
+## Architecture
+
+Each microservice in this reference architecture breaks down into three different independently deployable components.
+
+![Account microservice](http://i.imgur.com/kjT4shO.png)
+
+The diagram above details the system architecture of the bounded context for _Accounts_, which includes deployable units for each [Backing Service](https://12factor.net/backing-services), [Microservice](https://en.wikipedia.org/wiki/Microservices), and [AWS Lambda Function](https://en.wikipedia.org/wiki/AWS_Lambda).
+
 ## Usage
 
 The repository contains two parent projects. Each microservice team is responsible for two separate component modules. The first component is the HTTP-driven web service for managing domain entities through a hypermedia-based REST API. The second component is an AMQP-driven event processor that drives the state of domain aggregates.
@@ -77,6 +85,11 @@ Trade-offs:
 * Requires more application instances
 * Higher operational complexity
 * Requires two independent CI/CD pipelines
+
+
+#### Serverless Functions
+
+Each bounded context in this reference architecture contains a set of _action-mapped functions_ that can be deployed as Serverless functions. To learn more about how this works in practice, please take a look at the documentation for the [account-worker](https://github.com/kbastani/event-stream-processing-microservices/tree/master/account-parent/account-worker) application.
 
 # License
 
