@@ -1,6 +1,6 @@
-[submodule "account-parent/functions/create-account-function"]
-	path = account-parent/functions/create-account-function
-	url = https://github.com/kbastani/create-account-function.git
+[submodule "account-parent/functions/account-created-function"]
+	path = account-parent/functions/account-created-function
+	url = https://github.com/event-stream-processing-microservices/account-created-function.git
 [submodule "account-parent/functions/account-confirmed-function"]
 	path = account-parent/functions/account-confirmed-function
 	url = https://github.com/event-stream-processing-microservices/account-confirmed-function.git
