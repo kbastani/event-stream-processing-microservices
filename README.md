@@ -28,7 +28,7 @@ Spring projects used:
 
 Each microservice in this reference architecture breaks down into three different independently deployable components.
 
-![Account microservice](http://i.imgur.com/J0mMre7.png)
+![Account microservice](http://i.imgur.com/WZTR4lQ.png)
 
 The diagram above details the system architecture of the bounded context for _Accounts_, which includes deployable units for each [Backing Service](https://12factor.net/backing-services), [Microservice](https://en.wikipedia.org/wiki/Microservices), and [AWS Lambda Function](https://en.wikipedia.org/wiki/AWS_Lambda).
 
