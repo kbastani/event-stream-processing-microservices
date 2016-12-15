@@ -7,3 +7,15 @@
 [submodule "account-parent/functions/account-suspended-function"]
 	path = account-parent/functions/account-suspended-function
 	url = https://github.com/event-stream-processing-microservices/account-suspended-function.git
+[submodule "account-parent/functions/account-activated-function"]
+	path = account-parent/functions/account-activated-function
+	url = https://github.com/event-stream-processing-microservices/account-activated-function.git
+[submodule "account-parent/functions/account-archived-function"]
+	path = account-parent/functions/account-archived-function
+	url = https://github.com/event-stream-processing-microservices/account-archived-function.git
+[submodule "account-parent/functions/account-unsuspended-function"]
+	path = account-parent/functions/account-unsuspended-function
+	url = https://github.com/event-stream-processing-microservices/account-unsuspended-function.git
+[submodule "account-parent/functions/account-unarchived-function"]
+	path = account-parent/functions/account-unarchived-function
+	url = https://github.com/event-stream-processing-microservices/account-unarchived-function.git
