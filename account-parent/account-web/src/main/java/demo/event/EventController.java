@@ -16,9 +16,9 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    @PostMapping(path = "/events")
-    public ResponseEntity createEvent(@RequestBody AccountEvent event) {
-        return Optional.ofNullable(eventService.createEvent(event))
+    @PostMapping(path = "/events/{id}")
+    public ResponseEntity createEvent(@RequestBody AccountEvent event, @PathVariable Long id) {
+        return Optional.ofNullable(eventService.createEvent(id, event, ConsistencyModel.ACID))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
                 .orElseThrow(() -> new IllegalArgumentException("Event creation failed"));
     }

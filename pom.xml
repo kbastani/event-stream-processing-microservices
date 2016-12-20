@@ -25,6 +25,7 @@
         <module>order-parent</module>
         <module>user-parent</module>
         <module>warehouse-parent</module>
+        <module>spring-boot-starter-aws-lambda</module>
     </modules>
 
     <dependencies>

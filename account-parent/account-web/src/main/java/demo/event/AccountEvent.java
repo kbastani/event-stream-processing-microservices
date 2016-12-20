@@ -26,7 +26,7 @@ public class AccountEvent extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AccountEventType type;
 
-    @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Account account;
 

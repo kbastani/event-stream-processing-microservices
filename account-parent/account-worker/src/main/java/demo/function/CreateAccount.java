@@ -12,7 +12,7 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * The {@link AccountFunction} is an abstraction used to map actions that are triggered by
@@ -21,16 +21,16 @@ import java.util.function.Consumer;
  *
  * @author kbastani
  */
-public class CreateAccountFunction extends AccountFunction {
+public class CreateAccount extends AccountFunction {
 
-    final private Logger log = Logger.getLogger(CreateAccountFunction.class);
+    final private Logger log = Logger.getLogger(CreateAccount.class);
 
-    public CreateAccountFunction(StateContext<AccountStatus, AccountEventType> context) {
+    public CreateAccount(StateContext<AccountStatus, AccountEventType> context) {
         this(context, null);
     }
 
-    public CreateAccountFunction(StateContext<AccountStatus, AccountEventType> context,
-                                 Consumer<AccountEvent> function) {
+    public CreateAccount(StateContext<AccountStatus, AccountEventType> context,
+                         Function<AccountEvent, Account> function) {
         super(context, function);
     }
 
@@ -40,7 +40,10 @@ public class CreateAccountFunction extends AccountFunction {
      * @param event is the {@link AccountEvent} for this context
      */
     @Override
-    public void apply(AccountEvent event) {
+    public Account apply(AccountEvent event) {
+
+        Account account;
+
         log.info("Executing workflow for a created account...");
 
         // Create a traverson for the root account
@@ -50,7 +53,7 @@ public class CreateAccountFunction extends AccountFunction {
         );
 
         // Get the account resource attached to the event
-        Account account = traverson.follow("self")
+        account = traverson.follow("self")
                 .toEntity(Account.class)
                 .getBody();
 
@@ -68,6 +71,10 @@ public class CreateAccountFunction extends AccountFunction {
             log.info(event.getType() + ": " +
                     event.getLink("account").getHref());
         }
+
+        context.getExtendedState().getVariables().put("account", account);
+
+        return account;
     }
 
     /**

@@ -14,4 +14,8 @@ spring:
           consumer:
             durableSubscription: true
 server:
-  port: 0
+  port: 8081
+amazon:
+  aws:
+    access-key-id: replace
+    access-key-secret: replace

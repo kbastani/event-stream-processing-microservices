@@ -1,5 +1,5 @@
 name: account-web
-memory: 512M
+memory: 1024M
 instances: 1
 path: ./target/account-web-0.0.1-SNAPSHOT.jar
 buildpack: java_buildpack

@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableCaching
-public class CacheConfiguration {
+public class CacheConfig {
 
     @Bean
     public JedisConnectionFactory redisConnectionFactory(

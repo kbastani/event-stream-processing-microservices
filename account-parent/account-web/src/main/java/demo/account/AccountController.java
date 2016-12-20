@@ -136,12 +136,12 @@ public class AccountController {
      */
     private Resource<Account> createAccountResource(Account account) {
         Assert.notNull(account, "Account body must not be null");
-        Assert.notNull(account.getUserId(), "UserId is required");
-        Assert.notNull(account.getAccountNumber(), "AccountNumber is required");
-        Assert.notNull(account.getDefaultAccount(), "DefaultAccount is required");
+        Assert.notNull(account.getEmail(), "Email is required");
+        Assert.notNull(account.getFirstName(), "First name is required");
+        Assert.notNull(account.getLastName(), "Last name is required");
 
         // Create the new account
-        account = accountService.createAccount(account);
+        account = accountService.registerAccount(account);
 
         return getAccountResource(account);
     }

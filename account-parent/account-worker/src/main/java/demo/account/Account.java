@@ -12,36 +12,36 @@ import demo.event.AccountEvent;
  * @author kbastani
  */
 public class Account extends BaseEntity {
-    private Long userId;
-    private String accountNumber;
-    private Boolean defaultAccount;
+    private String firstName;
+    private String lastName;
+    private String email;
     private AccountStatus status;
 
     public Account() {
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public Boolean getDefaultAccount() {
-        return defaultAccount;
+    public String getEmail() {
+        return email;
     }
 
-    public void setDefaultAccount(Boolean defaultAccount) {
-        this.defaultAccount = defaultAccount;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public AccountStatus getStatus() {
@@ -50,14 +50,5 @@ public class Account extends BaseEntity {
 
     public void setStatus(AccountStatus status) {
         this.status = status;
-    }
-
-    @Override
-    public String toString() {
-        return "Account{" +
-                "userId=" + userId +
-                ", accountNumber='" + accountNumber + '\'' +
-                ", defaultAccount=" + defaultAccount +
-                "} " + super.toString();
     }
 }

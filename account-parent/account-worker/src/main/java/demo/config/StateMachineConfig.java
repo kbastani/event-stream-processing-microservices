@@ -150,13 +150,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
      * to ACCOUNT_PENDING.
      * <p>
      * The body of this method shows an example of how to map an {@link AccountFunction} to a function
-     * defined in a class method of {@link CreateAccountFunction}.
+     * defined in a class method of {@link CreateAccount}.
      *
      * @return an implementation of {@link Action} that includes a function to execute
      */
     @Bean
     public Action<AccountStatus, AccountEventType> createAccount() {
-        return context -> applyEvent(context, new CreateAccountFunction(context));
+        return context -> applyEvent(context, new CreateAccount(context));
     }
 
     /**
@@ -164,7 +164,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
      * to ACCOUNT_CONFIRMED.
      * <p>
      * The body of this method shows an example of how to use a {@link java.util.function.Consumer} Java 8
-     * lambda function instead of the class method definition that was shown in {@link CreateAccountFunction}.
+     * lambda function instead of the class method definition that was shown in {@link CreateAccount}.
      *
      * @return an implementation of {@link Action} that includes a function to execute
      */
@@ -172,9 +172,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     public Action<AccountStatus, AccountEventType> confirmAccount() {
         return context -> {
             // Map the account action to a Java 8 lambda function
-            ConfirmAccountFunction accountFunction;
+            ConfirmAccount accountFunction;
 
-            accountFunction = new ConfirmAccountFunction(context, event -> {
+            accountFunction = new ConfirmAccount(context, event -> {
                 // Get the account resource for the event
                 Traverson traverson = new Traverson(
                         URI.create(event.getLink("account").getHref()),
@@ -188,6 +188,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
                         .getBody();
 
                 log.info(event.getType() + ": " + event.getLink("account").getHref());
+
+                return account;
             });
 
             applyEvent(context, accountFunction);
@@ -203,9 +205,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     @Bean
     public Action<AccountStatus, AccountEventType> activateAccount() {
         return context -> applyEvent(context,
-                new ActivateAccountFunction(context,
-                        event -> log.info(event.getType() + ": " +
-                                event.getLink("account").getHref())));
+                new ActivateAccount(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("account").getHref());
+                    // Get the account resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("account").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Account.class)
+                            .getBody();
+                }));
     }
 
     /**
@@ -217,9 +228,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     @Bean
     public Action<AccountStatus, AccountEventType> archiveAccount() {
         return context -> applyEvent(context,
-                new ArchiveAccountFunction(context,
-                        event -> log.info(event.getType() + ": " +
-                                event.getLink("account").getHref())));
+                new ArchiveAccount(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("account").getHref());
+                    // Get the account resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("account").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Account.class)
+                            .getBody();
+                }));
     }
 
     /**
@@ -231,9 +251,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     @Bean
     public Action<AccountStatus, AccountEventType> suspendAccount() {
         return context -> applyEvent(context,
-                new SuspendAccountFunction(context,
-                        event -> log.info(event.getType() + ": " +
-                                event.getLink("account").getHref())));
+                new SuspendAccount(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("account").getHref());
+                    // Get the account resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("account").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Account.class)
+                            .getBody();
+                }));
     }
 
     /**
@@ -245,9 +274,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     @Bean
     public Action<AccountStatus, AccountEventType> unarchiveAccount() {
         return context -> applyEvent(context,
-                new UnarchiveAccountFunction(context,
-                        event -> log.info(event.getType() + ": " +
-                                event.getLink("account").getHref())));
+                new UnarchiveAccount(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("account").getHref());
+                    // Get the account resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("account").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Account.class)
+                            .getBody();
+                }));
     }
 
     /**
@@ -259,9 +297,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Accoun
     @Bean
     public Action<AccountStatus, AccountEventType> unsuspendAccount() {
         return context -> applyEvent(context,
-                new UnsuspendAccountFunction(context,
-                        event -> log.info(event.getType() + ": " +
-                                event.getLink("account").getHref())));
+                new UnsuspendAccount(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("account").getHref());
+                    // Get the account resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("account").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Account.class)
+                            .getBody();
+                }));
     }
 }
 

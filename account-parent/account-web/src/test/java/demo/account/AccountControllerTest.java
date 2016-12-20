@@ -30,9 +30,9 @@ public class AccountControllerTest {
 
     @Test
     public void getUserAccountResourceShouldReturnAccount() throws Exception {
-        String content = "{\"userId\": 1, \"accountNumber\": \"123456789\", \"defaultAccount\": true}";
+        String content = "{\"firstName\": \"Jane\", \"lastName\": \"Doe\", \"email\": \"jane.doe@example.com\"}";
 
-        Account account = new Account(1L, "123456789", true);
+        Account account = new Account("Jane", "Doe", "jane.doe@example.com");
 
         given(this.accountService.getAccount(1L))
                 .willReturn(account);

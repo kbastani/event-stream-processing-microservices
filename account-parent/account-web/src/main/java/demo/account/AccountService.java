@@ -3,20 +3,19 @@ package demo.account;
 import demo.event.AccountEvent;
 import demo.event.AccountEventType;
 import demo.event.EventService;
+import demo.event.ConsistencyModel;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 import static demo.account.AccountStatus.*;
-import static demo.account.AccountStatus.ACCOUNT_ACTIVE;
-import static demo.account.AccountStatus.ACCOUNT_ARCHIVED;
 
 /**
  * The {@link AccountService} provides transactional support for managing {@link Account}
@@ -28,16 +27,36 @@ import static demo.account.AccountStatus.ACCOUNT_ARCHIVED;
  * @author kbastani
  */
 @Service
-@Transactional
 @CacheConfig(cacheNames = {"accounts"})
 public class AccountService {
 
     private final AccountRepository accountRepository;
     private final EventService eventService;
+    private final CacheManager cacheManager;
 
-    public AccountService(AccountRepository accountRepository, EventService eventService) {
+    public AccountService(AccountRepository accountRepository, EventService eventService, CacheManager cacheManager) {
         this.accountRepository = accountRepository;
         this.eventService = eventService;
+        this.cacheManager = cacheManager;
+    }
+
+    @CacheEvict(cacheNames = "accounts", key = "#account.getAccountId().toString()")
+    public Account registerAccount(Account account) {
+
+        account = createAccount(account);
+
+        cacheManager.getCache("accounts")
+                .evict(account.getAccountId());
+
+        // Trigger the account creation event
+        AccountEvent event = appendEvent(account.getAccountId(),
+                new AccountEvent(AccountEventType.ACCOUNT_CREATED));
+
+        // Attach account identifier
+        event.getAccount().setAccountId(account.getAccountId());
+
+        // Return the result
+        return event.getAccount();
     }
 
     /**
@@ -48,18 +67,13 @@ public class AccountService {
      */
     @CacheEvict(cacheNames = "accounts", key = "#account.getAccountId().toString()")
     public Account createAccount(Account account) {
+
         // Assert for uniqueness constraint
-        Assert.isNull(accountRepository.findAccountByUserId(account.getUserId()),
-                "An account with the supplied userId already exists");
-        Assert.isNull(accountRepository.findAccountByAccountNumber(account.getAccountNumber()),
-                "An account with the supplied account number already exists");
+        Assert.isNull(accountRepository.findAccountByEmail(account.getEmail()),
+                "An account with the supplied email already exists");
 
         // Save the account to the repository
-        account = accountRepository.save(account);
-
-        // Trigger the account creation event
-        appendEvent(account.getAccountId(),
-                new AccountEvent(AccountEventType.ACCOUNT_CREATED));
+        account = accountRepository.saveAndFlush(account);
 
         return account;
     }
@@ -98,9 +112,9 @@ public class AccountService {
                 "The account with the supplied id does not exist");
 
         Account currentAccount = accountRepository.findOne(id);
-        currentAccount.setUserId(account.getUserId());
-        currentAccount.setAccountNumber(account.getAccountNumber());
-        currentAccount.setDefaultAccount(account.getDefaultAccount());
+        currentAccount.setEmail(account.getEmail());
+        currentAccount.setFirstName(account.getFirstName());
+        currentAccount.setLastName(account.getLastName());
         currentAccount.setStatus(account.getStatus());
 
         return accountRepository.save(currentAccount);
@@ -127,12 +141,24 @@ public class AccountService {
      * @return the newly appended {@link AccountEvent}
      */
     public AccountEvent appendEvent(Long accountId, AccountEvent event) {
+        return appendEvent(accountId, event, ConsistencyModel.ACID);
+    }
+
+    /**
+     * Append a new {@link AccountEvent} to the {@link Account} reference for the supplied identifier.
+     *
+     * @param accountId is the unique identifier for the {@link Account}
+     * @param event     is the {@link AccountEvent} to append to the {@link Account} entity
+     * @return the newly appended {@link AccountEvent}
+     */
+    public AccountEvent appendEvent(Long accountId, AccountEvent event, ConsistencyModel consistencyModel) {
         Account account = getAccount(accountId);
         Assert.notNull(account, "The account with the supplied id does not exist");
         event.setAccount(account);
-        event = eventService.createEvent(event);
+        event = eventService.createEvent(accountId, event);
         account.getEvents().add(event);
-        accountRepository.save(account);
+        accountRepository.saveAndFlush(account);
+        eventService.raiseEvent(event, consistencyModel);
         return event;
     }
 
@@ -158,8 +184,9 @@ public class AccountService {
                 // Confirm the account
                 Account updateAccount = account;
                 updateAccount.setStatus(ACCOUNT_CONFIRMED);
-                account = this.updateAccount(id, updateAccount);
-                this.appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED));
+                this.updateAccount(id, updateAccount);
+                this.appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED))
+                        .getAccount();
                 break;
             case ACTIVATE_ACCOUNT:
                 Assert.isTrue(status != ACCOUNT_ACTIVE, "The account is already active");
@@ -168,8 +195,9 @@ public class AccountService {
 
                 // Activate the account
                 account.setStatus(ACCOUNT_ACTIVE);
-                account = this.updateAccount(id, account);
-                this.appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED));
+                this.updateAccount(id, account);
+                this.appendEvent(id, new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED))
+                        .getAccount();
                 break;
             case SUSPEND_ACCOUNT:
                 Assert.isTrue(status == ACCOUNT_ACTIVE, "An inactive account cannot be suspended");

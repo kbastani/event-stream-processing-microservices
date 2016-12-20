@@ -1,11 +1,10 @@
-name: account-web
-memory: 512M
+name: account-worker
+memory: 1024M
 instances: 1
-path: ./target/account-web-0.0.1-SNAPSHOT.jar
+path: ./target/account-worker-0.0.1-SNAPSHOT.jar
 buildpack: java_buildpack
 services:
 - rabbit-events
-- redis-cache
 disk_quota: 1024M
-host: account-event-web
+host: account-event-worker
 domain: cfapps.io

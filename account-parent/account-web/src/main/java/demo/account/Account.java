@@ -22,11 +22,12 @@ public class Account extends BaseEntity {
     @Id
     @GeneratedValue
     private Long id;
-    private Long userId;
-    private String accountNumber;
-    private Boolean defaultAccount;
 
-    @OneToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    private String firstName;
+    private String lastName;
+    private String email;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<AccountEvent> events = new HashSet<>();
 
     @Enumerated(value = EnumType.STRING)
@@ -36,17 +37,11 @@ public class Account extends BaseEntity {
         status = AccountStatus.ACCOUNT_CREATED;
     }
 
-    public Account(Long userId, String accountNumber, Boolean defaultAccount) {
+    public Account(String firstName, String lastName, String email) {
         this();
-        this.accountNumber = accountNumber;
-        this.defaultAccount = defaultAccount;
-        this.userId = userId;
-    }
-
-    public Account(String accountNumber, Boolean defaultAccount, AccountStatus status) {
-        this.accountNumber = accountNumber;
-        this.defaultAccount = defaultAccount;
-        this.status = status;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
     }
 
     @JsonIgnore
@@ -58,28 +53,28 @@ public class Account extends BaseEntity {
         this.id = id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public Boolean getDefaultAccount() {
-        return defaultAccount;
+    public String getEmail() {
+        return email;
     }
 
-    public void setDefaultAccount(Boolean defaultAccount) {
-        this.defaultAccount = defaultAccount;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @JsonIgnore
@@ -103,9 +98,10 @@ public class Account extends BaseEntity {
     public String toString() {
         return "Account{" +
                 "id=" + id +
-                ", userId=" + userId +
-                ", accountNumber='" + accountNumber + '\'' +
-                ", defaultAccount=" + defaultAccount +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", events=" + events +
                 ", status=" + status +
                 "} " + super.toString();
     }

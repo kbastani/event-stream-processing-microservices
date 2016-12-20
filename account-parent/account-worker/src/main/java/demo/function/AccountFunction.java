@@ -1,12 +1,13 @@
 package demo.function;
 
+import demo.account.Account;
 import demo.account.AccountStatus;
 import demo.event.AccountEvent;
 import demo.event.AccountEventType;
 import org.apache.log4j.Logger;
 import org.springframework.statemachine.StateContext;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * The {@link AccountFunction} is an abstraction used to map actions that are triggered by
@@ -18,8 +19,8 @@ import java.util.function.Consumer;
 public abstract class AccountFunction {
 
     final private Logger log = Logger.getLogger(AccountFunction.class);
-    final private StateContext<AccountStatus, AccountEventType> context;
-    final private Consumer<AccountEvent> lambda;
+    final protected StateContext<AccountStatus, AccountEventType> context;
+    final protected Function<AccountEvent, Account> lambda;
 
     /**
      * Create a new instance of a class that extends {@link AccountFunction}, supplying
@@ -30,7 +31,7 @@ public abstract class AccountFunction {
      * @param lambda  is the lambda function describing an action that consumes an {@link AccountEvent}
      */
     public AccountFunction(StateContext<AccountStatus, AccountEventType> context,
-                           Consumer<AccountEvent> lambda) {
+                           Function<AccountEvent, Account> lambda) {
         this.context = context;
         this.lambda = lambda;
     }
@@ -41,8 +42,10 @@ public abstract class AccountFunction {
      *
      * @param event is the {@link AccountEvent} to apply to the lambda function
      */
-    public void apply(AccountEvent event) {
+    public Account apply(AccountEvent event) {
         // Execute the lambda function
-        lambda.accept(event);
+        Account result = lambda.apply(event);
+        context.getExtendedState().getVariables().put("account", result);
+        return result;
     }
 }
