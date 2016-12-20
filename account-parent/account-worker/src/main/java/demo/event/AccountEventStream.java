@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.cloud.stream.messaging.Sink;
+import org.springframework.context.annotation.Profile;
 import org.springframework.statemachine.StateMachine;
 
 /**
@@ -15,6 +16,7 @@ import org.springframework.statemachine.StateMachine;
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
+@Profile({ "cloud", "development" })
 public class AccountEventStream {
 
     private EventService eventService;
