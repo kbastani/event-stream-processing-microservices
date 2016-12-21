@@ -56,7 +56,7 @@ public interface LambdaFunctions {
 
 To start invoking your AWS Lambda functions, you can define a new bean that creates a proxy instance of your lambda interface.
 
-```
+```java
 @Configuration
 public class AwsLambdaConfig {
 
@@ -71,7 +71,7 @@ In the example above, we inject the auto-configured `AWSLambdaConfigurerAdapter`
 
 We can now inject the `LambdaFunctions` as a dependency into other Spring components in our application in order to easily invoke remote Lambda functions on AWS.
  
- ```
+ ```java
  @Service
  public class AccountService {
     
