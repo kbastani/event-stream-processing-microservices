@@ -1,0 +1,24 @@
+spring:
+  profiles:
+    active: development
+---
+spring:
+  profiles: development
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: account
+          group: account-group
+          contentType: 'application/json'
+          consumer:
+            durableSubscription: true
+server:
+  port: 8081
+amazon:
+  aws:
+    access-key-id: replace
+    access-key-secret: replace
+---
+spring:
+  profiles: test

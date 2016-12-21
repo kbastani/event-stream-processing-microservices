@@ -1,21 +1,21 @@
-[submodule "account-parent/functions/account-created-function"]
-	path = account-parent/functions/account-created-function
+[submodule "account/functions/account-created-function"]
+	path = account/functions/account-created-function
 	url = https://github.com/event-stream-processing-microservices/account-created-function.git
-[submodule "account-parent/functions/account-confirmed-function"]
-	path = account-parent/functions/account-confirmed-function
+[submodule "account/functions/account-confirmed-function"]
+	path = account/functions/account-confirmed-function
 	url = https://github.com/event-stream-processing-microservices/account-confirmed-function.git
-[submodule "account-parent/functions/account-suspended-function"]
-	path = account-parent/functions/account-suspended-function
+[submodule "account/functions/account-suspended-function"]
+	path = account/functions/account-suspended-function
 	url = https://github.com/event-stream-processing-microservices/account-suspended-function.git
-[submodule "account-parent/functions/account-activated-function"]
-	path = account-parent/functions/account-activated-function
+[submodule "account/functions/account-activated-function"]
+	path = account/functions/account-activated-function
 	url = https://github.com/event-stream-processing-microservices/account-activated-function.git
-[submodule "account-parent/functions/account-archived-function"]
-	path = account-parent/functions/account-archived-function
+[submodule "account/functions/account-archived-function"]
+	path = account/functions/account-archived-function
 	url = https://github.com/event-stream-processing-microservices/account-archived-function.git
-[submodule "account-parent/functions/account-unsuspended-function"]
-	path = account-parent/functions/account-unsuspended-function
+[submodule "account/functions/account-unsuspended-function"]
+	path = account/functions/account-unsuspended-function
 	url = https://github.com/event-stream-processing-microservices/account-unsuspended-function.git
-[submodule "account-parent/functions/account-unarchived-function"]
-	path = account-parent/functions/account-unarchived-function
+[submodule "account/functions/account-unarchived-function"]
+	path = account/functions/account-unarchived-function
 	url = https://github.com/event-stream-processing-microservices/account-unarchived-function.git

@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: development
+---
+spring:
+  profiles: development
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: order
+          contentType: 'application/json'
+  redis:
+    host: localhost
+    port: 6379
+server:
+  port: 8080
