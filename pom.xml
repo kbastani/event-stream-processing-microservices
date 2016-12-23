@@ -29,6 +29,7 @@
         <module>spring-boot-starters</module>
         <module>account</module>
         <module>order</module>
+        <module>payment</module>
     </modules>
 
     <dependencies>

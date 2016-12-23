@@ -1,6 +1,9 @@
 package demo.order;
 
 public enum OrderCommand {
-    // TODO: Create commands
-    TODO
+    CONNECT_ACCOUNT,
+    RESERVE_INVENTORY,
+    CREATE_PAYMENT,
+    CONNECT_PAYMENT,
+    PROCESS_PAYMENT
 }

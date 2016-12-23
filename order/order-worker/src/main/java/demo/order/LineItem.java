@@ -1,16 +1,15 @@
 package demo.order;
 
-/**
- * A simple domain class for the {@link LineItem} concept in the order context.
- *
- * @author Kenny Bastani
- * @author Josh Long
- */
-public class LineItem {
+import java.io.Serializable;
+
+public class LineItem implements Serializable {
 
     private String name, productId;
     private Integer quantity;
     private Double price, tax;
+
+    public LineItem() {
+    }
 
     public LineItem(String name, String productId, Integer quantity,
                     Double price, Double tax) {

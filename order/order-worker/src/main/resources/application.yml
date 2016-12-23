@@ -8,8 +8,8 @@ spring:
     stream:
       bindings:
         input:
-          destination: account
-          group: account-group
+          destination: order
+          group: order-group
           contentType: 'application/json'
           consumer:
             durableSubscription: true

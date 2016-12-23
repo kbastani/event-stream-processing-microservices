@@ -31,7 +31,7 @@ public class Order extends BaseEntity {
     private Address shippingAddress;
 
     public Order() {
-        this.status = OrderStatus.PURCHASED;
+        this.status = OrderStatus.ORDER_CREATED;
     }
 
     public Order(String accountNumber, Address shippingAddress) {

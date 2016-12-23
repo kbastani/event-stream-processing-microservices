@@ -76,10 +76,42 @@ public class OrderController {
                 .orElseThrow(() -> new RuntimeException("The order could not be found"));
     }
 
-    @GetMapping(path = "/orders/{id}/commands/todo")
-    public ResponseEntity confirmOrder(@PathVariable Long id) {
+    @GetMapping(path = "/orders/{id}/commands/connectAccount")
+    public ResponseEntity connectAccount(@PathVariable Long id) {
         return Optional.ofNullable(getOrderResource(
-                orderService.applyCommand(id, OrderCommand.TODO)))
+                orderService.applyCommand(id, OrderCommand.CONNECT_ACCOUNT)))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @GetMapping(path = "/orders/{id}/commands/connectPayment")
+    public ResponseEntity connectPayment(@PathVariable Long id) {
+        return Optional.ofNullable(getOrderResource(
+                orderService.applyCommand(id, OrderCommand.CONNECT_PAYMENT)))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @GetMapping(path = "/orders/{id}/commands/createPayment")
+    public ResponseEntity createPayment(@PathVariable Long id) {
+        return Optional.ofNullable(getOrderResource(
+                orderService.applyCommand(id, OrderCommand.CREATE_PAYMENT)))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @GetMapping(path = "/orders/{id}/commands/processPayment")
+    public ResponseEntity processPayment(@PathVariable Long id) {
+        return Optional.ofNullable(getOrderResource(
+                orderService.applyCommand(id, OrderCommand.PROCESS_PAYMENT)))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @GetMapping(path = "/orders/{id}/commands/reserveInventory")
+    public ResponseEntity reserveInventory(@PathVariable Long id) {
+        return Optional.ofNullable(getOrderResource(
+                orderService.applyCommand(id, OrderCommand.RESERVE_INVENTORY)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -177,17 +209,20 @@ public class OrderController {
         if (orderResource != null) {
             commandResource.add(
                     getCommandLinkBuilder(id)
-                            .slash("confirm")
-                            .withRel("confirm"),
+                            .slash("connectAccount")
+                            .withRel("connectAccount"),
                     getCommandLinkBuilder(id)
-                            .slash("activate")
-                            .withRel("activate"),
+                            .slash("reserveInventory")
+                            .withRel("reserveInventory"),
                     getCommandLinkBuilder(id)
-                            .slash("suspend")
-                            .withRel("suspend"),
+                            .slash("createPayment")
+                            .withRel("createPayment"),
                     getCommandLinkBuilder(id)
-                            .slash("archive")
-                            .withRel("archive")
+                            .slash("connectPayment")
+                            .withRel("connectPayment"),
+                    getCommandLinkBuilder(id)
+                            .slash("processPayment")
+                            .withRel("processPayment")
             );
         }
 

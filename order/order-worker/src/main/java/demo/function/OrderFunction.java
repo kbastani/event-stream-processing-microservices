@@ -46,6 +46,7 @@ public abstract class OrderFunction {
         // Execute the lambda function
         Order result = lambda.apply(event);
         context.getExtendedState().getVariables().put("order", result);
+        log.info("Order function: " + event.getType());
         return result;
     }
 }
