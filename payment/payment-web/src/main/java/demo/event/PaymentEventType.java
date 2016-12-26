@@ -4,8 +4,8 @@ import demo.payment.Payment;
 import demo.payment.PaymentStatus;
 
 /**
- * The {@link PaymentEventType} represents a collection of possible events that describe
- * state transitions of {@link PaymentStatus} on the {@link Payment} aggregate.
+ * The {@link PaymentEventType} represents a collection of possible events that describe state transitions of
+ * {@link PaymentStatus} on the {@link Payment} aggregate.
  *
  * @author kbastani
  */

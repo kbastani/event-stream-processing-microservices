@@ -1,29 +1,23 @@
 package demo.payment;
 
 import demo.event.EventService;
-import demo.util.ConsistencyModel;
 import demo.event.PaymentEvent;
 import demo.event.PaymentEventType;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+import demo.util.ConsistencyModel;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Objects;
 
 /**
- * The {@link PaymentService} provides transactional support for managing {@link Payment}
- * entities. This service also provides event sourcing support for {@link PaymentEvent}.
- * Events can be appended to an {@link Payment}, which contains a append-only log of
- * actions that can be used to support remediation for distributed transactions that encountered
- * a partial failure.
+ * The {@link PaymentService} provides transactional support for managing {@link Payment} entities. This service also
+ * provides event sourcing support for {@link PaymentEvent}. Events can be appended to an {@link Payment}, which
+ * contains a append-only log of actions that can be used to support remediation for distributed transactions that
+ * encountered a partial failure.
  *
- * @author kbastani
+ * @author Kenny Bastani
  */
 @Service
-@CacheConfig(cacheNames = {"payments"})
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
@@ -34,13 +28,9 @@ public class PaymentService {
         this.eventService = eventService;
     }
 
-    @CacheEvict(cacheNames = "payments", key = "#payment.getPaymentId().toString()")
     public Payment registerPayment(Payment payment) {
 
         payment = createPayment(payment);
-
-//        cacheManager.getCache("payments")
-//                .evict(payment.getPaymentId());
 
         // Trigger the payment creation event
         PaymentEvent event = appendEvent(payment.getPaymentId(),
@@ -59,7 +49,6 @@ public class PaymentService {
      * @param payment is the {@link Payment} to create
      * @return the newly created {@link Payment}
      */
-    @CacheEvict(cacheNames = "payments", key = "#payment.getPaymentId().toString()")
     public Payment createPayment(Payment payment) {
 
         // Save the payment to the repository
@@ -74,7 +63,6 @@ public class PaymentService {
      * @param id is the unique identifier of a {@link Payment} entity
      * @return an {@link Payment} entity
      */
-    @Cacheable(cacheNames = "payments", key = "#id.toString()")
     public Payment getPayment(Long id) {
         return paymentRepository.findOne(id);
     }
@@ -86,7 +74,6 @@ public class PaymentService {
      * @param payment is the {@link Payment} containing updated fields
      * @return the updated {@link Payment} entity
      */
-    @CachePut(cacheNames = "payments", key = "#id.toString()")
     public Payment updatePayment(Long id, Payment payment) {
         Assert.notNull(id, "Payment id must be present in the resource URL");
         Assert.notNull(payment, "Payment request body cannot be null");
@@ -112,7 +99,6 @@ public class PaymentService {
      *
      * @param id is the unique identifier for the {@link Payment}
      */
-    @CacheEvict(cacheNames = "payments", key = "#id.toString()")
     public Boolean deletePayment(Long id) {
         Assert.state(paymentRepository.exists(id),
                 "The payment with the supplied id does not exist");
@@ -144,13 +130,15 @@ public class PaymentService {
         Payment payment = getPayment(paymentId);
         Assert.notNull(payment, "The payment with the supplied id does not exist");
 
+        // Add the entity to the event
         event.setEntity(payment);
         event = eventService.save(paymentId, event);
 
+        // Add the event to the entity
         payment.getEvents().add(event);
         paymentRepository.saveAndFlush(payment);
 
-        // Raise the event using the supplied consistency model
+        // Applies the event for the chosen consistency model
         switch (consistencyModel) {
             case BASE:
                 eventService.sendAsync(event);
@@ -170,10 +158,8 @@ public class PaymentService {
      * @param paymentCommand is the command to apply to the {@link Payment}
      * @return a hypermedia resource containing the updated {@link Payment}
      */
-    @CachePut(cacheNames = "payments", key = "#id.toString()")
     public Payment applyCommand(Long id, PaymentCommand paymentCommand) {
         Payment payment = getPayment(id);
-
         Assert.notNull(payment, "The payment for the supplied id could not be found");
 
         PaymentStatus status = payment.getStatus();

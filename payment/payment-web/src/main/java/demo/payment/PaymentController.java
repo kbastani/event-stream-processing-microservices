@@ -13,6 +13,11 @@ import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
+/**
+ * The REST API for managing {@link Payment} entities and {@link PaymentEvent}s.
+ *
+ * @author Kenny Bastani
+ */
 @RestController
 @RequestMapping("/v1")
 @ExposesResourceFor(Payment.class)
@@ -107,7 +112,6 @@ public class PaymentController {
         if (payment != null)
             paymentResource = getPaymentResource(payment);
 
-
         return paymentResource;
     }
 
@@ -138,8 +142,8 @@ public class PaymentController {
     }
 
     /**
-     * Appends an {@link PaymentEvent} domain event to the event log of the {@link Payment}
-     * aggregate with the specified paymentId.
+     * Appends an {@link PaymentEvent} domain event to the event log of the {@link Payment} aggregate with the
+     * specified paymentId.
      *
      * @param paymentId is the unique identifier for the {@link Payment}
      * @param event     is the {@link PaymentEvent} that attempts to alter the state of the {@link Payment}
@@ -167,8 +171,8 @@ public class PaymentController {
     }
 
     /**
-     * Get the {@link PaymentCommand} hypermedia resource that lists the available commands that can be applied
-     * to an {@link Payment} entity.
+     * Get the {@link PaymentCommand} hypermedia resource that lists the available commands that can be applied to a
+     * {@link Payment} entity.
      *
      * @param id is the {@link Payment} identifier to provide command links for
      * @return an {@link PaymentCommands} with a collection of embedded command links

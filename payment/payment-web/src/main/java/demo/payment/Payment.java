@@ -12,12 +12,10 @@ import java.util.Set;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
- * The {@link Payment} domain object contains information related to
- * a user's payment. The status of an payment is event sourced using
- * events logged to the {@link PaymentEvent} collection attached to
- * this resource.
+ * The {@link Payment} domain object contains information related to a user's payment. The status of an payment is
+ * event sourced using events logged to the {@link PaymentEvent} collection attached to this resource.
  *
- * @author kbastani
+ * @author Kenny Bastani
  */
 @Entity
 public class Payment extends BaseEntity {

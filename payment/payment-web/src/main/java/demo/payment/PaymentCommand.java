@@ -1,11 +1,11 @@
 package demo.payment;
 
 /**
- * The {@link PaymentCommand} represents an action that can be performed to an
- * {@link Payment} aggregate. Commands initiate an action that can mutate the state of
- * an payment entity as it transitions between {@link PaymentStatus} values.
+ * The {@link PaymentCommand} represents an action that can be performed to an {@link Payment} aggregate. Commands
+ * initiate an action that can mutate the state of an payment entity as it transitions between {@link PaymentStatus}
+ * values.
  *
- * @author kbastani
+ * @author Kenneth Bastani
  */
 public enum PaymentCommand {
     CONNECT_ORDER,
