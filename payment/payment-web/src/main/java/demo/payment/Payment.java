@@ -3,10 +3,13 @@ package demo.payment;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.domain.BaseEntity;
 import demo.event.PaymentEvent;
+import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The {@link Payment} domain object contains information related to
@@ -40,11 +43,11 @@ public class Payment extends BaseEntity {
     }
 
     public Payment(Double amount, PaymentMethod paymentMethod) {
+        this();
         this.amount = amount;
         this.paymentMethod = paymentMethod;
     }
 
-    @JsonIgnore
     public Long getPaymentId() {
         return id;
     }
@@ -93,6 +96,17 @@ public class Payment extends BaseEntity {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
+    }
+
+    /**
+     * Returns the {@link Link} with a rel of {@link Link#REL_SELF}.
+     */
+    @Override
+    public Link getId() {
+        return linkTo(PaymentController.class)
+                .slash("payments")
+                .slash(getPaymentId())
+                .withSelfRel();
     }
 
     @Override

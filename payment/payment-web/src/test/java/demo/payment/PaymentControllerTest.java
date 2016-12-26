@@ -1,6 +1,7 @@
 package demo.payment;
 
 import demo.event.EventService;
+import demo.event.PaymentEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class PaymentControllerTest {
     private PaymentService paymentService;
 
     @MockBean
-    private EventService eventService;
+    private EventService<PaymentEvent, Long> eventService;
 
     @Test
     public void getUserPaymentResourceShouldReturnPayment() throws Exception {

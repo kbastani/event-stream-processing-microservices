@@ -16,7 +16,8 @@ public class Order extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String accountNumber;
+    private Long accountId;
+    private Long paymentId;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<OrderEvent> events = new HashSet<>();
@@ -34,9 +35,9 @@ public class Order extends BaseEntity {
         this.status = OrderStatus.ORDER_CREATED;
     }
 
-    public Order(String accountNumber, Address shippingAddress) {
+    public Order(Long accountId, Address shippingAddress) {
         this();
-        this.accountNumber = accountNumber;
+        this.accountId = accountId;
         this.shippingAddress = shippingAddress;
         if (shippingAddress.getAddressType() == null)
             this.shippingAddress.setAddressType(AddressType.SHIPPING);
@@ -51,12 +52,22 @@ public class Order extends BaseEntity {
         this.id = id;
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
+    @JsonIgnore
+    public Long getAccountId() {
+        return accountId;
     }
 
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    @JsonIgnore
+    public Long getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(Long paymentId) {
+        this.paymentId = paymentId;
     }
 
     public OrderStatus getStatus() {
@@ -100,8 +111,8 @@ public class Order extends BaseEntity {
     public String toString() {
         return "Order{" +
                 "id=" + id +
-                ", accountNumber='" + accountNumber + '\'' +
-                ", events=" + events +
+                ", accountId=" + accountId +
+                ", paymentId=" + paymentId +
                 ", status=" + status +
                 ", lineItems=" + lineItems +
                 ", shippingAddress=" + shippingAddress +

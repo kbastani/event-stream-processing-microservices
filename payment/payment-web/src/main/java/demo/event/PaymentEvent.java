@@ -2,33 +2,40 @@ package demo.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.payment.Payment;
-import demo.domain.BaseEntity;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 
 /**
- * The domain event {@link PaymentEvent} tracks the type and state of events as
- * applied to the {@link Payment} domain object. This event resource can be used
- * to event source the aggregate state of {@link Payment}.
+ * The domain event {@link PaymentEvent} tracks the type and state of events as applied to the {@link Payment} domain
+ * object. This event resource can be used to event source the aggregate state of {@link Payment}.
  * <p>
- * This event resource also provides a transaction log that can be used to append
- * actions to the event.
+ * This event resource also provides a transaction log that can be used to append actions to the event.
  *
  * @author kbastani
  */
 @Entity
-public class PaymentEvent extends BaseEntity {
+@EntityListeners(AuditingEntityListener.class)
+public class PaymentEvent extends Event<Payment, PaymentEventType, Long> {
 
     @Id
-    @GeneratedValue
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long eventId;
 
     @Enumerated(EnumType.STRING)
     private PaymentEventType type;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Payment payment;
+    private Payment entity;
+
+    @CreatedDate
+    private Long createdAt;
+
+    @LastModifiedDate
+    private Long lastModified;
 
     public PaymentEvent() {
     }
@@ -37,37 +44,59 @@ public class PaymentEvent extends BaseEntity {
         this.type = type;
     }
 
-    @JsonIgnore
+    public PaymentEvent(PaymentEventType type, Payment entity) {
+        this.type = type;
+        this.entity = entity;
+    }
+
+    @Override
     public Long getEventId() {
-        return id;
+        return eventId;
     }
 
+    @Override
     public void setEventId(Long id) {
-        this.id = id;
+        eventId = id;
     }
 
+    @Override
     public PaymentEventType getType() {
         return type;
     }
 
+    @Override
     public void setType(PaymentEventType type) {
         this.type = type;
     }
 
-    public Payment getPayment() {
-        return payment;
-    }
-
-    public void setPayment(Payment payment) {
-        this.payment = payment;
+    @Override
+    public Payment getEntity() {
+        return entity;
     }
 
     @Override
-    public String toString() {
-        return "PaymentEvent{" +
-                "id=" + id +
-                ", type=" + type +
-                ", payment=" + payment +
-                "} " + super.toString();
+    public void setEntity(Payment entity) {
+        this.entity = entity;
+    }
+
+    @Override
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    @Override
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @Override
+    public Long getLastModified() {
+        return lastModified;
+    }
+
+    @Override
+    public void setLastModified(Long lastModified) {
+        this.lastModified = lastModified;
     }
 }
+

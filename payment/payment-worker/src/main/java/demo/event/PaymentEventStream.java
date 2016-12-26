@@ -34,7 +34,7 @@ public class PaymentEventStream {
      * @param paymentEvent is the {@link Payment} domain event to process
      */
     @StreamListener(Sink.INPUT)
-    public void streamListerner(PaymentEvent paymentEvent) {
+    public void streamListener(PaymentEvent paymentEvent) {
         eventService.apply(paymentEvent);
     }
 }

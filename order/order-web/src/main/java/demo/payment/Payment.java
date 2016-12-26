@@ -4,7 +4,6 @@ import demo.domain.BaseEntity;
 
 public class Payment extends BaseEntity {
 
-    private Long paymentId;
     private Double amount;
     private PaymentMethod paymentMethod;
     private PaymentStatus status;
@@ -12,12 +11,9 @@ public class Payment extends BaseEntity {
     public Payment() {
     }
 
-    public Long getPaymentId() {
-        return paymentId;
-    }
-
-    public void setPaymentId(Long paymentId) {
-        this.paymentId = paymentId;
+    public Payment(Double amount, PaymentMethod paymentMethod) {
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
     }
 
     public PaymentStatus getStatus() {

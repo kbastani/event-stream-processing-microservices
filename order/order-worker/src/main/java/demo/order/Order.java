@@ -11,7 +11,6 @@ import java.util.Set;
 public class Order extends BaseEntity {
 
     private Long orderId;
-    private String accountNumber;
 
     private OrderStatus status;
 
@@ -26,7 +25,6 @@ public class Order extends BaseEntity {
 
     public Order(String accountNumber, Address shippingAddress) {
         this();
-        this.accountNumber = accountNumber;
         this.shippingAddress = shippingAddress;
         if (shippingAddress.getAddressType() == null)
             this.shippingAddress.setAddressType(AddressType.SHIPPING);
@@ -38,14 +36,6 @@ public class Order extends BaseEntity {
 
     public void setOrderId(Long id) {
         this.orderId = orderId;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
     }
 
     public OrderStatus getStatus() {
@@ -87,9 +77,9 @@ public class Order extends BaseEntity {
     @Override
     public String toString() {
         return "Order{" +
-                "orderId='" + orderId + '\'' +
-                ", accountNumber='" + accountNumber + '\'' +
+                "orderId=" + orderId +
                 ", status=" + status +
+                ", events=" + events +
                 ", lineItems=" + lineItems +
                 ", shippingAddress=" + shippingAddress +
                 "} " + super.toString();

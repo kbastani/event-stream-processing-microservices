@@ -1,10 +1,9 @@
 package demo.payment;
 
-import demo.event.ConsistencyModel;
 import demo.event.EventService;
+import demo.util.ConsistencyModel;
 import demo.event.PaymentEvent;
 import demo.event.PaymentEventType;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -28,13 +27,11 @@ import java.util.Objects;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final EventService eventService;
-    private final CacheManager cacheManager;
+    private final EventService<PaymentEvent, Long> eventService;
 
-    public PaymentService(PaymentRepository paymentRepository, EventService eventService, CacheManager cacheManager) {
+    public PaymentService(PaymentRepository paymentRepository, EventService<PaymentEvent, Long> eventService) {
         this.paymentRepository = paymentRepository;
         this.eventService = eventService;
-        this.cacheManager = cacheManager;
     }
 
     @CacheEvict(cacheNames = "payments", key = "#payment.getPaymentId().toString()")
@@ -42,18 +39,18 @@ public class PaymentService {
 
         payment = createPayment(payment);
 
-        cacheManager.getCache("payments")
-                .evict(payment.getPaymentId());
+//        cacheManager.getCache("payments")
+//                .evict(payment.getPaymentId());
 
         // Trigger the payment creation event
         PaymentEvent event = appendEvent(payment.getPaymentId(),
                 new PaymentEvent(PaymentEventType.PAYMENT_CREATED));
 
         // Attach payment identifier
-        event.getPayment().setPaymentId(payment.getPaymentId());
+        event.getEntity().setPaymentId(payment.getPaymentId());
 
         // Return the result
-        return event.getPayment();
+        return event.getEntity();
     }
 
     /**
@@ -131,7 +128,7 @@ public class PaymentService {
      * @return the newly appended {@link PaymentEvent}
      */
     public PaymentEvent appendEvent(Long paymentId, PaymentEvent event) {
-        return appendEvent(paymentId, event, ConsistencyModel.ACID);
+        return appendEvent(paymentId, event, ConsistencyModel.BASE);
     }
 
     /**
@@ -142,13 +139,27 @@ public class PaymentService {
      * @return the newly appended {@link PaymentEvent}
      */
     public PaymentEvent appendEvent(Long paymentId, PaymentEvent event, ConsistencyModel consistencyModel) {
+
+        // Get the entity
         Payment payment = getPayment(paymentId);
         Assert.notNull(payment, "The payment with the supplied id does not exist");
-        event.setPayment(payment);
-        event = eventService.createEvent(paymentId, event);
+
+        event.setEntity(payment);
+        event = eventService.save(paymentId, event);
+
         payment.getEvents().add(event);
         paymentRepository.saveAndFlush(payment);
-        eventService.raiseEvent(event, consistencyModel);
+
+        // Raise the event using the supplied consistency model
+        switch (consistencyModel) {
+            case BASE:
+                eventService.sendAsync(event);
+                break;
+            case ACID:
+                event = eventService.send(event);
+                break;
+        }
+
         return event;
     }
 

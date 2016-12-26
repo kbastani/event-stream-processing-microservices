@@ -1,11 +1,11 @@
 package demo.payment;
 
 import demo.event.EventService;
+import demo.event.PaymentEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cache.CacheManager;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,19 +15,16 @@ import static org.mockito.BDDMockito.given;
 public class PaymentServiceTests {
 
     @MockBean
-    private EventService eventService;
+    private EventService<PaymentEvent, Long> eventService;
 
     @MockBean
     private PaymentRepository paymentRepository;
-
-    @MockBean
-    private CacheManager cacheManager;
 
     private PaymentService paymentService;
 
     @Before
     public void before() {
-        paymentService = new PaymentService(paymentRepository, eventService, cacheManager);
+        paymentService = new PaymentService(paymentRepository, eventService);
     }
 
     @Test

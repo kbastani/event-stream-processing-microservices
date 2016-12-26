@@ -1,4 +1,4 @@
-package demo.event;
+package demo.util;
 
 public enum ConsistencyModel {
     BASE,

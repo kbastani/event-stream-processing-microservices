@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.RequestEntity;
@@ -68,7 +69,10 @@ public class EventService {
      * @param consistencyModel is the consistency model for this request
      * @return an {@link OrderEvent} that has been appended to the {@link Order}'s event log
      */
-    public OrderEvent raiseEvent(OrderEvent event, ConsistencyModel consistencyModel) {
+    public OrderEvent raiseEvent(OrderEvent event, ConsistencyModel consistencyModel, Link... links) {
+        // Add embedded links
+        event.add(links);
+
         switch (consistencyModel) {
             case BASE:
                 asyncRaiseEvent(event);
@@ -189,7 +193,7 @@ public class EventService {
      * @return a hypermedia resource for the supplied {@link OrderEvent} entity
      */
     private Resource<OrderEvent> getOrderEventResource(OrderEvent event) {
-        return new Resource<OrderEvent>(event, Arrays.asList(
+        event.add(Arrays.asList(
                 linkTo(OrderController.class)
                         .slash("events")
                         .slash(event.getEventId())
@@ -198,6 +202,7 @@ public class EventService {
                         .slash("orders")
                         .slash(event.getOrder().getOrderId())
                         .withRel("order")));
+        return new Resource<OrderEvent>(event, event.getLinks());
     }
 
     /**

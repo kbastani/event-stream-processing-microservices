@@ -5,6 +5,7 @@ import demo.event.OrderEventType;
 import demo.function.*;
 import demo.order.Order;
 import demo.order.OrderStatus;
+import demo.payment.Payment;
 import demo.stream.OrderStream;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,8 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A configuration adapter for describing a {@link StateMachine} factory that maps actions to functional
@@ -99,7 +102,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .action(reservationFailed())
                     .and()
                     .withExternal()
-                    .source(OrderStatus.RESERVATION_SUCCEEDED)
+                    .source(OrderStatus.ACCOUNT_CONNECTED)
                     .target(OrderStatus.PAYMENT_CREATED)
                     .event(OrderEventType.PAYMENT_CREATED)
                     .action(paymentCreated())
@@ -240,14 +243,30 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                 new PaymentCreated(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
                     // Get the account resource for the event
-                    Traverson traverson = new Traverson(
+                    Traverson paymentResource = new Traverson(
+                            URI.create(event.getLink("payment").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    Traverson orderResource = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
+                    Payment payment = paymentResource.follow("self")
+                            .toEntity(Payment.class)
+                            .getBody();
+
+                    Order order = orderResource.follow("self")
                             .toEntity(Order.class)
                             .getBody();
+
+                    Map<String, Object> template = new HashMap<String, Object>();
+                    template.put("paymentId", payment.getPaymentId());
+                    return orderResource.follow("commands", "connectPayment")
+                            .withTemplateParameters(template)
+                            .toObject(Order.class);
+
                 }));
     }
 

@@ -4,28 +4,39 @@ import demo.event.ConsistencyModel;
 import demo.event.EventService;
 import demo.event.OrderEvent;
 import demo.event.OrderEventType;
-import org.springframework.cache.CacheManager;
+import demo.payment.Payment;
+import demo.payment.PaymentMethod;
+import org.apache.log4j.Logger;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @CacheConfig(cacheNames = {"orders"})
 public class OrderService {
 
+    private final Logger log = Logger.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
     private final EventService eventService;
-    private final CacheManager cacheManager;
+    private final RestTemplate restTemplate;
 
-    public OrderService(OrderRepository orderRepository, EventService eventService, CacheManager cacheManager) {
+    public OrderService(OrderRepository orderRepository, EventService eventService, RestTemplate restTemplate) {
         this.orderRepository = orderRepository;
         this.eventService = eventService;
-        this.cacheManager = cacheManager;
+        this.restTemplate = restTemplate;
     }
 
     @CacheEvict(cacheNames = "orders", key = "#order.getOrderId().toString()")
@@ -33,8 +44,7 @@ public class OrderService {
 
         order = createOrder(order);
 
-        cacheManager.getCache("orders")
-                .evict(order.getOrderId());
+        //cacheManager.getCache("orders").evict(order.getOrderId());
 
         // Trigger the order creation event
         OrderEvent event = appendEvent(order.getOrderId(),
@@ -76,7 +86,7 @@ public class OrderService {
     /**
      * Update an {@link Order} entity with the supplied identifier.
      *
-     * @param id      is the unique identifier of the {@link Order} entity
+     * @param id    is the unique identifier of the {@link Order} entity
      * @param order is the {@link Order} containing updated fields
      * @return the updated {@link Order} entity
      */
@@ -96,12 +106,13 @@ public class OrderService {
                 "The order with the supplied id does not exist");
 
         Order currentOrder = orderRepository.findOne(id);
-        currentOrder.setAccountNumber(order.getAccountNumber());
+        currentOrder.setAccountId(order.getAccountId());
+        currentOrder.setPaymentId(order.getPaymentId());
         currentOrder.setLineItems(order.getLineItems());
         currentOrder.setShippingAddress(order.getShippingAddress());
         currentOrder.setStatus(order.getStatus());
 
-        return orderRepository.save(currentOrder);
+        return orderRepository.saveAndFlush(currentOrder);
     }
 
     /**
@@ -121,7 +132,19 @@ public class OrderService {
      * Append a new {@link OrderEvent} to the {@link Order} reference for the supplied identifier.
      *
      * @param orderId is the unique identifier for the {@link Order}
-     * @param event     is the {@link OrderEvent} to append to the {@link Order} entity
+     * @param event   is the {@link OrderEvent} to append to the {@link Order} entity
+     * @param links   is the optional {@link Link} to embed in the {@link org.springframework.hateoas.Resource}
+     * @return the newly appended {@link OrderEvent}
+     */
+    public OrderEvent appendEvent(Long orderId, OrderEvent event, Link... links) {
+        return appendEvent(orderId, event, ConsistencyModel.ACID, links);
+    }
+
+    /**
+     * Append a new {@link OrderEvent} to the {@link Order} reference for the supplied identifier.
+     *
+     * @param orderId is the unique identifier for the {@link Order}
+     * @param event   is the {@link OrderEvent} to append to the {@link Order} entity
      * @return the newly appended {@link OrderEvent}
      */
     public OrderEvent appendEvent(Long orderId, OrderEvent event) {
@@ -132,24 +155,25 @@ public class OrderService {
      * Append a new {@link OrderEvent} to the {@link Order} reference for the supplied identifier.
      *
      * @param orderId is the unique identifier for the {@link Order}
-     * @param event     is the {@link OrderEvent} to append to the {@link Order} entity
+     * @param event   is the {@link OrderEvent} to append to the {@link Order} entity
      * @return the newly appended {@link OrderEvent}
      */
-    public OrderEvent appendEvent(Long orderId, OrderEvent event, ConsistencyModel consistencyModel) {
+    public OrderEvent appendEvent(Long orderId, OrderEvent event, ConsistencyModel consistencyModel, Link... links) {
         Order order = getOrder(orderId);
         Assert.notNull(order, "The order with the supplied id does not exist");
         event.setOrder(order);
         event = eventService.createEvent(orderId, event);
         order.getEvents().add(event);
-        orderRepository.saveAndFlush(order);
-        eventService.raiseEvent(event, consistencyModel);
+        order = orderRepository.saveAndFlush(order);
+        event.setOrder(order);
+        eventService.raiseEvent(event, consistencyModel, links);
         return event;
     }
 
     /**
      * Apply an {@link OrderCommand} to the {@link Order} with a specified identifier.
      *
-     * @param id             is the unique identifier of the {@link Order}
+     * @param id           is the unique identifier of the {@link Order}
      * @param orderCommand is the command to apply to the {@link Order}
      * @return a hypermedia resource containing the updated {@link Order}
      */
@@ -164,5 +188,106 @@ public class OrderService {
         // TODO: Implement apply command
 
         return order;
+    }
+
+    public Order connectAccount(Long id, Long accountId) {
+        // Get the order
+        Order order = getOrder(id);
+
+        // Connect the account
+        order.setAccountId(accountId);
+        order.setStatus(OrderStatus.ACCOUNT_CONNECTED);
+        order = updateOrder(id, order);
+
+        //cacheManager.getCache("orders").evict(id);
+
+        // Trigger the account connected event
+        OrderEvent event = appendEvent(order.getOrderId(),
+                new OrderEvent(OrderEventType.ACCOUNT_CONNECTED));
+
+        // Set non-serializable fields
+        event.getOrder().setAccountId(order.getAccountId());
+        event.getOrder().setPaymentId(order.getPaymentId());
+        event.getOrder().setOrderId(order.getOrderId());
+
+        // Return the result
+        return event.getOrder();
+    }
+
+    public Order connectPayment(Long id, Long paymentId) {
+        // Get the order
+        Order order = getOrder(id);
+
+        // Connect the account
+        order.setPaymentId(paymentId);
+        order.setStatus(OrderStatus.PAYMENT_CONNECTED);
+        order = updateOrder(id, order);
+
+        // cacheManager.getCache("orders").evict(id);
+
+        // Trigger the account connected event
+        OrderEvent event = appendEvent(order.getOrderId(),
+                new OrderEvent(OrderEventType.PAYMENT_CONNECTED));
+
+        // Set non-serializable fields
+        event.getOrder().setAccountId(order.getAccountId());
+        event.getOrder().setPaymentId(order.getPaymentId());
+        event.getOrder().setOrderId(order.getOrderId());
+
+        // Return the result
+        return event.getOrder();
+    }
+
+    public Order createPayment(Long id) {
+        // Get the order
+        Order order = getOrder(id);
+
+        Payment payment = new Payment();
+
+        // Calculate payment amount
+        payment.setAmount(order.getLineItems()
+                .stream()
+                .mapToDouble(a -> (a.getPrice() + a.getTax()) * a.getQuantity())
+                .sum());
+
+        // Set payment method
+        payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
+
+        // Create a new request entity
+        RequestEntity<Resource<Payment>> requestEntity = RequestEntity.post(
+                URI.create("http://localhost:8082/v1/payments"))
+                .contentType(MediaTypes.HAL_JSON)
+                .body(new Resource<Payment>(payment), Resource.class);
+
+        // Update the order entity's status
+        payment = restTemplate.exchange(requestEntity, Payment.class)
+                .getBody();
+
+        log.info(payment);
+
+        // Update the status
+        order.setStatus(OrderStatus.PAYMENT_CREATED);
+        order = updateOrder(id, order);
+
+        // cacheManager.getCache("orders").evict(id);
+
+        // Trigger the account connected event
+        OrderEvent event = appendEvent(order.getOrderId(),
+                new OrderEvent(OrderEventType.PAYMENT_CREATED),
+                new Link(payment.getId().getHref(), "payment"));
+
+        // Set non-serializable fields
+        event.getOrder()
+                .setAccountId(Optional.ofNullable(event.getOrder().getAccountId())
+                        .orElse(order.getAccountId()));
+
+        event.getOrder()
+                .setPaymentId(Optional.ofNullable(event.getOrder().getPaymentId())
+                        .orElse(order.getPaymentId()));
+
+        event.getOrder().setOrderId(order.getOrderId());
+
+        // Return the result
+        return event.getOrder();
     }
 }

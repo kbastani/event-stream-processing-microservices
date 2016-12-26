@@ -1,9 +1,7 @@
 package demo.payment;
 
-import demo.event.PaymentEvent;
-import demo.event.PaymentEvents;
-import demo.event.EventController;
-import demo.event.EventService;
+import demo.event.*;
+import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
@@ -17,12 +15,13 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/v1")
+@ExposesResourceFor(Payment.class)
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final EventService eventService;
+    private final EventService<PaymentEvent, Long> eventService;
 
-    public PaymentController(PaymentService paymentService, EventService eventService) {
+    public PaymentController(PaymentService paymentService, EventService<PaymentEvent, Long> eventService) {
         this.paymentService = paymentService;
         this.eventService = eventService;
     }
@@ -196,14 +195,8 @@ public class PaymentController {
         return commandResource;
     }
 
-    /**
-     * Get {@link PaymentEvents} for the supplied {@link Payment} identifier.
-     *
-     * @param id is the unique identifier of the {@link Payment}
-     * @return a list of {@link PaymentEvent} wrapped in a hypermedia {@link PaymentEvents} resource
-     */
-    private PaymentEvents getPaymentEventResources(Long id) {
-        return new PaymentEvents(id, eventService.getPaymentEvents(id));
+    private Events getPaymentEventResources(Long id) {
+        return eventService.find(id);
     }
 
     /**

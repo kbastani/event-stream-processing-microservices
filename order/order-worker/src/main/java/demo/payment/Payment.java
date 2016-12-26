@@ -47,7 +47,8 @@ public class Payment extends BaseEntity {
     @Override
     public String toString() {
         return "Payment{" +
-                "amount=" + amount +
+                "paymentId=" + paymentId +
+                ", amount=" + amount +
                 ", paymentMethod=" + paymentMethod +
                 ", status=" + status +
                 "} " + super.toString();

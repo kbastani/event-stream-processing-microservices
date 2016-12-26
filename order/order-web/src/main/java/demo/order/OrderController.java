@@ -1,11 +1,10 @@
 package demo.order;
 
-import demo.event.OrderEvent;
-import demo.event.OrderEvents;
 import demo.event.EventController;
 import demo.event.EventService;
-import org.springframework.hateoas.LinkBuilder;
-import org.springframework.hateoas.Resource;
+import demo.event.OrderEvent;
+import demo.event.OrderEvents;
+import org.springframework.hateoas.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
@@ -77,17 +76,15 @@ public class OrderController {
     }
 
     @GetMapping(path = "/orders/{id}/commands/connectAccount")
-    public ResponseEntity connectAccount(@PathVariable Long id) {
-        return Optional.ofNullable(getOrderResource(
-                orderService.applyCommand(id, OrderCommand.CONNECT_ACCOUNT)))
+    public ResponseEntity connectAccount(@PathVariable Long id, @RequestParam(value = "accountId") Long accountId) {
+        return Optional.ofNullable(getOrderResource(orderService.connectAccount(id, accountId)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @GetMapping(path = "/orders/{id}/commands/connectPayment")
-    public ResponseEntity connectPayment(@PathVariable Long id) {
-        return Optional.ofNullable(getOrderResource(
-                orderService.applyCommand(id, OrderCommand.CONNECT_PAYMENT)))
+    public ResponseEntity connectPayment(@PathVariable Long id, @RequestParam(value = "paymentId") Long paymentId) {
+        return Optional.ofNullable(getOrderResource(orderService.connectPayment(id, paymentId)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -95,7 +92,7 @@ public class OrderController {
     @GetMapping(path = "/orders/{id}/commands/createPayment")
     public ResponseEntity createPayment(@PathVariable Long id) {
         return Optional.ofNullable(getOrderResource(
-                orderService.applyCommand(id, OrderCommand.CREATE_PAYMENT)))
+                orderService.createPayment(id)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -154,7 +151,7 @@ public class OrderController {
     /**
      * Update a {@link Order} entity for the provided identifier.
      *
-     * @param id      is the unique identifier for the {@link Order} update
+     * @param id    is the unique identifier for the {@link Order} update
      * @param order is the entity representation containing any updated {@link Order} fields
      * @return a hypermedia resource for the updated {@link Order}
      */
@@ -167,7 +164,7 @@ public class OrderController {
      * aggregate with the specified orderId.
      *
      * @param orderId is the unique identifier for the {@link Order}
-     * @param event     is the {@link OrderEvent} that attempts to alter the state of the {@link Order}
+     * @param event   is the {@link OrderEvent} that attempts to alter the state of the {@link Order}
      * @return a hypermedia resource for the newly appended {@link OrderEvent}
      */
     private Resource<OrderEvent> appendEventResource(Long orderId, OrderEvent event) {
@@ -208,18 +205,28 @@ public class OrderController {
         // Add order command hypermedia links
         if (orderResource != null) {
             commandResource.add(
-                    getCommandLinkBuilder(id)
-                            .slash("connectAccount")
-                            .withRel("connectAccount"),
+                    new Link(new UriTemplate(
+                            getCommandLinkBuilder(id)
+                                    .slash("connectAccount")
+                                    .toUri()
+                                    .toString(),
+                            new TemplateVariables(
+                                    new TemplateVariable("accountId",
+                                            TemplateVariable.VariableType.REQUEST_PARAM))), "connectAccount"),
                     getCommandLinkBuilder(id)
                             .slash("reserveInventory")
                             .withRel("reserveInventory"),
                     getCommandLinkBuilder(id)
                             .slash("createPayment")
                             .withRel("createPayment"),
-                    getCommandLinkBuilder(id)
-                            .slash("connectPayment")
-                            .withRel("connectPayment"),
+                    new Link(new UriTemplate(
+                            getCommandLinkBuilder(id)
+                                    .slash("connectPayment")
+                                    .toUri()
+                                    .toString(),
+                            new TemplateVariables(
+                                    new TemplateVariable("paymentId",
+                                            TemplateVariable.VariableType.REQUEST_PARAM))), "connectPayment"),
                     getCommandLinkBuilder(id)
                             .slash("processPayment")
                             .withRel("processPayment")
@@ -275,6 +282,12 @@ public class OrderController {
                 getCommandLinkBuilder(order.getOrderId())
                         .withRel("commands")
         );
+
+        if (order.getAccountId() != null)
+            orderResource.add(new Link("http://account-service/v1/accounts/" + order.getAccountId(), "account"));
+
+        if (order.getPaymentId() != null)
+            orderResource.add(new Link("http://localhost:8082/v1/payments/" + order.getPaymentId(), "payment"));
 
         return orderResource;
     }

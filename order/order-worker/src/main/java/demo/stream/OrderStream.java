@@ -27,7 +27,7 @@ public class OrderStream {
     }
 
     @StreamListener(Sink.INPUT)
-    public void streamListerner(OrderEvent orderEvent) {
+    public void streamListener(OrderEvent orderEvent) {
         eventService.apply(orderEvent);
     }
 }
