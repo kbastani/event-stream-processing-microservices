@@ -1,8 +1,13 @@
 package demo.payment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import demo.domain.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import demo.domain.AbstractEntity;
+import demo.domain.Command;
 import demo.event.PaymentEvent;
+import demo.payment.action.ConnectOrder;
+import demo.payment.action.ProcessPayment;
+import demo.payment.controller.PaymentController;
 import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
@@ -18,7 +23,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  * @author Kenny Bastani
  */
 @Entity
-public class Payment extends BaseEntity {
+public class Payment extends AbstractEntity<Long> {
 
     @Id
     @GeneratedValue
@@ -41,16 +46,18 @@ public class Payment extends BaseEntity {
     }
 
     public Payment(Double amount, PaymentMethod paymentMethod) {
-        this();
         this.amount = amount;
         this.paymentMethod = paymentMethod;
     }
 
-    public Long getPaymentId() {
-        return id;
+    @JsonProperty("paymentId")
+    @Override
+    public Long getIdentity() {
+        return this.id;
     }
 
-    public void setPaymentId(Long id) {
+    @Override
+    public void setIdentity(Long id) {
         this.id = id;
     }
 
@@ -96,6 +103,24 @@ public class Payment extends BaseEntity {
         this.orderId = orderId;
     }
 
+    @Command(method = "connectOrder", controller = PaymentController.class)
+    public Payment connectOrder(Long orderId) {
+        getAction(ConnectOrder.class)
+                .getConsumer()
+                .accept(this, orderId);
+
+        return this;
+    }
+
+    @Command(method = "processPayment", controller = PaymentController.class)
+    public Payment processPayment() {
+        getAction(ProcessPayment.class)
+                .getConsumer()
+                .accept(this);
+
+        return this;
+    }
+
     /**
      * Returns the {@link Link} with a rel of {@link Link#REL_SELF}.
      */
@@ -103,16 +128,9 @@ public class Payment extends BaseEntity {
     public Link getId() {
         return linkTo(PaymentController.class)
                 .slash("payments")
-                .slash(getPaymentId())
+                .slash(getIdentity())
                 .withSelfRel();
     }
 
-    @Override
-    public String toString() {
-        return "Payment{" +
-                "id=" + id +
-                ", events=" + events +
-                ", status=" + status +
-                "} " + super.toString();
-    }
+
 }

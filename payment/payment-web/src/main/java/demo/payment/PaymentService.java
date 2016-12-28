@@ -1,10 +1,10 @@
 package demo.payment;
 
+import demo.domain.Service;
 import demo.event.EventService;
 import demo.event.PaymentEvent;
 import demo.event.PaymentEventType;
 import demo.util.ConsistencyModel;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Objects;
@@ -17,8 +17,8 @@ import java.util.Objects;
  *
  * @author Kenny Bastani
  */
-@Service
-public class PaymentService {
+@org.springframework.stereotype.Service
+public class PaymentService extends Service<Payment> {
 
     private final PaymentRepository paymentRepository;
     private final EventService<PaymentEvent, Long> eventService;
@@ -33,11 +33,11 @@ public class PaymentService {
         payment = createPayment(payment);
 
         // Trigger the payment creation event
-        PaymentEvent event = appendEvent(payment.getPaymentId(),
+        PaymentEvent event = appendEvent(payment.getIdentity(),
                 new PaymentEvent(PaymentEventType.PAYMENT_CREATED));
 
         // Attach payment identifier
-        event.getEntity().setPaymentId(payment.getPaymentId());
+        event.getEntity().setIdentity(payment.getIdentity());
 
         // Return the result
         return event.getEntity();
@@ -78,11 +78,11 @@ public class PaymentService {
         Assert.notNull(id, "Payment id must be present in the resource URL");
         Assert.notNull(payment, "Payment request body cannot be null");
 
-        if (payment.getPaymentId() != null) {
-            Assert.isTrue(Objects.equals(id, payment.getPaymentId()),
+        if (payment.getIdentity() != null) {
+            Assert.isTrue(Objects.equals(id, payment.getIdentity()),
                     "The payment id in the request body must match the resource URL");
         } else {
-            payment.setPaymentId(id);
+            payment.setIdentity(id);
         }
 
         Assert.state(paymentRepository.exists(id),
@@ -149,23 +149,5 @@ public class PaymentService {
         }
 
         return event;
-    }
-
-    /**
-     * Apply an {@link PaymentCommand} to the {@link Payment} with a specified identifier.
-     *
-     * @param id             is the unique identifier of the {@link Payment}
-     * @param paymentCommand is the command to apply to the {@link Payment}
-     * @return a hypermedia resource containing the updated {@link Payment}
-     */
-    public Payment applyCommand(Long id, PaymentCommand paymentCommand) {
-        Payment payment = getPayment(id);
-        Assert.notNull(payment, "The payment for the supplied id could not be found");
-
-        PaymentStatus status = payment.getStatus();
-
-        // TODO: Implement
-
-        return payment;
     }
 }

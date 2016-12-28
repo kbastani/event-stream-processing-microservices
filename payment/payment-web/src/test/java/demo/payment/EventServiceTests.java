@@ -23,7 +23,7 @@ public class EventServiceTests {
         Payment payment = new Payment(11.0, PaymentMethod.CREDIT_CARD);
         payment = paymentRepository.saveAndFlush(payment);
         eventService.save(new PaymentEvent(PaymentEventType.PAYMENT_CREATED, payment));
-        Events events = eventService.find(payment.getPaymentId());
+        Events events = eventService.find(payment.getIdentity());
         Assert.notNull(events);
     }
 }

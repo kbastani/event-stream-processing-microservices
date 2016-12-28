@@ -3,7 +3,6 @@ package demo.domain;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.hateoas.ResourceSupport;
 
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
@@ -11,7 +10,9 @@ import java.io.Serializable;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class BaseEntity extends ResourceSupport implements Serializable {
+public class AbstractEntity<T extends Serializable> extends Aggregate<T> implements Serializable {
+
+    private T identity;
 
     @CreatedDate
     private Long createdAt;
@@ -19,7 +20,7 @@ public class BaseEntity extends ResourceSupport implements Serializable {
     @LastModifiedDate
     private Long lastModified;
 
-    public BaseEntity() {
+    public AbstractEntity() {
     }
 
     public Long getCreatedAt() {
@@ -36,6 +37,15 @@ public class BaseEntity extends ResourceSupport implements Serializable {
 
     public void setLastModified(Long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    public T getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(T id) {
+        this.identity = id;
     }
 
     @Override

@@ -1,14 +1,21 @@
-package demo.payment;
+package demo.payment.controller;
 
-import demo.event.*;
+import demo.event.EventController;
+import demo.event.EventService;
+import demo.event.Events;
+import demo.event.PaymentEvent;
+import demo.payment.Payment;
+import demo.payment.PaymentService;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.ResourceSupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -31,68 +38,68 @@ public class PaymentController {
         this.eventService = eventService;
     }
 
-    @PostMapping(path = "/payments")
+    @RequestMapping(path = "/payments", method = RequestMethod.POST)
     public ResponseEntity createPayment(@RequestBody Payment payment) {
         return Optional.ofNullable(createPaymentResource(payment))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
                 .orElseThrow(() -> new RuntimeException("Payment creation failed"));
     }
 
-    @PutMapping(path = "/payments/{id}")
+    @RequestMapping(path = "/payments/{id}", method = RequestMethod.PUT)
     public ResponseEntity updatePayment(@RequestBody Payment payment, @PathVariable Long id) {
         return Optional.ofNullable(updatePaymentResource(id, payment))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("Payment update failed"));
     }
 
-    @GetMapping(path = "/payments/{id}")
+    @RequestMapping(path = "/payments/{id}", method = RequestMethod.GET)
     public ResponseEntity getPayment(@PathVariable Long id) {
         return Optional.ofNullable(getPaymentResource(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @DeleteMapping(path = "/payments/{id}")
+    @RequestMapping(path = "/payments/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deletePayment(@PathVariable Long id) {
         return Optional.ofNullable(paymentService.deletePayment(id))
                 .map(e -> new ResponseEntity<>(HttpStatus.NO_CONTENT))
                 .orElseThrow(() -> new RuntimeException("Payment deletion failed"));
     }
 
-    @GetMapping(path = "/payments/{id}/events")
+    @RequestMapping(path = "/payments/{id}/events", method = RequestMethod.GET)
     public ResponseEntity getPaymentEvents(@PathVariable Long id) {
-        return Optional.of(getPaymentEventResources(id))
+        return Optional.ofNullable(getPaymentEventResources(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("Could not get payment events"));
     }
 
-    @PostMapping(path = "/payments/{id}/events")
+    @RequestMapping(path = "/payments/{id}/events", method = RequestMethod.POST)
     public ResponseEntity createPayment(@PathVariable Long id, @RequestBody PaymentEvent event) {
         return Optional.ofNullable(appendEventResource(id, event))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
                 .orElseThrow(() -> new RuntimeException("Append payment event failed"));
     }
 
-    @GetMapping(path = "/payments/{id}/commands")
-    public ResponseEntity getPaymentCommands(@PathVariable Long id) {
-        return Optional.ofNullable(getCommandsResource(id))
+    @RequestMapping(path = "/payments/{id}/commands")
+    public ResponseEntity getCommands(@PathVariable Long id) {
+        return Optional.ofNullable(getCommandsResources(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The payment could not be found"));
     }
 
-    @GetMapping(path = "/payments/{id}/commands/connectOrder")
-    public ResponseEntity connectOrder(@PathVariable Long id) {
-        return Optional.ofNullable(getPaymentResource(
-                paymentService.applyCommand(id, PaymentCommand.CONNECT_ORDER)))
-                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+    @RequestMapping(path = "/payments/{id}/commands/connectOrder")
+    public ResponseEntity connectOrder(@PathVariable Long id, @RequestParam(value = "orderId") Long orderId) {
+        return Optional.of(paymentService.getPayment(id)
+                .connectOrder(orderId))
+                .map(e -> new ResponseEntity<>(getPaymentResource(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
-    @GetMapping(path = "/payments/{id}/commands/processPayment")
+    @RequestMapping(path = "/payments/{id}/commands/processPayment")
     public ResponseEntity processPayment(@PathVariable Long id) {
-        return Optional.ofNullable(getPaymentResource(
-                paymentService.applyCommand(id, PaymentCommand.PROCESS_PAYMENT)))
-                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+        return Optional.of(paymentService.getPayment(id)
+                .processPayment())
+                .map(e -> new ResponseEntity<>(getPaymentResource(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
@@ -103,16 +110,10 @@ public class PaymentController {
      * @return a hypermedia resource for the fetched {@link Payment}
      */
     private Resource<Payment> getPaymentResource(Long id) {
-        Resource<Payment> paymentResource = null;
-
         // Get the payment for the provided id
         Payment payment = paymentService.getPayment(id);
 
-        // If the payment exists, wrap the hypermedia response
-        if (payment != null)
-            paymentResource = getPaymentResource(payment);
-
-        return paymentResource;
+        return getPaymentResource(payment);
     }
 
     /**
@@ -170,50 +171,20 @@ public class PaymentController {
         return eventResource;
     }
 
-    /**
-     * Get the {@link PaymentCommand} hypermedia resource that lists the available commands that can be applied to a
-     * {@link Payment} entity.
-     *
-     * @param id is the {@link Payment} identifier to provide command links for
-     * @return an {@link PaymentCommands} with a collection of embedded command links
-     */
-    private PaymentCommands getCommandsResource(Long id) {
-        // Get the payment resource for the identifier
-        Resource<Payment> paymentResource = getPaymentResource(id);
-
-        // Create a new payment commands hypermedia resource
-        PaymentCommands commandResource = new PaymentCommands();
-
-        // Add payment command hypermedia links
-        if (paymentResource != null) {
-            commandResource.add(
-                    getCommandLinkBuilder(id)
-                            .slash("connectOrder")
-                            .withRel("connectOrder"),
-                    getCommandLinkBuilder(id)
-                            .slash("processPayment")
-                            .withRel("processPayment")
-            );
-        }
-
-        return commandResource;
-    }
-
     private Events getPaymentEventResources(Long id) {
         return eventService.find(id);
     }
 
-    /**
-     * Generate a {@link LinkBuilder} for generating the {@link PaymentCommands}.
-     *
-     * @param id is the unique identifier for a {@link Payment}
-     * @return a {@link LinkBuilder} for the {@link PaymentCommands}
-     */
-    private LinkBuilder getCommandLinkBuilder(Long id) {
-        return linkTo(PaymentController.class)
-                .slash("payments")
-                .slash(id)
-                .slash("commands");
+    private LinkBuilder linkBuilder(String name, Long id) {
+        Method method;
+
+        try {
+            method = PaymentController.class.getMethod(name, Long.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+
+        return linkTo(PaymentController.class, method, id);
     }
 
     /**
@@ -223,23 +194,20 @@ public class PaymentController {
      * @return is a hypermedia enriched resource for the supplied {@link Payment} entity
      */
     private Resource<Payment> getPaymentResource(Payment payment) {
-        Resource<Payment> paymentResource;
+        Assert.notNull(payment, "Payment must not be null");
 
-        // Prepare hypermedia response
-        paymentResource = new Resource<>(payment,
-                linkTo(PaymentController.class)
-                        .slash("payments")
-                        .slash(payment.getPaymentId())
-                        .withSelfRel(),
-                linkTo(PaymentController.class)
-                        .slash("payments")
-                        .slash(payment.getPaymentId())
-                        .slash("events")
-                        .withRel("events"),
-                getCommandLinkBuilder(payment.getPaymentId())
-                        .withRel("commands")
-        );
+        // Add command link
+        payment.add(linkBuilder("getCommands", payment.getIdentity()).withRel("commands"));
 
-        return paymentResource;
+        // Add get events link
+        payment.add(linkBuilder("getPaymentEvents", payment.getIdentity()).withRel("events"));
+
+        return new Resource<>(payment);
+    }
+
+    private ResourceSupport getCommandsResources(Long id) {
+        Payment payment = new Payment();
+        payment.setIdentity(id);
+        return new Resource<>(payment.getCommands());
     }
 }
