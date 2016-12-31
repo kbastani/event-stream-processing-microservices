@@ -1,12 +1,13 @@
 package demo.event;
 
+import demo.domain.Aggregate;
 import org.apache.log4j.Logger;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.web.client.RestTemplate;
@@ -38,14 +39,18 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
         this.restTemplate = restTemplate;
     }
 
-    public <E extends ResourceSupport, S extends T> S send(S event, Link... links) {
+    public <E extends Aggregate, S extends T> S send(S event, Link... links) {
         // Assemble request to the event stream processor
         RequestEntity<Resource<T>> requestEntity = RequestEntity.post(URI.create(EVENT_PROCESSOR_URL))
-                .contentType(MediaTypes.HAL_JSON).body(new Resource<T>(event), Resource.class);
+                .contentType(MediaTypes.HAL_JSON)
+                .body(new Resource<T>(event), Resource.class);
 
         try {
             // Send the event to the event stream processor
-            E entity = (E) restTemplate.exchange(requestEntity, event.getEntity().getClass()).getBody();
+            E entity = (E) restTemplate.exchange(requestEntity, event.getEntity()
+                    .getClass())
+                    .getBody();
+
             // Set the applied entity reference to the event
             event.setEntity(entity);
         } catch (Exception ex) {
@@ -56,7 +61,10 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
     }
 
     public <S extends T> Boolean sendAsync(S event, Link... links) {
-        return eventStream.output().send(MessageBuilder.withPayload(event).build());
+        return eventStream.output()
+                .send(MessageBuilder.withPayload(event)
+                        .setHeader("contentType", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                        .build());
     }
 
     public <S extends T> S save(S event) {
@@ -75,6 +83,7 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
 
     public <E extends Events> E find(ID entityId) {
         return (E) new Events(entityId, eventRepository.findEventsByEntityId(entityId,
-                new PageRequest(0, Integer.MAX_VALUE)).getContent());
+                new PageRequest(0, Integer.MAX_VALUE))
+                .getContent());
     }
 }

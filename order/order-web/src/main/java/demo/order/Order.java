@@ -1,26 +1,26 @@
 package demo.order;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import demo.address.Address;
 import demo.address.AddressType;
-import demo.domain.BaseEntity;
+import demo.domain.AbstractEntity;
+import demo.domain.Command;
 import demo.event.OrderEvent;
+import demo.order.action.*;
+import demo.order.controller.OrderController;
+import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+
 @Entity(name = "orders")
-public class Order extends BaseEntity {
-
+public class Order extends AbstractEntity<OrderEvent, Long> {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private Long id;
-    private Long accountId;
-    private Long paymentId;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<OrderEvent> events = new HashSet<>();
 
     @Enumerated(value = EnumType.STRING)
     private OrderStatus status;
@@ -30,6 +30,8 @@ public class Order extends BaseEntity {
 
     @OneToOne(cascade = CascadeType.ALL)
     private Address shippingAddress;
+
+    private Long accountId, paymentId;
 
     public Order() {
         this.status = OrderStatus.ORDER_CREATED;
@@ -43,31 +45,15 @@ public class Order extends BaseEntity {
             this.shippingAddress.setAddressType(AddressType.SHIPPING);
     }
 
-    @JsonIgnore
-    public Long getOrderId() {
-        return id;
+    @JsonProperty("orderId")
+    @Override
+    public Long getIdentity() {
+        return this.id;
     }
 
-    public void setOrderId(Long id) {
+    @Override
+    public void setIdentity(Long id) {
         this.id = id;
-    }
-
-    @JsonIgnore
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
-    }
-
-    @JsonIgnore
-    public Long getPaymentId() {
-        return paymentId;
-    }
-
-    public void setPaymentId(Long paymentId) {
-        this.paymentId = paymentId;
     }
 
     public OrderStatus getStatus() {
@@ -76,15 +62,6 @@ public class Order extends BaseEntity {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
-    }
-
-    @JsonIgnore
-    public Set<OrderEvent> getEvents() {
-        return events;
-    }
-
-    public void setEvents(Set<OrderEvent> events) {
-        this.events = events;
     }
 
     public Set<LineItem> getLineItems() {
@@ -103,19 +80,70 @@ public class Order extends BaseEntity {
         this.shippingAddress = shippingAddress;
     }
 
-    public void addLineItem(LineItem lineItem) {
-        lineItems.add(lineItem);
+    public Long getAccountId() {
+        return accountId;
     }
 
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    public Long getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(Long paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    @Command(method = "connectAccount", controller = OrderController.class)
+    public Order connectAccount(Long accountId) {
+        getAction(ConnectAccount.class)
+                .getConsumer()
+                .accept(this, accountId);
+        return this;
+    }
+
+    @Command(method = "connectPayment", controller = OrderController.class)
+    public Order connectPayment(Long paymentId) {
+        getAction(ConnectPayment.class)
+                .getConsumer()
+                .accept(this, paymentId);
+        return this;
+    }
+
+    @Command(method = "createPayment", controller = OrderController.class)
+    public Order createPayment() {
+        getAction(CreatePayment.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    @Command(method = "processPayment", controller = OrderController.class)
+    public Order processPayment() {
+        getAction(ProcessPayment.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    @Command(method = "reserveInventory", controller = OrderController.class)
+    public Order reserveInventory(Long paymentId) {
+        getAction(ReserveInventory.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    /**
+     * Returns the {@link Link} with a rel of {@link Link#REL_SELF}.
+     */
     @Override
-    public String toString() {
-        return "Order{" +
-                "id=" + id +
-                ", accountId=" + accountId +
-                ", paymentId=" + paymentId +
-                ", status=" + status +
-                ", lineItems=" + lineItems +
-                ", shippingAddress=" + shippingAddress +
-                "} " + super.toString();
+    public Link getId() {
+        return linkTo(OrderController.class)
+                .slash("orders")
+                .slash(getIdentity())
+                .withSelfRel();
     }
 }

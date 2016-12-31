@@ -1,5 +1,6 @@
 package demo.domain;
 
+import demo.event.EventService;
 import lombok.*;
 import org.junit.After;
 import org.junit.Before;
@@ -14,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import static junit.framework.TestCase.assertEquals;
@@ -97,7 +99,7 @@ public class ProviderTests {
     @NoArgsConstructor
     @Getter
     @Setter
-    public static class EmptyAggregate extends Aggregate<Long> {
+    public static class EmptyAggregate extends Aggregate<EmptyEvent, Long> {
         @NonNull
         private Long id;
         @NonNull
@@ -121,6 +123,11 @@ public class ProviderTests {
         Long getIdentity() {
             return this.id;
         }
+
+        @Override
+        public List<EmptyEvent> getEvents() {
+            return null;
+        }
     }
 
     @Getter
@@ -128,14 +135,40 @@ public class ProviderTests {
     public static class EmptyProvider extends Provider<EmptyAggregate> {
         private final EmptyService emptyService;
 
-        public Service<? extends EmptyAggregate> getDefaultService() {
+        public Service<? extends EmptyAggregate, Long> getDefaultService() {
             return emptyService;
+        }
+
+        @Override
+        public EventService<?, ?> getDefaultEventService() {
+            return null;
         }
     }
 
-    public static class EmptyService extends Service<EmptyAggregate> {
+    public static class EmptyService extends Service<EmptyAggregate, Long> {
         public EmptyAggregate getEmptyAggregate(Long id) {
             return new EmptyAggregate(id, AggregateStatus.CREATED);
+        }
+
+
+        @Override
+        public EmptyAggregate get(Long aLong) {
+            return null;
+        }
+
+        @Override
+        public EmptyAggregate create(EmptyAggregate entity) {
+            return null;
+        }
+
+        @Override
+        public EmptyAggregate update(EmptyAggregate entity) {
+            return null;
+        }
+
+        @Override
+        public boolean delete(Long aLong) {
+            return false;
         }
     }
 

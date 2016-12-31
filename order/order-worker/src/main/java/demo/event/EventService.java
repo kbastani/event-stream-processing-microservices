@@ -29,6 +29,8 @@ public class EventService {
 
         Order result;
 
+        log.info(orderEvent);
+
         log.info("Order event received: " + orderEvent.getLink("self").getHref());
 
         // Generate a state machine for computing the state of the order resource

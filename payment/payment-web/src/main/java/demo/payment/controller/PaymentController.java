@@ -61,7 +61,7 @@ public class PaymentController {
 
     @RequestMapping(path = "/payments/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deletePayment(@PathVariable Long id) {
-        return Optional.ofNullable(paymentService.deletePayment(id))
+        return Optional.ofNullable(paymentService.delete(id))
                 .map(e -> new ResponseEntity<>(HttpStatus.NO_CONTENT))
                 .orElseThrow(() -> new RuntimeException("Payment deletion failed"));
     }
@@ -74,7 +74,7 @@ public class PaymentController {
     }
 
     @RequestMapping(path = "/payments/{id}/events", method = RequestMethod.POST)
-    public ResponseEntity createPayment(@PathVariable Long id, @RequestBody PaymentEvent event) {
+    public ResponseEntity createPaymentEvents(@PathVariable Long id, @RequestBody PaymentEvent event) {
         return Optional.ofNullable(appendEventResource(id, event))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
                 .orElseThrow(() -> new RuntimeException("Append payment event failed"));
@@ -89,7 +89,7 @@ public class PaymentController {
 
     @RequestMapping(path = "/payments/{id}/commands/connectOrder")
     public ResponseEntity connectOrder(@PathVariable Long id, @RequestParam(value = "orderId") Long orderId) {
-        return Optional.of(paymentService.getPayment(id)
+        return Optional.of(paymentService.get(id)
                 .connectOrder(orderId))
                 .map(e -> new ResponseEntity<>(getPaymentResource(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
@@ -97,7 +97,7 @@ public class PaymentController {
 
     @RequestMapping(path = "/payments/{id}/commands/processPayment")
     public ResponseEntity processPayment(@PathVariable Long id) {
-        return Optional.of(paymentService.getPayment(id)
+        return Optional.of(paymentService.get(id)
                 .processPayment())
                 .map(e -> new ResponseEntity<>(getPaymentResource(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
@@ -111,7 +111,7 @@ public class PaymentController {
      */
     private Resource<Payment> getPaymentResource(Long id) {
         // Get the payment for the provided id
-        Payment payment = paymentService.getPayment(id);
+        Payment payment = paymentService.get(id);
 
         return getPaymentResource(payment);
     }
@@ -128,7 +128,9 @@ public class PaymentController {
         // Create the new payment
         payment = paymentService.registerPayment(payment);
 
-        return getPaymentResource(payment);
+        payment.getLinks().clear();
+
+        return new Resource<>(payment);
     }
 
     /**
@@ -139,7 +141,8 @@ public class PaymentController {
      * @return a hypermedia resource for the updated {@link Payment}
      */
     private Resource<Payment> updatePaymentResource(Long id, Payment payment) {
-        return getPaymentResource(paymentService.updatePayment(id, payment));
+        payment.setIdentity(id);
+        return getPaymentResource(paymentService.update(payment));
     }
 
     /**
@@ -153,7 +156,7 @@ public class PaymentController {
     private Resource<PaymentEvent> appendEventResource(Long paymentId, PaymentEvent event) {
         Resource<PaymentEvent> eventResource = null;
 
-        event = paymentService.appendEvent(paymentId, event);
+        event = paymentService.get(paymentId).sendEvent(event);
 
         if (event != null) {
             eventResource = new Resource<>(event,
@@ -196,11 +199,15 @@ public class PaymentController {
     private Resource<Payment> getPaymentResource(Payment payment) {
         Assert.notNull(payment, "Payment must not be null");
 
-        // Add command link
-        payment.add(linkBuilder("getCommands", payment.getIdentity()).withRel("commands"));
+        if(!payment.hasLink("commands")) {
+            // Add command link
+            payment.add(linkBuilder("getCommands", payment.getIdentity()).withRel("commands"));
+        }
 
-        // Add get events link
-        payment.add(linkBuilder("getPaymentEvents", payment.getIdentity()).withRel("events"));
+        if(!payment.hasLink("events")) {
+            // Add get events link
+            payment.add(linkBuilder("getPaymentEvents", payment.getIdentity()).withRel("events"));
+        }
 
         return new Resource<>(payment);
     }

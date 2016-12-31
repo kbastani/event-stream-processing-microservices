@@ -33,7 +33,7 @@ public class PaymentServiceTests {
 
         given(this.paymentRepository.findOne(1L)).willReturn(expected);
 
-        Payment actual = paymentService.getPayment(1L);
+        Payment actual = paymentService.get(1L);
 
         assertThat(actual).isNotNull();
         assertThat(actual.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);

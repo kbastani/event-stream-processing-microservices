@@ -11,8 +11,6 @@ import demo.payment.controller.PaymentController;
 import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -23,14 +21,11 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  * @author Kenny Bastani
  */
 @Entity
-public class Payment extends AbstractEntity<Long> {
+public class Payment extends AbstractEntity<PaymentEvent, Long> {
 
     @Id
     @GeneratedValue
     private Long id;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<PaymentEvent> events = new HashSet<>();
 
     @Enumerated(value = EnumType.STRING)
     private PaymentStatus status;
@@ -59,15 +54,6 @@ public class Payment extends AbstractEntity<Long> {
     @Override
     public void setIdentity(Long id) {
         this.id = id;
-    }
-
-    @JsonIgnore
-    public Set<PaymentEvent> getEvents() {
-        return events;
-    }
-
-    public void setEvents(Set<PaymentEvent> events) {
-        this.events = events;
     }
 
     public PaymentStatus getStatus() {
@@ -131,6 +117,4 @@ public class Payment extends AbstractEntity<Long> {
                 .slash(getIdentity())
                 .withSelfRel();
     }
-
-
 }

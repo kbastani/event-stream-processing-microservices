@@ -1,5 +1,6 @@
 package demo.domain;
 
+import demo.event.EventService;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -24,5 +25,7 @@ public abstract class Provider<T extends Aggregate> implements ApplicationContex
         Provider.applicationContext = applicationContext;
     }
 
-    protected abstract Service<? extends T> getDefaultService();
+    public abstract Service<?, ?> getDefaultService();
+
+    public abstract EventService<?, ?> getDefaultEventService();
 }

@@ -4,10 +4,10 @@ import demo.order.Order;
 import demo.order.OrderStatus;
 
 /**
- * The {@link OrderEventType} represents a collection of possible events that describe
- * state transitions of {@link OrderStatus} on the {@link Order} aggregate.
+ * The {@link OrderEventType} represents a collection of possible events that describe state transitions of
+ * {@link OrderStatus} on the {@link Order} aggregate.
  *
- * @author kbastani
+ * @author Kenny Bastani
  */
 public enum OrderEventType {
     ORDER_CREATED,

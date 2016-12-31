@@ -1,8 +1,6 @@
 package demo.payment;
 
-import demo.domain.BaseEntity;
-
-public class Payment extends BaseEntity {
+public class Payment {
 
     private Double amount;
     private PaymentMethod paymentMethod;

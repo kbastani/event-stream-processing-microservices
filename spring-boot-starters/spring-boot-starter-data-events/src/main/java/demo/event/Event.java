@@ -1,5 +1,6 @@
 package demo.event;
 
+import demo.domain.Aggregate;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.core.EvoInflectorRelProvider;
@@ -21,7 +22,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  * @see org.springframework.stereotype.Repository
  * @see ResourceSupport
  */
-public abstract class Event<T extends ResourceSupport, E, ID extends Serializable> extends ResourceSupport {
+public abstract class Event<T extends Aggregate, E, ID extends Serializable> extends ResourceSupport {
 
     public Event() {
     }

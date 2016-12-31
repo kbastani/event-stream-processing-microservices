@@ -40,7 +40,7 @@ public class PaymentControllerTest {
 
         Payment payment = new Payment(42.0, PaymentMethod.CREDIT_CARD);
 
-        given(this.paymentService.getPayment(1L)).willReturn(payment);
+        given(this.paymentService.get(1L)).willReturn(payment);
         given(this.eventService.find(1L)).willReturn(new Events<>(1L, Collections
                 .singletonList(new PaymentEvent(PaymentEventType
                         .PAYMENT_CREATED))));
