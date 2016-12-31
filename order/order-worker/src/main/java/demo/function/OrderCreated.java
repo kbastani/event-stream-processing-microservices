@@ -1,9 +1,9 @@
 package demo.function;
 
-import demo.event.OrderEvent;
-import demo.event.OrderEventType;
-import demo.order.Order;
-import demo.order.OrderStatus;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventType;
+import demo.order.domain.Order;
+import demo.order.domain.OrderStatus;
 import org.apache.log4j.Logger;
 import org.springframework.statemachine.StateContext;
 

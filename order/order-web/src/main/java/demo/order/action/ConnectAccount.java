@@ -21,7 +21,7 @@ public class ConnectAccount extends Action<Order> {
 
     public BiConsumer<Order, Long> getConsumer() {
         return (order, accountId) -> {
-            OrderService orderService = order.getProvider(OrderModule.class)
+            OrderService orderService = order.getModule(OrderModule.class)
                     .getDefaultService();
 
             // Connect the account

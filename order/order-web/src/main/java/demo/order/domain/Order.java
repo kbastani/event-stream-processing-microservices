@@ -135,6 +135,14 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
         return this;
     }
 
+    public boolean delete() {
+        getAction(DeleteOrder.class)
+                .getConsumer()
+                .accept(this);
+
+        return true;
+    }
+
     @JsonIgnore
     public Double calculateTotal() {
         return getLineItems()

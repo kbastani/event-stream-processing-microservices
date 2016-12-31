@@ -29,7 +29,7 @@ public class ActivateAccount extends Action<Account> {
             Assert.isTrue(Arrays.asList(ACCOUNT_CONFIRMED, ACCOUNT_SUSPENDED, ACCOUNT_ARCHIVED)
                     .contains(account.getStatus()), "The account cannot be activated");
 
-            AccountService accountService = account.getProvider(AccountModule.class)
+            AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
             // Activate the account

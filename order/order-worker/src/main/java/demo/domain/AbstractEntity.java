@@ -2,12 +2,12 @@ package demo.domain;
 
 import org.springframework.hateoas.ResourceSupport;
 
-public class BaseEntity extends ResourceSupport {
+public class AbstractEntity extends ResourceSupport {
 
     private Long createdAt;
     private Long lastModified;
 
-    public BaseEntity() {
+    public AbstractEntity() {
     }
 
     public Long getCreatedAt() {

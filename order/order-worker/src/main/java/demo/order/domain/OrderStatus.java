@@ -1,4 +1,4 @@
-package demo.order;
+package demo.order.domain;
 
 public enum OrderStatus {
     ORDER_CREATED,

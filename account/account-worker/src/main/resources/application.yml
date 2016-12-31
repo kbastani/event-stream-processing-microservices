@@ -13,8 +13,10 @@ spring:
           contentType: 'application/json'
           consumer:
             durableSubscription: true
+  jackson:
+    default-property-inclusion: non_null
 server:
-  port: 8081
+  port: 0
 amazon:
   aws:
     access-key-id: replace

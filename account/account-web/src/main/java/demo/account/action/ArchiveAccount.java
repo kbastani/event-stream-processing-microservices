@@ -26,7 +26,7 @@ public class ArchiveAccount extends Action<Account> {
         return (account) -> {
             Assert.isTrue(account.getStatus() == ACCOUNT_ACTIVE, "An inactive account cannot be archived");
             
-            AccountService accountService = account.getProvider(AccountModule.class)
+            AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
             // Archive the account

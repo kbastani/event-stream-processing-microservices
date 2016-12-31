@@ -42,18 +42,18 @@ public class ProviderTests {
 
     @Test
     public void testGetProviderReturnsProvider() {
-        assertNotNull(new EmptyAggregate().getProvider(EmptyProvider.class));
+        assertNotNull(new EmptyAggregate().getModule(EmptyProvider.class));
     }
 
     @Test
     public void testGetServiceReturnsService() {
-        EmptyProvider provider = new EmptyAggregate().getProvider(EmptyProvider.class);
+        EmptyProvider provider = new EmptyAggregate().getModule(EmptyProvider.class);
         assertNotNull(provider.getEmptyService());
     }
 
     @Test
     public void testGetActionReturnsAction() {
-        EmptyProvider provider = new EmptyAggregate().getProvider(EmptyProvider.class);
+        EmptyProvider provider = new EmptyAggregate().getModule(EmptyProvider.class);
         EmptyService service = provider.getEmptyService();
         assertNotNull(service.getAction(EmptyAction.class));
     }
@@ -61,7 +61,7 @@ public class ProviderTests {
     @Test
     public void testProcessCommandChangesStatus() {
         EmptyAggregate aggregate = new EmptyAggregate(0L, AggregateStatus.CREATED);
-        EmptyProvider provider = new EmptyAggregate().getProvider(EmptyProvider.class);
+        EmptyProvider provider = new EmptyAggregate().getModule(EmptyProvider.class);
         EmptyService service = provider.getEmptyService();
         EmptyAction emptyAction = service.getAction(EmptyAction.class);
         emptyAction.getConsumer().accept(aggregate);
@@ -107,7 +107,7 @@ public class ProviderTests {
 
         @Command(controller = EmptyController.class, method = "emptyAction")
         public void emptyAction() {
-            EmptyProvider emptyProvider = this.getProvider();
+            EmptyProvider emptyProvider = this.getModule();
             emptyProvider.getEmptyService()
                     .getAction(EmptyAction.class)
                     .getConsumer()

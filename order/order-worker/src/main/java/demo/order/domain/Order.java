@@ -1,16 +1,16 @@
-package demo.order;
+package demo.order.domain;
 
-import demo.address.Address;
-import demo.address.AddressType;
-import demo.domain.BaseEntity;
-import demo.event.OrderEvent;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import demo.domain.AbstractEntity;
+import demo.order.event.OrderEvent;
+import org.springframework.hateoas.Link;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class Order extends BaseEntity {
+public class Order extends AbstractEntity {
 
-    private Long orderId;
+    private Long id;
 
     private OrderStatus status;
 
@@ -23,19 +23,13 @@ public class Order extends BaseEntity {
     public Order() {
     }
 
-    public Order(String accountNumber, Address shippingAddress) {
-        this();
-        this.shippingAddress = shippingAddress;
-        if (shippingAddress.getAddressType() == null)
-            this.shippingAddress.setAddressType(AddressType.SHIPPING);
+    @JsonProperty("orderId")
+    public Long getIdentity() {
+        return this.id;
     }
 
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(Long id) {
-        this.orderId = orderId;
+    public void setIdentity(Long id) {
+        this.id = id;
     }
 
     public OrderStatus getStatus() {
@@ -74,14 +68,13 @@ public class Order extends BaseEntity {
         lineItems.add(lineItem);
     }
 
+    /**
+     * Returns the {@link Link} with a rel of {@link Link#REL_SELF}.
+     */
     @Override
-    public String toString() {
-        return "Order{" +
-                "orderId=" + orderId +
-                ", status=" + status +
-                ", events=" + events +
-                ", lineItems=" + lineItems +
-                ", shippingAddress=" + shippingAddress +
-                "} " + super.toString();
+    public Link getId() {
+        return getLink("self");
     }
+
+
 }

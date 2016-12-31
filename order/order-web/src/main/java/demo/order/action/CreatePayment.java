@@ -42,7 +42,7 @@ public class CreatePayment extends Action<Order> {
             Assert.isTrue(order.getPaymentId() == null, "Payment has already been created");
             Assert.isTrue(order.getStatus() == OrderStatus.ACCOUNT_CONNECTED, "Account must be connected first");
 
-            OrderService orderService = order.getProvider(OrderModule.class)
+            OrderService orderService = order.getModule(OrderModule.class)
                     .getDefaultService();
 
             Payment payment = new Payment();

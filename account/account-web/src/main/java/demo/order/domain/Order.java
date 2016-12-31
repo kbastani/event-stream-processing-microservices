@@ -76,7 +76,7 @@ public class Order extends Aggregate<OrderEvent, Long> {
     }
 
     public Order post() {
-        OrderModule orderProvider = getProvider();
+        OrderModule orderProvider = getModule();
         return orderProvider.getDefaultService()
                 .create(this);
     }
@@ -115,9 +115,9 @@ public class Order extends Aggregate<OrderEvent, Long> {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Module<A>, A extends Aggregate<OrderEvent, Long>> T getProvider() throws
+    public <T extends Module<A>, A extends Aggregate<OrderEvent, Long>> T getModule() throws
             IllegalArgumentException {
-        OrderModule orderProvider = getProvider(OrderModule.class);
+        OrderModule orderProvider = getModule(OrderModule.class);
         return (T) orderProvider;
     }
 

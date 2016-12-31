@@ -13,6 +13,8 @@ spring:
           contentType: 'application/json'
           consumer:
             durableSubscription: true
+  jackson:
+    default-property-inclusion: non_null
 server:
   port: 0
 amazon:
@@ -25,3 +27,5 @@ spring:
 eureka:
   client:
     enabled: false
+server:
+  port: 0

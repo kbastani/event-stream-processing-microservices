@@ -1,4 +1,4 @@
-package demo.address;
+package demo.order.domain;
 
 import java.io.Serializable;
 

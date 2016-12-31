@@ -46,7 +46,7 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
     @JsonIgnore
     protected <T extends Action<A>, A extends Aggregate> T getAction(
             Class<T> actionType) throws IllegalArgumentException {
-        Module provider = getProvider();
+        Module provider = getModule();
         Service service = provider.getDefaultService();
         return (T) service.getAction(actionType);
     }
@@ -59,8 +59,8 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
      */
     @SuppressWarnings("unchecked")
     @JsonIgnore
-    public <T extends Module<A>, A extends Aggregate<E, ID>> T getProvider() throws IllegalArgumentException {
-        return getProvider((Class<T>) ResolvableType
+    public <T extends Module<A>, A extends Aggregate<E, ID>> T getModule() throws IllegalArgumentException {
+        return getModule((Class<T>) ResolvableType
                 .forClassWithGenerics(Module.class, ResolvableType.forInstance(this))
                 .getRawClass());
     }
@@ -72,7 +72,7 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
      * @throws IllegalArgumentException if the application context is unavailable or the provider does not exist
      */
     @JsonIgnore
-    public <T extends Module<A>, A extends Aggregate<E, ID>> T getProvider(Class<T> providerType) throws
+    public <T extends Module<A>, A extends Aggregate<E, ID>> T getModule(Class<T> providerType) throws
             IllegalArgumentException {
         Assert.notNull(applicationContext, "The application context is unavailable");
         T provider = applicationContext.getBean(providerType);
@@ -167,13 +167,13 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
     @SuppressWarnings("unchecked")
     @JsonIgnore
     protected Service<Aggregate<E, ID>, ID> getEntityService() {
-        return (Service<Aggregate<E, ID>, ID>) getProvider().getDefaultService();
+        return (Service<Aggregate<E, ID>, ID>) getModule().getDefaultService();
     }
 
     @SuppressWarnings("unchecked")
     @JsonIgnore
     protected EventService<E, ID> getEventService() {
-        return (EventService<E, ID>) getProvider().getDefaultEventService();
+        return (EventService<E, ID>) getModule().getDefaultEventService();
     }
 
     public static class CommandResources extends ResourceSupport {

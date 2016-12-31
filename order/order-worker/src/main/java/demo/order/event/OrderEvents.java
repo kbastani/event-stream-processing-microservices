@@ -1,4 +1,4 @@
-package demo.event;
+package demo.order.event;
 
 import org.springframework.hateoas.Resources;
 

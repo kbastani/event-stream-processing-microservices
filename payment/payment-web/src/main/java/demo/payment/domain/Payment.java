@@ -1,13 +1,12 @@
 package demo.payment.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import demo.domain.AbstractEntity;
 import demo.domain.Command;
-import demo.payment.event.PaymentEvent;
 import demo.payment.action.ConnectOrder;
 import demo.payment.action.ProcessPayment;
 import demo.payment.controller.PaymentController;
+import demo.payment.event.PaymentEvent;
 import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
@@ -41,6 +40,7 @@ public class Payment extends AbstractEntity<PaymentEvent, Long> {
     }
 
     public Payment(Double amount, PaymentMethod paymentMethod) {
+        this();
         this.amount = amount;
         this.paymentMethod = paymentMethod;
     }
@@ -80,7 +80,6 @@ public class Payment extends AbstractEntity<PaymentEvent, Long> {
         this.paymentMethod = paymentMethod;
     }
 
-    @JsonIgnore
     public Long getOrderId() {
         return orderId;
     }

@@ -75,6 +75,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Paymen
                     .and()
                     .withExternal()
                     .source(PaymentStatus.PAYMENT_CREATED)
+                    .target(PaymentStatus.ORDER_CONNECTED)
+                    .event(PaymentEventType.ORDER_CONNECTED)
+                    .action(orderConnected())
+                    .and()
+                    .withExternal()
+                    .source(PaymentStatus.ORDER_CONNECTED)
                     .target(PaymentStatus.PAYMENT_PENDING)
                     .event(PaymentEventType.PAYMENT_PENDING)
                     .action(paymentPending())
@@ -136,6 +142,23 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Paymen
     public Action<PaymentStatus, PaymentEventType> paymentCreated() {
         return context -> applyEvent(context,
                 new PaymentCreated(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("payment").getHref());
+                    // Get the payment resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("payment").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Payment.class)
+                            .getBody();
+                }));
+    }
+
+    @Bean
+    public Action<PaymentStatus, PaymentEventType> orderConnected() {
+        return context -> applyEvent(context,
+                new OrderConnected(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("payment").getHref());
                     // Get the payment resource for the event
                     Traverson traverson = new Traverson(

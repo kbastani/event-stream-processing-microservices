@@ -26,7 +26,7 @@ public class ConfirmAccount extends Action<Account> {
         return (account) -> {
             Assert.isTrue(account.getStatus() == ACCOUNT_PENDING, "The account has already been confirmed");
 
-            AccountService accountService = account.getProvider(AccountModule.class)
+            AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
             // Confirm the account

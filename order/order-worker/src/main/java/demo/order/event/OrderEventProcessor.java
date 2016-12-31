@@ -1,8 +1,7 @@
-package demo.stream;
+package demo.order.event;
 
-import demo.event.EventService;
-import demo.event.OrderEvent;
-import demo.order.Order;
+import demo.order.StateFactory;
+import demo.order.domain.Order;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -10,24 +9,24 @@ import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.context.annotation.Profile;
 
 /**
- * The {@link OrderStream} monitors for a variety of {@link OrderEvent} domain
+ * The {@link OrderEventProcessor} monitors for a variety of {@link OrderEvent} domain
  * events for an {@link Order}.
  *
  * @author kbastani
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
-@Profile({ "cloud", "development" })
-public class OrderStream {
+@Profile({"cloud", "development"})
+public class OrderEventProcessor {
 
-    private EventService eventService;
+    private StateFactory stateFactory;
 
-    public OrderStream(EventService eventService) {
-        this.eventService = eventService;
+    public OrderEventProcessor(StateFactory stateFactory) {
+        this.stateFactory = stateFactory;
     }
 
     @StreamListener(Sink.INPUT)
     public void streamListener(OrderEvent orderEvent) {
-        eventService.apply(orderEvent);
+        stateFactory.apply(orderEvent);
     }
 }

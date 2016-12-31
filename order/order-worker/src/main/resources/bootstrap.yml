@@ -1,4 +1,4 @@
 spring:
   application:
-    name: account-worker
+    name: order-worker
 ---

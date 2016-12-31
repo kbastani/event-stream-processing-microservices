@@ -1,5 +1,7 @@
-package demo.event;
+package demo.order.controller;
 
+import demo.order.StateFactory;
+import demo.order.event.OrderEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,9 +15,9 @@ import java.util.Optional;
 @RequestMapping("/v1")
 public class EventController {
 
-    private EventService eventService;
+    private StateFactory eventService;
 
-    public EventController(EventService eventService) {
+    public EventController(StateFactory eventService) {
         this.eventService = eventService;
     }
 

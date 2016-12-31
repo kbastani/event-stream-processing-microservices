@@ -10,6 +10,8 @@ spring:
         output:
           destination: order
           contentType: 'application/json'
+  jackson:
+    default-property-inclusion: non_null
 server:
   port: 0
 events:

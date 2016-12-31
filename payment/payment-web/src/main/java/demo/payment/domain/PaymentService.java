@@ -19,11 +19,9 @@ import org.springframework.util.Assert;
 public class PaymentService extends Service<Payment, Long> {
 
     private final PaymentRepository paymentRepository;
-    private final EventService<PaymentEvent, Long> eventService;
 
     public PaymentService(PaymentRepository paymentRepository, EventService<PaymentEvent, Long> eventService) {
         this.paymentRepository = paymentRepository;
-        this.eventService = eventService;
     }
 
     public Payment registerPayment(Payment payment) {

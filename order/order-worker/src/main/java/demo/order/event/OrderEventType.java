@@ -1,4 +1,4 @@
-package demo.event;
+package demo.order.event;
 
 public enum OrderEventType {
     ORDER_CREATED,

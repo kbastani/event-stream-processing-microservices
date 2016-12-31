@@ -4,6 +4,8 @@ spring:
 ---
 spring:
   profiles: development
+  jackson:
+    default-property-inclusion: non_null
   cloud:
     stream:
       bindings:

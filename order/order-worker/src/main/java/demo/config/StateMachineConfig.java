@@ -1,12 +1,13 @@
 package demo.config;
 
-import demo.event.OrderEvent;
-import demo.event.OrderEventType;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventType;
 import demo.function.*;
-import demo.order.Order;
-import demo.order.OrderStatus;
-import demo.payment.Payment;
-import demo.stream.OrderStream;
+import demo.order.domain.Order;
+import demo.order.domain.OrderStatus;
+import demo.order.event.OrderEvents;
+import demo.payment.domain.Payment;
+import demo.order.event.OrderEventProcessor;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +31,9 @@ import java.util.Map;
  * expressions. Actions are executed during transitions between a source state and a target state.
  * <p>
  * A state machine provides a robust declarative language for describing the state of an {@link Order}
- * resource given a sequence of ordered {@link demo.event.OrderEvents}. When an event is received
- * in {@link OrderStream}, an in-memory state machine is fully replicated given the
- * {@link demo.event.OrderEvents} attached to an {@link Order} resource.
+ * resource given a sequence of ordered {@link OrderEvents}. When an event is received
+ * in {@link OrderEventProcessor}, an in-memory state machine is fully replicated given the
+ * {@link OrderEvents} attached to an {@link Order} resource.
  *
  * @author kbastani
  */
@@ -50,13 +51,38 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
     @Override
     public void configure(StateMachineStateConfigurer<OrderStatus, OrderEventType> states) {
         try {
-            // Describe the initial condition of the order state machine
             states.withStates()
                     .initial(OrderStatus.ORDER_CREATED)
                     .states(EnumSet.allOf(OrderStatus.class));
         } catch (Exception e) {
             throw new RuntimeException("State machine configuration failed", e);
         }
+    }
+
+    /**
+     * Functions are mapped to actions that are triggered during the replication of a state machine. Functions
+     * should only be executed after the state machine has completed replication. This method checks the state
+     * context of the machine for an {@link OrderEvent}, which signals that the state machine is finished
+     * replication.
+     * <p>
+     * The {@link OrderFunction} argument is only applied if an {@link OrderEvent} is provided as a
+     * message header in the {@link StateContext}.
+     *
+     * @param context       is the state machine context that may include an {@link OrderEvent}
+     * @param orderFunction is the order function to apply after the state machine has completed replication
+     * @return an {@link OrderEvent} only if this event has not yet been processed, otherwise returns null
+     */
+    private OrderEvent applyEvent(StateContext<OrderStatus, OrderEventType> context, OrderFunction orderFunction) {
+        OrderEvent event = null;
+        log.info(String.format("Replicate event: %s", context.getMessage().getPayload()));
+
+        if (context.getMessageHeader("event") != null) {
+            event = context.getMessageHeaders().get("event", OrderEvent.class);
+            log.info(String.format("State replication complete: %s", event.getType()));
+            orderFunction.apply(event);
+        }
+
+        return event;
     }
 
     /**
@@ -253,20 +279,26 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             MediaTypes.HAL_JSON
                     );
 
-                    Payment payment = paymentResource.follow("self")
-                            .toEntity(Payment.class)
-                            .getBody();
-
                     Order order = orderResource.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                            .toObject(Order.class);
 
-                    Map<String, Object> template = new HashMap<String, Object>();
+                    Map<String, Object> template = new HashMap<>();
+                    template.put("orderId", order.getIdentity());
+
+                    // Connect payment to order
+                    Payment payment = paymentResource.follow("self", "commands", "connectOrder")
+                            .withTemplateParameters(template)
+                            .toObject(Payment.class);
+
+                    template = new HashMap<>();
                     template.put("paymentId", payment.getPaymentId());
-                    return orderResource.follow("commands", "connectPayment")
+
+                    // Connect order to payment
+                    order = orderResource.follow("commands", "connectPayment")
                             .withTemplateParameters(template)
                             .toObject(Order.class);
 
+                    return order;
                 }));
     }
 
@@ -321,36 +353,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                 }));
     }
 
-    /**
-     * Functions are mapped to actions that are triggered during the replication of a state machine. Functions
-     * should only be executed after the state machine has completed replication. This method checks the state
-     * context of the machine for an {@link OrderEvent}, which signals that the state machine is finished
-     * replication.
-     * <p>
-     * The {@link OrderFunction} argument is only applied if an {@link OrderEvent} is provided as a
-     * message header in the {@link StateContext}.
-     *
-     * @param context       is the state machine context that may include an {@link OrderEvent}
-     * @param orderFunction is the order function to apply after the state machine has completed replication
-     * @return an {@link OrderEvent} only if this event has not yet been processed, otherwise returns null
-     */
-    private OrderEvent applyEvent(StateContext<OrderStatus, OrderEventType> context,
-                                  OrderFunction orderFunction) {
-        OrderEvent orderEvent = null;
 
-        // Log out the progress of the state machine replication
-        log.info("Replicate event: " + context.getMessage().getPayload());
-
-        // The machine is finished replicating when an OrderEvent is found in the message header
-        if (context.getMessageHeader("event") != null) {
-            orderEvent = (OrderEvent) context.getMessageHeader("event");
-            log.info("State machine replicated: " + orderEvent.getType());
-
-            // Apply the provided function to the OrderEvent
-            orderFunction.apply(orderEvent);
-        }
-
-        return orderEvent;
-    }
 }
 

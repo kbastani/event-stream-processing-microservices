@@ -22,7 +22,7 @@ public class ConnectPayment extends Action<Order> {
     public BiConsumer<Order, Long> getConsumer() {
         return (order, paymentId) -> {
 
-            OrderService orderService = order.getProvider(OrderModule.class)
+            OrderService orderService = order.getModule(OrderModule.class)
                     .getDefaultService();
 
             // Connect the account

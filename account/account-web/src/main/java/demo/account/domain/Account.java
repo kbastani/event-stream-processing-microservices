@@ -140,9 +140,9 @@ public class Account extends AbstractEntity<AccountEvent, Long> {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Module<A>, A extends Aggregate<AccountEvent, Long>> T getProvider() throws
+    public <T extends Module<A>, A extends Aggregate<AccountEvent, Long>> T getModule() throws
             IllegalArgumentException {
-        AccountModule accountProvider = getProvider(AccountModule.class);
+        AccountModule accountProvider = getModule(AccountModule.class);
         return (T) accountProvider;
     }
 

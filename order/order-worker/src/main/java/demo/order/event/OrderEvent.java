@@ -1,8 +1,8 @@
-package demo.event;
+package demo.order.event;
 
-import demo.domain.BaseEntity;
+import demo.domain.AbstractEntity;
 
-public class OrderEvent extends BaseEntity {
+public class OrderEvent extends AbstractEntity {
 
     private OrderEventType type;
 

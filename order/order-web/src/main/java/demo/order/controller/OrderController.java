@@ -52,14 +52,14 @@ public class OrderController {
 
     @RequestMapping(path = "/orders/{id}")
     public ResponseEntity getOrder(@PathVariable Long id) {
-        return Optional.ofNullable(getOrderResource(id))
+        return Optional.ofNullable(getOrderResource(orderService.get(id)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping(path = "/orders/{id}")
     public ResponseEntity deleteOrder(@PathVariable Long id) {
-        return Optional.ofNullable(orderService.delete(id))
+        return Optional.ofNullable(orderService.get(id).delete())
                 .map(e -> new ResponseEntity<>(HttpStatus.NO_CONTENT))
                 .orElseThrow(() -> new RuntimeException("Order deletion failed"));
     }
@@ -130,19 +130,6 @@ public class OrderController {
         return Optional.ofNullable(orderService.findOrdersByAccountId(accountId))
                 .map(e -> new ResponseEntity<>(new Resources<Order>(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
-    }
-
-    /**
-     * Retrieves a hypermedia resource for {@link Order} with the specified identifier.
-     *
-     * @param id is the unique identifier for looking up the {@link Order} entity
-     * @return a hypermedia resource for the fetched {@link Order}
-     */
-    private Resource<Order> getOrderResource(Long id) {
-        // Get the order for the provided id
-        Order order = orderService.get(id);
-
-        return getOrderResource(order);
     }
 
     /**
@@ -225,7 +212,7 @@ public class OrderController {
      * @return is a hypermedia enriched resource for the supplied {@link Order} entity
      */
     private Resource<Order> getOrderResource(Order order) {
-        Assert.notNull(order, "Order must not be null");
+        if(order == null) return null;
 
         // Add command link
         order.add(linkBuilder("getCommands", order.getIdentity()).withRel("commands"));

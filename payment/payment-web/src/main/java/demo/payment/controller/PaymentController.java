@@ -6,17 +6,18 @@ import demo.event.Events;
 import demo.payment.event.PaymentEvent;
 import demo.payment.domain.Payment;
 import demo.payment.domain.PaymentService;
-import org.springframework.hateoas.ExposesResourceFor;
-import org.springframework.hateoas.LinkBuilder;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.hateoas.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -32,10 +33,13 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final EventService<PaymentEvent, Long> eventService;
+    private final DiscoveryClient discoveryClient;
 
-    public PaymentController(PaymentService paymentService, EventService<PaymentEvent, Long> eventService) {
+    public PaymentController(PaymentService paymentService, EventService<PaymentEvent, Long> eventService,
+            DiscoveryClient discoveryClient) {
         this.paymentService = paymentService;
         this.eventService = eventService;
+        this.discoveryClient = discoveryClient;
     }
 
     @RequestMapping(path = "/payments", method = RequestMethod.POST)
@@ -199,14 +203,21 @@ public class PaymentController {
     private Resource<Payment> getPaymentResource(Payment payment) {
         Assert.notNull(payment, "Payment must not be null");
 
-        if(!payment.hasLink("commands")) {
+        if (!payment.hasLink("commands")) {
             // Add command link
             payment.add(linkBuilder("getCommands", payment.getIdentity()).withRel("commands"));
         }
 
-        if(!payment.hasLink("events")) {
+        if (!payment.hasLink("events")) {
             // Add get events link
             payment.add(linkBuilder("getPaymentEvents", payment.getIdentity()).withRel("events"));
+        }
+
+        // Add remote payment link
+        if (payment.getOrderId() != null) {
+            Link result = getRemoteLink("order-web", "/v1/orders/{id}", payment.getOrderId(), "order    ");
+            if (result != null)
+                payment.add(result);
         }
 
         return new Resource<>(payment);
@@ -216,5 +227,20 @@ public class PaymentController {
         Payment payment = new Payment();
         payment.setIdentity(id);
         return new Resource<>(payment.getCommands());
+    }
+
+    private Link getRemoteLink(String service, String relative, Object identifier, String rel) {
+        Link result = null;
+        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(service);
+        if (serviceInstances.size() > 0) {
+            ServiceInstance serviceInstance = serviceInstances.get(new Random().nextInt(serviceInstances.size()));
+            result = new Link(new UriTemplate(serviceInstance.getUri()
+                    .toString()
+                    .concat(relative)).with("id", TemplateVariable.VariableType.PATH_VARIABLE)
+                    .expand(identifier)
+                    .toString())
+                    .withRel(rel);
+        }
+        return result;
     }
 }

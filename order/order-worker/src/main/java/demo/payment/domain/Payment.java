@@ -1,8 +1,8 @@
-package demo.payment;
+package demo.payment.domain;
 
-import demo.domain.BaseEntity;
+import demo.domain.AbstractEntity;
 
-public class Payment extends BaseEntity {
+public class Payment extends AbstractEntity {
 
     private Long paymentId;
     private Double amount;
