@@ -1,8 +1,8 @@
 package demo.account;
 
 import demo.account.controller.AccountController;
-import demo.event.AccountEvent;
-import demo.event.AccountEventType;
+import demo.account.event.AccountEvent;
+import demo.account.event.AccountEventType;
 import demo.event.EventService;
 import demo.event.Events;
 import org.junit.Test;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(AccountController.class)
+@ActiveProfiles("test")
 public class AccountControllerTest {
 
     @Autowired

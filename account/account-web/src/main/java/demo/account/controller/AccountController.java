@@ -2,10 +2,12 @@ package demo.account.controller;
 
 import demo.account.Account;
 import demo.account.AccountService;
-import demo.event.AccountEvent;
+import demo.account.event.AccountEvent;
 import demo.event.EventController;
 import demo.event.EventService;
 import demo.event.Events;
+import demo.order.domain.Order;
+import demo.order.domain.Orders;
 import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
@@ -73,6 +75,13 @@ public class AccountController {
                 .orElseThrow(() -> new RuntimeException("Append account event failed"));
     }
 
+    @RequestMapping(path = "/accounts/{id}/orders")
+    public ResponseEntity getAccountOrders(@PathVariable Long id) {
+        return Optional.of(getAccountOrdersResource(id))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("Could not get account events"));
+    }
+
     @RequestMapping(path = "/accounts/{id}/commands")
     public ResponseEntity getCommands(@PathVariable Long id) {
         return Optional.ofNullable(getCommandsResource(id))
@@ -108,6 +117,14 @@ public class AccountController {
     public ResponseEntity archive(@PathVariable Long id) {
         return Optional.ofNullable(getAccountResource(accountService.get(id)
                 .archive()))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/accounts/{id}/commands/postOrder", method = RequestMethod.POST)
+    public ResponseEntity postOrder(@PathVariable Long id, @RequestBody Order order) {
+        return Optional.ofNullable(getAccountResource(accountService.get(id)
+                .postOrder(order)))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -155,6 +172,27 @@ public class AccountController {
         return getAccountResource(accountService.update(account));
     }
 
+    private Orders getAccountOrdersResource(Long accountId) {
+        Account account = accountService.get(accountId);
+        Assert.notNull(account, "Account could not be found");
+
+        Orders accountOrders = account.getOrders();
+
+        accountOrders.add(
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(accountId)
+                        .slash("orders")
+                        .withSelfRel(),
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(accountId)
+                        .withRel("account")
+        );
+
+        return accountOrders;
+    }
+
     /**
      * Appends an {@link AccountEvent} domain event to the event log of the {@link Account}
      * aggregate with the specified accountId.
@@ -165,7 +203,7 @@ public class AccountController {
      */
     private Resource<AccountEvent> appendEventResource(Long accountId, AccountEvent event) {
         Assert.notNull(event, "Event body must be provided");
-        
+
         Account account = accountService.get(accountId);
         Assert.notNull(account, "Account could not be found");
 
@@ -214,6 +252,9 @@ public class AccountController {
 
         // Add get events link
         account.add(linkBuilder("getAccountEvents", account.getIdentity()).withRel("events"));
+
+        // Add orders link
+        account.add(linkBuilder("getAccountOrders", account.getIdentity()).withRel("orders"));
 
         return new Resource<>(account);
     }

@@ -2,6 +2,7 @@ package demo.event;
 
 import demo.domain.Aggregate;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Link;
@@ -27,7 +28,9 @@ import java.net.URI;
 class EventServiceImpl<T extends Event, ID extends Serializable> implements EventService<T, ID> {
 
     private static final Logger log = Logger.getLogger(EventServiceImpl.class);
-    private static final String EVENT_PROCESSOR_URL = "http://localhost:8083/v1/events";
+
+    @Value("${events.worker:http://localhost:8080/v1/events}")
+    private String eventsWorker;
 
     private final EventRepository<T, ID> eventRepository;
     private final Source eventStream;
@@ -41,7 +44,7 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
 
     public <E extends Aggregate, S extends T> S send(S event, Link... links) {
         // Assemble request to the event stream processor
-        RequestEntity<Resource<T>> requestEntity = RequestEntity.post(URI.create(EVENT_PROCESSOR_URL))
+        RequestEntity<Resource<T>> requestEntity = RequestEntity.post(URI.create(eventsWorker))
                 .contentType(MediaTypes.HAL_JSON)
                 .body(new Resource<T>(event), Resource.class);
 

@@ -1,8 +1,8 @@
 package demo.account;
 
+import demo.account.event.AccountEvent;
+import demo.account.event.AccountEventType;
 import demo.domain.Service;
-import demo.event.AccountEvent;
-import demo.event.AccountEventType;
 import org.springframework.util.Assert;
 
 @org.springframework.stereotype.Service
@@ -58,6 +58,7 @@ public class AccountService extends Service<Account, Long> {
      * @param account is the {@link Account} containing updated fields
      * @return the updated {@link Account} entity
      */
+    @Override
     public Account update(Account account) {
         Assert.notNull(account.getIdentity(), "Account id must be present in the resource URL");
         Assert.notNull(account, "Account request body cannot be null");

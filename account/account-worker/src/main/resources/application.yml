@@ -22,3 +22,6 @@ amazon:
 ---
 spring:
   profiles: test
+eureka:
+  client:
+    enabled: false

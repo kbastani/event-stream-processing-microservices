@@ -1,14 +1,16 @@
 package demo.account;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import demo.account.action.ActivateAccount;
-import demo.account.action.ArchiveAccount;
-import demo.account.action.ConfirmAccount;
-import demo.account.action.SuspendAccount;
+import demo.account.action.*;
 import demo.account.controller.AccountController;
+import demo.account.event.AccountEvent;
 import demo.domain.AbstractEntity;
+import demo.domain.Aggregate;
 import demo.domain.Command;
-import demo.event.AccountEvent;
+import demo.domain.Provider;
+import demo.order.domain.Order;
+import demo.order.domain.Orders;
 import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
@@ -83,6 +85,13 @@ public class Account extends AbstractEntity<AccountEvent, Long> {
         this.status = status;
     }
 
+    @JsonIgnore
+    public Orders getOrders() {
+        return getAction(GetOrders.class)
+                .getFunction()
+                .apply(this);
+    }
+
     @Command(method = "activate", controller = AccountController.class)
     public Account activate() {
         getAction(ActivateAccount.class)
@@ -113,6 +122,28 @@ public class Account extends AbstractEntity<AccountEvent, Long> {
                 .getConsumer()
                 .accept(this);
         return this;
+    }
+
+    @Command(method = "postOrder", controller = AccountController.class)
+    public Account postOrder(Order order) {
+        getAction(PostOrder.class)
+                .getFunction()
+                .apply(this, order);
+        return this;
+    }
+
+    /**
+     * Retrieves an instance of the {@link Provider} for this instance
+     *
+     * @return the provider for this instance
+     * @throws IllegalArgumentException if the application context is unavailable or the provider does not exist
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends Provider<A>, A extends Aggregate<AccountEvent, Long>> T getProvider() throws
+            IllegalArgumentException {
+        AccountProvider accountProvider = getProvider(AccountProvider.class);
+        return (T) accountProvider;
     }
 
     /**

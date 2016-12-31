@@ -1,4 +1,4 @@
-package demo.event;
+package demo.account.event;
 
 import demo.account.Account;
 import demo.account.AccountStatus;

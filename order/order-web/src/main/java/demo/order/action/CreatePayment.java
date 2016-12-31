@@ -15,6 +15,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -38,24 +39,23 @@ public class CreatePayment extends Action<Order> {
 
     public Consumer<Order> getConsumer() {
         return order -> {
+            Assert.isTrue(order.getPaymentId() == null, "Payment has already been created");
+            Assert.isTrue(order.getStatus() == OrderStatus.ACCOUNT_CONNECTED, "Account must be connected first");
 
-            OrderService orderService = (OrderService) order.getProvider(OrderProvider.class)
+            OrderService orderService = order.getProvider(OrderProvider.class)
                     .getDefaultService();
 
             Payment payment = new Payment();
 
             // Calculate payment amount
-            payment.setAmount(order.getLineItems()
-                    .stream()
-                    .mapToDouble(a -> (a.getPrice() + a.getTax()) * a.getQuantity())
-                    .sum());
+            payment.setAmount(order.calculateTotal());
 
             // Set payment method
             payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
 
             // Create a new request entity
             RequestEntity<Resource<Payment>> requestEntity = RequestEntity.post(
-                    URI.create("http://localhost:8082/v1/payments"))
+                    URI.create("http://payment-web/v1/payments"))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaTypes.HAL_JSON)
                     .body(new Resource<>(payment), Resource.class);

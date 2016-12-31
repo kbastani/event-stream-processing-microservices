@@ -1,13 +1,15 @@
 package demo.account;
 
-import demo.event.AccountEvent;
-import demo.event.AccountEventType;
+import demo.account.event.AccountEvent;
+import demo.account.event.AccountEventType;
 import demo.event.EventService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +17,7 @@ import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("test")
 public class AccountServiceTests {
 
     @MockBean
@@ -22,6 +25,9 @@ public class AccountServiceTests {
 
     @MockBean
     private AccountRepository accountRepository;
+
+    @MockBean
+    private DiscoveryClient discoveryClient;
 
     @Autowired
     private AccountService accountService;

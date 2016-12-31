@@ -1,22 +1,23 @@
-package demo.account;
+package demo.order;
 
-import demo.domain.Provider;
 import demo.account.event.AccountEvent;
+import demo.domain.Provider;
 import demo.event.EventService;
+import demo.order.domain.Order;
 
 @org.springframework.stereotype.Service
-public class AccountProvider extends Provider<Account> {
+public class OrderProvider extends Provider<Order> {
 
-    private final AccountService accountService;
+    private final OrderService orderService;
     private final EventService<AccountEvent, Long> eventService;
 
-    public AccountProvider(AccountService accountService, EventService<AccountEvent, Long> eventService) {
-        this.accountService = accountService;
+    public OrderProvider(OrderService orderService, EventService<AccountEvent, Long> eventService) {
+        this.orderService = orderService;
         this.eventService = eventService;
     }
 
-    public AccountService getAccountService() {
-        return accountService;
+    public OrderService getOrderService() {
+        return orderService;
     }
 
     public EventService<AccountEvent, Long> getEventService() {
@@ -24,8 +25,8 @@ public class AccountProvider extends Provider<Account> {
     }
 
     @Override
-    public AccountService getDefaultService() {
-        return accountService;
+    public OrderService getDefaultService() {
+        return orderService;
     }
 
     @Override

@@ -11,4 +11,22 @@ spring:
           destination: account
           contentType: 'application/json'
 server:
-  port: 8080
+  port: 0
+events:
+  worker: http://account-worker/v1/events
+---
+spring:
+  profiles: test
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: account
+          contentType: 'application/json'
+server:
+  port: 0
+events:
+  worker: http://account-worker/v1/events
+eureka:
+  client:
+    enabled: false

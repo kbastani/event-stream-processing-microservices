@@ -82,4 +82,8 @@ public class OrderService extends Service<Order, Long> {
         this.orderRepository.delete(id);
         return true;
     }
+
+    public Orders findOrdersByAccountId(Long accountId) {
+        return new Orders(orderRepository.findOrdersByAccountId(accountId));
+    }
 }

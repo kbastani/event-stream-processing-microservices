@@ -10,8 +10,23 @@ spring:
         output:
           destination: order
           contentType: 'application/json'
-  redis:
-    host: localhost
-    port: 6379
 server:
-  port: 8080
+  port: 0
+events:
+  worker: http://order-worker/v1/events
+---
+spring:
+  profiles: test
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: order
+          contentType: 'application/json'
+server:
+  port: 0
+events:
+  worker: http://order-worker/v1/events
+eureka:
+  client:
+    enabled: false

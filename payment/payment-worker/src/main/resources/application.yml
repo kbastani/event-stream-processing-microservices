@@ -14,7 +14,7 @@ spring:
           consumer:
             durableSubscription: true
 server:
-  port: 8083
+  port: 0
 amazon:
   aws:
     access-key-id: replace
@@ -22,3 +22,6 @@ amazon:
 ---
 spring:
   profiles: test
+eureka:
+  client:
+    enabled: false

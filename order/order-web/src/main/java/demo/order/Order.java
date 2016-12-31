@@ -1,5 +1,6 @@
 package demo.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import demo.address.Address;
 import demo.address.AddressType;
@@ -134,6 +135,14 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
                 .getConsumer()
                 .accept(this);
         return this;
+    }
+
+    @JsonIgnore
+    public Double calculateTotal() {
+        return getLineItems()
+                .stream()
+                .mapToDouble(a -> (a.getPrice() + a.getTax()) * a.getQuantity())
+                .sum();
     }
 
     /**

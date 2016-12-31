@@ -120,7 +120,7 @@ public class ProviderTests {
         }
 
         @Override
-        Long getIdentity() {
+        public Long getIdentity() {
             return this.id;
         }
 

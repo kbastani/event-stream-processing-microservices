@@ -6,17 +6,18 @@ import demo.event.Events;
 import demo.event.OrderEvent;
 import demo.order.Order;
 import demo.order.OrderService;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.LinkBuilder;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.hateoas.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -26,10 +27,13 @@ public class OrderController {
 
     private final OrderService orderService;
     private final EventService<OrderEvent, Long> eventService;
+    private final DiscoveryClient discoveryClient;
 
-    public OrderController(OrderService orderService, EventService<OrderEvent, Long> eventService) {
+    public OrderController(OrderService orderService, EventService<OrderEvent, Long> eventService, DiscoveryClient
+            discoveryClient) {
         this.orderService = orderService;
         this.eventService = eventService;
+        this.discoveryClient = discoveryClient;
     }
 
     @PostMapping(path = "/orders")
@@ -118,6 +122,13 @@ public class OrderController {
         return Optional.ofNullable(orderService.get(id)
                 .reserveInventory(id))
                 .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/orders/search/findOrdersByAccountId")
+    public ResponseEntity findOrdersByAccountId(@RequestParam("accountId") Long accountId) {
+        return Optional.ofNullable(orderService.findOrdersByAccountId(accountId))
+                .map(e -> new ResponseEntity<>(new Resources<Order>(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
@@ -222,13 +233,36 @@ public class OrderController {
         // Add get events link
         order.add(linkBuilder("getOrderEvents", order.getIdentity()).withRel("events"));
 
-        if (order.getAccountId() != null)
-            order.add(new Link("http://account-service/v1/accounts/" + order.getAccountId(), "account"));
+        // Add remote account link
+        if (order.getAccountId() != null) {
+            Link result = getRemoteLink("account-web", "/v1/accounts/{id}", order.getAccountId(), "account");
+            if (result != null)
+                order.add(result);
+        }
 
-        if (order.getPaymentId() != null)
-            order.add(new Link("http://localhost:8082/v1/payments/" + order.getPaymentId(), "payment"));
+        // Add remote payment link
+        if (order.getPaymentId() != null) {
+            Link result = getRemoteLink("payment-web", "/v1/payments/{id}", order.getPaymentId(), "payment");
+            if (result != null)
+                order.add(result);
+        }
 
         return new Resource<>(order);
+    }
+
+    private Link getRemoteLink(String service, String relative, Object identifier, String rel) {
+        Link result = null;
+        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(service);
+        if (serviceInstances.size() > 0) {
+            ServiceInstance serviceInstance = serviceInstances.get(new Random().nextInt(serviceInstances.size()));
+            result = new Link(new UriTemplate(serviceInstance.getUri()
+                    .toString()
+                    .concat(relative)).with("id", TemplateVariable.VariableType.PATH_VARIABLE)
+                    .expand(identifier)
+                    .toString())
+                    .withRel(rel);
+        }
+        return result;
     }
 
     private ResourceSupport getCommandsResources(Long id) {

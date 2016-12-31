@@ -5,8 +5,8 @@ import demo.account.AccountProvider;
 import demo.account.AccountService;
 import demo.account.AccountStatus;
 import demo.domain.Action;
-import demo.event.AccountEvent;
-import demo.event.AccountEventType;
+import demo.account.event.AccountEvent;
+import demo.account.event.AccountEventType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import static demo.account.AccountStatus.ACCOUNT_ACTIVE;
 
 /**
- * Connects an {@link Account} to an Account.
+ * Suspends an {@link Account}
  *
  * @author Kenny Bastani
  */

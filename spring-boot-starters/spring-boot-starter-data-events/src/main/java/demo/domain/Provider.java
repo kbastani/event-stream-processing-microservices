@@ -25,7 +25,7 @@ public abstract class Provider<T extends Aggregate> implements ApplicationContex
         Provider.applicationContext = applicationContext;
     }
 
-    public abstract Service<?, ?> getDefaultService();
+    public abstract Service<? extends Aggregate, ?> getDefaultService();
 
     public abstract EventService<?, ?> getDefaultEventService();
 }

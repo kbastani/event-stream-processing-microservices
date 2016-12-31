@@ -31,7 +31,7 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
         Value<Link> {
 
     @JsonProperty("id")
-    abstract ID getIdentity();
+    public abstract ID getIdentity();
 
     private final ApplicationContext applicationContext = Optional.ofNullable(Provider.getApplicationContext())
             .orElse(null);
@@ -123,7 +123,7 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
                 .stream()
                 .collect(Collectors.toList());
 
-        if(!super.hasLink("self"))
+        if (!super.hasLink("self"))
             links.add(getId());
 
         return links;
@@ -165,12 +165,14 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
     }
 
     @SuppressWarnings("unchecked")
-    private <A extends Aggregate> Service<A, ID> getEntityService() {
-        return (Service<A, ID>) getProvider().getDefaultService();
+    @JsonIgnore
+    protected Service<Aggregate<E, ID>, ID> getEntityService() {
+        return (Service<Aggregate<E, ID>, ID>) getProvider().getDefaultService();
     }
 
     @SuppressWarnings("unchecked")
-    private EventService<E, ID> getEventService() {
+    @JsonIgnore
+    protected EventService<E, ID> getEventService() {
         return (EventService<E, ID>) getProvider().getDefaultEventService();
     }
 
