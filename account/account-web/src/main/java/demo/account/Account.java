@@ -1,23 +1,22 @@
 package demo.account;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import demo.domain.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import demo.account.action.ActivateAccount;
+import demo.account.action.ArchiveAccount;
+import demo.account.action.ConfirmAccount;
+import demo.account.action.SuspendAccount;
+import demo.account.controller.AccountController;
+import demo.domain.AbstractEntity;
+import demo.domain.Command;
 import demo.event.AccountEvent;
+import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
-/**
- * The {@link Account} domain object contains information related to
- * a user's account. The status of an account is event sourced using
- * events logged to the {@link AccountEvent} collection attached to
- * this resource.
- *
- * @author kbastani
- */
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+
 @Entity
-public class Account extends BaseEntity {
+public class Account extends AbstractEntity<AccountEvent, Long> {
 
     @Id
     @GeneratedValue
@@ -26,9 +25,6 @@ public class Account extends BaseEntity {
     private String firstName;
     private String lastName;
     private String email;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<AccountEvent> events = new HashSet<>();
 
     @Enumerated(value = EnumType.STRING)
     private AccountStatus status;
@@ -44,12 +40,14 @@ public class Account extends BaseEntity {
         this.email = email;
     }
 
-    @JsonIgnore
-    public Long getAccountId() {
-        return id;
+    @JsonProperty("accountId")
+    @Override
+    public Long getIdentity() {
+        return this.id;
     }
 
-    public void setAccountId(Long id) {
+    @Override
+    public void setIdentity(Long id) {
         this.id = id;
     }
 
@@ -77,21 +75,55 @@ public class Account extends BaseEntity {
         this.email = email;
     }
 
-    @JsonIgnore
-    public Set<AccountEvent> getEvents() {
-        return events;
-    }
-
-    public void setEvents(Set<AccountEvent> events) {
-        this.events = events;
-    }
-
     public AccountStatus getStatus() {
         return status;
     }
 
     public void setStatus(AccountStatus status) {
         this.status = status;
+    }
+
+    @Command(method = "activate", controller = AccountController.class)
+    public Account activate() {
+        getAction(ActivateAccount.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    @Command(method = "archive", controller = AccountController.class)
+    public Account archive() {
+        getAction(ArchiveAccount.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    @Command(method = "confirm", controller = AccountController.class)
+    public Account confirm() {
+        getAction(ConfirmAccount.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    @Command(method = "suspend", controller = AccountController.class)
+    public Account suspend() {
+        getAction(SuspendAccount.class)
+                .getConsumer()
+                .accept(this);
+        return this;
+    }
+
+    /**
+     * Returns the {@link Link} with a rel of {@link Link#REL_SELF}.
+     */
+    @Override
+    public Link getId() {
+        return linkTo(AccountController.class)
+                .slash("accounts")
+                .slash(getIdentity())
+                .withSelfRel();
     }
 
     @Override
@@ -101,7 +133,6 @@ public class Account extends BaseEntity {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", events=" + events +
                 ", status=" + status +
                 "} " + super.toString();
     }

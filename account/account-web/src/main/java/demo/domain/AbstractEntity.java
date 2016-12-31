@@ -1,17 +1,21 @@
 package demo.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import demo.event.Event;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.hateoas.ResourceSupport;
 
-import javax.persistence.EntityListeners;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class BaseEntity extends ResourceSupport implements Serializable {
+public abstract class AbstractEntity<E extends Event, T extends Serializable> extends Aggregate<E, T> implements Serializable {
+
+    private T identity;
 
     @CreatedDate
     private Long createdAt;
@@ -19,7 +23,10 @@ public class BaseEntity extends ResourceSupport implements Serializable {
     @LastModifiedDate
     private Long lastModified;
 
-    public BaseEntity() {
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<E> events = new ArrayList<>();
+
+    public AbstractEntity() {
     }
 
     public Long getCreatedAt() {
@@ -36,6 +43,25 @@ public class BaseEntity extends ResourceSupport implements Serializable {
 
     public void setLastModified(Long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    @JsonIgnore
+    public List<E> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<E> events) {
+        this.events = events;
+    }
+
+    @Override
+    public T getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(T id) {
+        this.identity = id;
     }
 
     @Override

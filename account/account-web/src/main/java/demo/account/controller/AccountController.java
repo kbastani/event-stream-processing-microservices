@@ -1,16 +1,20 @@
-package demo.account;
+package demo.account.controller;
 
+import demo.account.Account;
+import demo.account.AccountService;
 import demo.event.AccountEvent;
-import demo.event.AccountEvents;
 import demo.event.EventController;
 import demo.event.EventService;
+import demo.event.Events;
 import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.ResourceSupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -20,9 +24,9 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 public class AccountController {
 
     private final AccountService accountService;
-    private final EventService eventService;
+    private final EventService<AccountEvent, Long> eventService;
 
-    public AccountController(AccountService accountService, EventService eventService) {
+    public AccountController(AccountService accountService, EventService<AccountEvent, Long> eventService) {
         this.accountService = accountService;
         this.eventService = eventService;
     }
@@ -41,7 +45,7 @@ public class AccountController {
                 .orElseThrow(() -> new RuntimeException("Account update failed"));
     }
 
-    @GetMapping(path = "/accounts/{id}")
+    @RequestMapping(path = "/accounts/{id}")
     public ResponseEntity getAccount(@PathVariable Long id) {
         return Optional.ofNullable(getAccountResource(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
@@ -50,12 +54,12 @@ public class AccountController {
 
     @DeleteMapping(path = "/accounts/{id}")
     public ResponseEntity deleteAccount(@PathVariable Long id) {
-        return Optional.ofNullable(accountService.deleteAccount(id))
+        return Optional.ofNullable(accountService.delete(id))
                 .map(e -> new ResponseEntity<>(HttpStatus.NO_CONTENT))
                 .orElseThrow(() -> new RuntimeException("Account deletion failed"));
     }
 
-    @GetMapping(path = "/accounts/{id}/events")
+    @RequestMapping(path = "/accounts/{id}/events")
     public ResponseEntity getAccountEvents(@PathVariable Long id) {
         return Optional.of(getAccountEventResources(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
@@ -63,47 +67,47 @@ public class AccountController {
     }
 
     @PostMapping(path = "/accounts/{id}/events")
-    public ResponseEntity createAccount(@PathVariable Long id, @RequestBody AccountEvent event) {
+    public ResponseEntity appendAccountEvent(@PathVariable Long id, @RequestBody AccountEvent event) {
         return Optional.ofNullable(appendEventResource(id, event))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.CREATED))
                 .orElseThrow(() -> new RuntimeException("Append account event failed"));
     }
 
-    @GetMapping(path = "/accounts/{id}/commands")
-    public ResponseEntity getAccountCommands(@PathVariable Long id) {
+    @RequestMapping(path = "/accounts/{id}/commands")
+    public ResponseEntity getCommands(@PathVariable Long id) {
         return Optional.ofNullable(getCommandsResource(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The account could not be found"));
     }
 
-    @GetMapping(path = "/accounts/{id}/commands/confirm")
-    public ResponseEntity confirmAccount(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(
-                accountService.applyCommand(id, AccountCommand.CONFIRM_ACCOUNT)))
+    @RequestMapping(path = "/accounts/{id}/commands/confirm")
+    public ResponseEntity confirm(@PathVariable Long id) {
+        return Optional.ofNullable(getAccountResource(accountService.get(id)
+                .confirm()))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
-    @GetMapping(path = "/accounts/{id}/commands/activate")
-    public ResponseEntity activateAccount(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(
-                accountService.applyCommand(id, AccountCommand.ACTIVATE_ACCOUNT)))
+    @RequestMapping(path = "/accounts/{id}/commands/activate")
+    public ResponseEntity activate(@PathVariable Long id) {
+        return Optional.ofNullable(getAccountResource(accountService.get(id)
+                .activate()))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
-    @GetMapping(path = "/accounts/{id}/commands/suspend")
-    public ResponseEntity suspendAccount(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(
-                accountService.applyCommand(id, AccountCommand.SUSPEND_ACCOUNT)))
+    @RequestMapping(path = "/accounts/{id}/commands/suspend")
+    public ResponseEntity suspend(@PathVariable Long id) {
+        return Optional.ofNullable(getAccountResource(accountService.get(id)
+                .suspend()))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
-    @GetMapping(path = "/accounts/{id}/commands/archive")
-    public ResponseEntity archiveAccount(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(
-                accountService.applyCommand(id, AccountCommand.ARCHIVE_ACCOUNT)))
+    @RequestMapping(path = "/accounts/{id}/commands/archive")
+    public ResponseEntity archive(@PathVariable Long id) {
+        return Optional.ofNullable(getAccountResource(accountService.get(id)
+                .archive()))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -115,17 +119,10 @@ public class AccountController {
      * @return a hypermedia resource for the fetched {@link Account}
      */
     private Resource<Account> getAccountResource(Long id) {
-        Resource<Account> accountResource = null;
-
         // Get the account for the provided id
-        Account account = accountService.getAccount(id);
+        Account account = accountService.get(id);
 
-        // If the account exists, wrap the hypermedia response
-        if (account != null)
-            accountResource = getAccountResource(account);
-
-
-        return accountResource;
+        return getAccountResource(account);
     }
 
     /**
@@ -154,7 +151,8 @@ public class AccountController {
      * @return a hypermedia resource for the updated {@link Account}
      */
     private Resource<Account> updateAccountResource(Long id, Account account) {
-        return getAccountResource(accountService.updateAccount(id, account));
+        account.setIdentity(id);
+        return getAccountResource(accountService.update(account));
     }
 
     /**
@@ -166,82 +164,40 @@ public class AccountController {
      * @return a hypermedia resource for the newly appended {@link AccountEvent}
      */
     private Resource<AccountEvent> appendEventResource(Long accountId, AccountEvent event) {
-        Resource<AccountEvent> eventResource = null;
+        Assert.notNull(event, "Event body must be provided");
+        
+        Account account = accountService.get(accountId);
+        Assert.notNull(account, "Account could not be found");
 
-        event = accountService.appendEvent(accountId, event);
+        event.setEntity(account);
+        account.sendAsyncEvent(event);
 
-        if (event != null) {
-            eventResource = new Resource<>(event,
-                    linkTo(EventController.class)
-                            .slash("events")
-                            .slash(event.getEventId())
-                            .withSelfRel(),
-                    linkTo(AccountController.class)
-                            .slash("accounts")
-                            .slash(accountId)
-                            .withRel("account")
-            );
+        return new Resource<>(event,
+                linkTo(EventController.class)
+                        .slash("events")
+                        .slash(event.getEventId())
+                        .withSelfRel(),
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(accountId)
+                        .withRel("account")
+        );
+    }
+
+    private Events getAccountEventResources(Long id) {
+        return eventService.find(id);
+    }
+
+    private LinkBuilder linkBuilder(String name, Long id) {
+        Method method;
+
+        try {
+            method = AccountController.class.getMethod(name, Long.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
         }
 
-        return eventResource;
-    }
-
-    /**
-     * Get the {@link AccountCommand} hypermedia resource that lists the available commands that can be applied
-     * to an {@link Account} entity.
-     *
-     * @param id is the {@link Account} identifier to provide command links for
-     * @return an {@link AccountCommandsResource} with a collection of embedded command links
-     */
-    private AccountCommandsResource getCommandsResource(Long id) {
-        // Get the account resource for the identifier
-        Resource<Account> accountResource = getAccountResource(id);
-
-        // Create a new account commands hypermedia resource
-        AccountCommandsResource commandResource = new AccountCommandsResource();
-
-        // Add account command hypermedia links
-        if (accountResource != null) {
-            commandResource.add(
-                    getCommandLinkBuilder(id)
-                            .slash("confirm")
-                            .withRel("confirm"),
-                    getCommandLinkBuilder(id)
-                            .slash("activate")
-                            .withRel("activate"),
-                    getCommandLinkBuilder(id)
-                            .slash("suspend")
-                            .withRel("suspend"),
-                    getCommandLinkBuilder(id)
-                            .slash("archive")
-                            .withRel("archive")
-            );
-        }
-
-        return commandResource;
-    }
-
-    /**
-     * Get {@link AccountEvents} for the supplied {@link Account} identifier.
-     *
-     * @param id is the unique identifier of the {@link Account}
-     * @return a list of {@link AccountEvent} wrapped in a hypermedia {@link AccountEvents} resource
-     */
-    private AccountEvents getAccountEventResources(Long id) {
-        return new AccountEvents(id, eventService.getAccountEvents(id));
-    }
-
-    /**
-     * Generate a {@link LinkBuilder} for generating the {@link AccountCommandsResource}.
-     *
-     * @param id is the unique identifier for a {@link Account}
-     * @return a {@link LinkBuilder} for the {@link AccountCommandsResource}
-     */
-    private LinkBuilder getCommandLinkBuilder(Long id) {
-        return linkTo(AccountController.class)
-                .slash("accounts")
-                .slash(id)
-                .slash("commands");
+        return linkTo(AccountController.class, method, id);
     }
 
     /**
@@ -251,23 +207,20 @@ public class AccountController {
      * @return is a hypermedia enriched resource for the supplied {@link Account} entity
      */
     private Resource<Account> getAccountResource(Account account) {
-        Resource<Account> accountResource;
+        Assert.notNull(account, "Account must not be null");
 
-        // Prepare hypermedia response
-        accountResource = new Resource<>(account,
-                linkTo(AccountController.class)
-                        .slash("accounts")
-                        .slash(account.getAccountId())
-                        .withSelfRel(),
-                linkTo(AccountController.class)
-                        .slash("accounts")
-                        .slash(account.getAccountId())
-                        .slash("events")
-                        .withRel("events"),
-                getCommandLinkBuilder(account.getAccountId())
-                        .withRel("commands")
-        );
+        // Add command link
+        account.add(linkBuilder("getCommands", account.getIdentity()).withRel("commands"));
 
-        return accountResource;
+        // Add get events link
+        account.add(linkBuilder("getAccountEvents", account.getIdentity()).withRel("events"));
+
+        return new Resource<>(account);
+    }
+
+    private ResourceSupport getCommandsResource(Long id) {
+        Account account = new Account();
+        account.setIdentity(id);
+        return new Resource<>(account.getCommands());
     }
 }

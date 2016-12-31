@@ -20,6 +20,11 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.function.Consumer;
 
+/**
+ * Creates a {@link Payment} for an {@link Order}.
+ *
+ * @author Kenny Bastani
+ */
 @Service
 public class CreatePayment extends Action<Order> {
 

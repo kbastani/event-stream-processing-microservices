@@ -11,6 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.function.BiConsumer;
 
+/**
+ * Connects an {@link Order} to an Account.
+ *
+ * @author Kenny Bastani
+ */
 @Service
 public class ConnectAccount extends Action<Order> {
 
@@ -25,7 +30,7 @@ public class ConnectAccount extends Action<Order> {
             order = orderService.update(order);
 
             // Trigger the account connected event
-            order.sendAsyncEvent(new OrderEvent(OrderEventType.ACCOUNT_CONNECTED));
+            order.sendAsyncEvent(new OrderEvent(OrderEventType.ACCOUNT_CONNECTED, order));
         };
     }
 }

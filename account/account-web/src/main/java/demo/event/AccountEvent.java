@@ -2,33 +2,40 @@ package demo.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.account.Account;
-import demo.domain.BaseEntity;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 
 /**
- * The domain event {@link AccountEvent} tracks the type and state of events as
- * applied to the {@link Account} domain object. This event resource can be used
- * to event source the aggregate state of {@link Account}.
+ * The domain event {@link AccountEvent} tracks the type and state of events as applied to the {@link Account} domain
+ * object. This event resource can be used to event source the aggregate state of {@link Account}.
  * <p>
- * This event resource also provides a transaction log that can be used to append
- * actions to the event.
+ * This event resource also provides a transaction log that can be used to append actions to the event.
  *
- * @author kbastani
+ * @author Kenny Bastani
  */
 @Entity
-public class AccountEvent extends BaseEntity {
+@EntityListeners(AuditingEntityListener.class)
+public class AccountEvent extends Event<Account, AccountEventType, Long> {
 
     @Id
-    @GeneratedValue
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long eventId;
 
     @Enumerated(EnumType.STRING)
     private AccountEventType type;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Account account;
+    private Account entity;
+
+    @CreatedDate
+    private Long createdAt;
+
+    @LastModifiedDate
+    private Long lastModified;
 
     public AccountEvent() {
     }
@@ -37,37 +44,69 @@ public class AccountEvent extends BaseEntity {
         this.type = type;
     }
 
-    @JsonIgnore
+    public AccountEvent(AccountEventType type, Account entity) {
+        this.type = type;
+        this.entity = entity;
+    }
+
+    @Override
     public Long getEventId() {
-        return id;
+        return eventId;
     }
 
+    @Override
     public void setEventId(Long id) {
-        this.id = id;
+        eventId = id;
     }
 
+    @Override
     public AccountEventType getType() {
         return type;
     }
 
+    @Override
     public void setType(AccountEventType type) {
         this.type = type;
     }
 
-    public Account getAccount() {
-        return account;
+    @Override
+    public Account getEntity() {
+        return entity;
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
+    @Override
+    public void setEntity(Account entity) {
+        this.entity = entity;
+    }
+
+    @Override
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    @Override
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @Override
+    public Long getLastModified() {
+        return lastModified;
+    }
+
+    @Override
+    public void setLastModified(Long lastModified) {
+        this.lastModified = lastModified;
     }
 
     @Override
     public String toString() {
         return "AccountEvent{" +
-                "id=" + id +
+                "eventId=" + eventId +
                 ", type=" + type +
-                ", account=" + account +
+                ", entity=" + entity +
+                ", createdAt=" + createdAt +
+                ", lastModified=" + lastModified +
                 "} " + super.toString();
     }
 }

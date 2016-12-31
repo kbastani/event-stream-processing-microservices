@@ -11,6 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.function.BiConsumer;
 
+/**
+ * Connects a {@link demo.payment.Payment} to an {@link Order}.
+ *
+ * @author Kenny Bastani
+ */
 @Service
 public class ConnectPayment extends Action<Order> {
     public BiConsumer<Order, Long> getConsumer() {
@@ -25,7 +30,7 @@ public class ConnectPayment extends Action<Order> {
             order = orderService.update(order);
 
             // Trigger the account connected event
-            order.sendAsyncEvent(new OrderEvent(OrderEventType.PAYMENT_CONNECTED));
+            order.sendAsyncEvent(new OrderEvent(OrderEventType.PAYMENT_CONNECTED, order));
         };
     }
 }
