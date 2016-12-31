@@ -1,7 +1,7 @@
 package demo.account.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import demo.account.Account;
+import demo.account.domain.Account;
 import demo.event.Event;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;

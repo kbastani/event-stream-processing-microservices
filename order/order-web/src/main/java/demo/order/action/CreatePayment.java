@@ -1,14 +1,14 @@
 package demo.order.action;
 
 import demo.domain.Action;
-import demo.event.OrderEvent;
-import demo.event.OrderEventType;
-import demo.order.Order;
-import demo.order.OrderProvider;
-import demo.order.OrderService;
-import demo.order.OrderStatus;
-import demo.payment.Payment;
-import demo.payment.PaymentMethod;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventType;
+import demo.order.domain.Order;
+import demo.order.domain.OrderModule;
+import demo.order.domain.OrderService;
+import demo.order.domain.OrderStatus;
+import demo.payment.domain.Payment;
+import demo.payment.domain.PaymentMethod;
 import org.apache.log4j.Logger;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -42,7 +42,7 @@ public class CreatePayment extends Action<Order> {
             Assert.isTrue(order.getPaymentId() == null, "Payment has already been created");
             Assert.isTrue(order.getStatus() == OrderStatus.ACCOUNT_CONNECTED, "Account must be connected first");
 
-            OrderService orderService = order.getProvider(OrderProvider.class)
+            OrderService orderService = order.getProvider(OrderModule.class)
                     .getDefaultService();
 
             Payment payment = new Payment();

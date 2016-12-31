@@ -1,9 +1,9 @@
 package demo.account.action;
 
-import demo.account.Account;
-import demo.account.AccountProvider;
-import demo.account.AccountService;
-import demo.account.AccountStatus;
+import demo.account.domain.Account;
+import demo.account.domain.AccountModule;
+import demo.account.domain.AccountService;
+import demo.account.domain.AccountStatus;
 import demo.domain.Action;
 import demo.account.event.AccountEvent;
 import demo.account.event.AccountEventType;
@@ -13,7 +13,7 @@ import org.springframework.util.Assert;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import static demo.account.AccountStatus.*;
+import static demo.account.domain.AccountStatus.*;
 
 /**
  * Activates an {@link Account}
@@ -29,7 +29,7 @@ public class ActivateAccount extends Action<Account> {
             Assert.isTrue(Arrays.asList(ACCOUNT_CONFIRMED, ACCOUNT_SUSPENDED, ACCOUNT_ARCHIVED)
                     .contains(account.getStatus()), "The account cannot be activated");
 
-            AccountService accountService = account.getProvider(AccountProvider.class)
+            AccountService accountService = account.getProvider(AccountModule.class)
                     .getDefaultService();
 
             // Activate the account

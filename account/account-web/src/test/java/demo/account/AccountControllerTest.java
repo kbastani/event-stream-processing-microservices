@@ -1,6 +1,8 @@
 package demo.account;
 
 import demo.account.controller.AccountController;
+import demo.account.domain.Account;
+import demo.account.domain.AccountService;
 import demo.account.event.AccountEvent;
 import demo.account.event.AccountEventType;
 import demo.event.EventService;

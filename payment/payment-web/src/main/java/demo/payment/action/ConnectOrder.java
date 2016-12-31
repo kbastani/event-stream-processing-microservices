@@ -1,7 +1,7 @@
 package demo.payment.action;
 
 import demo.domain.Action;
-import demo.payment.Payment;
+import demo.payment.domain.Payment;
 import org.springframework.stereotype.Service;
 
 import java.util.function.BiConsumer;

@@ -132,7 +132,7 @@ public class ProviderTests {
 
     @Getter
     @RequiredArgsConstructor
-    public static class EmptyProvider extends Provider<EmptyAggregate> {
+    public static class EmptyProvider extends Module<EmptyAggregate> {
         private final EmptyService emptyService;
 
         public Service<? extends EmptyAggregate, Long> getDefaultService() {

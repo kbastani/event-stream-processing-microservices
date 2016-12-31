@@ -33,11 +33,11 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
     @JsonProperty("id")
     public abstract ID getIdentity();
 
-    private final ApplicationContext applicationContext = Optional.ofNullable(Provider.getApplicationContext())
+    private final ApplicationContext applicationContext = Optional.ofNullable(Module.getApplicationContext())
             .orElse(null);
 
     /**
-     * Retrieves an {@link Action} for this {@link Provider}
+     * Retrieves an {@link Action} for this {@link Module}
      *
      * @return the action for this provider
      * @throws IllegalArgumentException if the application context is unavailable or the provider does not exist
@@ -46,33 +46,33 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
     @JsonIgnore
     protected <T extends Action<A>, A extends Aggregate> T getAction(
             Class<T> actionType) throws IllegalArgumentException {
-        Provider provider = getProvider();
+        Module provider = getProvider();
         Service service = provider.getDefaultService();
         return (T) service.getAction(actionType);
     }
 
     /**
-     * Retrieves an instance of the {@link Provider} for this instance
+     * Retrieves an instance of the {@link Module} for this instance
      *
      * @return the provider for this instance
      * @throws IllegalArgumentException if the application context is unavailable or the provider does not exist
      */
     @SuppressWarnings("unchecked")
     @JsonIgnore
-    public <T extends Provider<A>, A extends Aggregate<E, ID>> T getProvider() throws IllegalArgumentException {
+    public <T extends Module<A>, A extends Aggregate<E, ID>> T getProvider() throws IllegalArgumentException {
         return getProvider((Class<T>) ResolvableType
-                .forClassWithGenerics(Provider.class, ResolvableType.forInstance(this))
+                .forClassWithGenerics(Module.class, ResolvableType.forInstance(this))
                 .getRawClass());
     }
 
     /**
-     * Retrieves an instance of a {@link Provider} with the supplied type
+     * Retrieves an instance of a {@link Module} with the supplied type
      *
-     * @return an instance of the requested {@link Provider}
+     * @return an instance of the requested {@link Module}
      * @throws IllegalArgumentException if the application context is unavailable or the provider does not exist
      */
     @JsonIgnore
-    public <T extends Provider<A>, A extends Aggregate<E, ID>> T getProvider(Class<T> providerType) throws
+    public <T extends Module<A>, A extends Aggregate<E, ID>> T getProvider(Class<T> providerType) throws
             IllegalArgumentException {
         Assert.notNull(applicationContext, "The application context is unavailable");
         T provider = applicationContext.getBean(providerType);

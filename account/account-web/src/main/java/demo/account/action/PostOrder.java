@@ -1,7 +1,7 @@
 package demo.account.action;
 
 
-import demo.account.Account;
+import demo.account.domain.Account;
 import demo.domain.Action;
 import demo.order.domain.Order;
 import org.springframework.hateoas.MediaTypes;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static demo.account.AccountStatus.ACCOUNT_ACTIVE;
+import static demo.account.domain.AccountStatus.ACCOUNT_ACTIVE;
 
 /**
  * Confirms an {@link Account}

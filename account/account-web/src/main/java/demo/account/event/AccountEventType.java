@@ -1,7 +1,7 @@
 package demo.account.event;
 
-import demo.account.Account;
-import demo.account.AccountStatus;
+import demo.account.domain.Account;
+import demo.account.domain.AccountStatus;
 
 /**
  * The {@link AccountEventType} represents a collection of possible events that describe

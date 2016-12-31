@@ -1,8 +1,8 @@
 package demo.account.action;
 
-import demo.account.Account;
+import demo.account.domain.Account;
 import demo.domain.Action;
-import demo.order.OrderProvider;
+import demo.order.domain.OrderModule;
 import demo.order.domain.Orders;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +11,9 @@ import java.util.function.Function;
 @Service
 public class GetOrders extends Action<Account> {
 
-    private OrderProvider orderProvider;
+    private OrderModule orderProvider;
 
-    public GetOrders(OrderProvider orderProvider) {
+    public GetOrders(OrderModule orderProvider) {
         this.orderProvider = orderProvider;
     }
 

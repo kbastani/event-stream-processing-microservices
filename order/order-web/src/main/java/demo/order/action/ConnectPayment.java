@@ -1,18 +1,19 @@
 package demo.order.action;
 
 import demo.domain.Action;
-import demo.event.OrderEvent;
-import demo.event.OrderEventType;
-import demo.order.Order;
-import demo.order.OrderProvider;
-import demo.order.OrderService;
-import demo.order.OrderStatus;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventType;
+import demo.order.domain.Order;
+import demo.order.domain.OrderModule;
+import demo.order.domain.OrderService;
+import demo.order.domain.OrderStatus;
+import demo.payment.domain.Payment;
 import org.springframework.stereotype.Service;
 
 import java.util.function.BiConsumer;
 
 /**
- * Connects a {@link demo.payment.Payment} to an {@link Order}.
+ * Connects a {@link Payment} to an {@link Order}.
  *
  * @author Kenny Bastani
  */
@@ -21,7 +22,7 @@ public class ConnectPayment extends Action<Order> {
     public BiConsumer<Order, Long> getConsumer() {
         return (order, paymentId) -> {
 
-            OrderService orderService = order.getProvider(OrderProvider.class)
+            OrderService orderService = order.getProvider(OrderModule.class)
                     .getDefaultService();
 
             // Connect the account

@@ -2,9 +2,12 @@ package demo.payment;
 
 import demo.event.EventService;
 import demo.event.Events;
-import demo.event.PaymentEvent;
-import demo.event.PaymentEventType;
+import demo.payment.event.PaymentEvent;
+import demo.payment.event.PaymentEventType;
 import demo.payment.controller.PaymentController;
+import demo.payment.domain.Payment;
+import demo.payment.domain.PaymentMethod;
+import demo.payment.domain.PaymentService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

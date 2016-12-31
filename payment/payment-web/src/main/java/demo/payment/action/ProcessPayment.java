@@ -1,8 +1,8 @@
 package demo.payment.action;
 
 import demo.domain.Action;
-import demo.payment.Payment;
-import demo.payment.PaymentStatus;
+import demo.payment.domain.Payment;
+import demo.payment.domain.PaymentStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;

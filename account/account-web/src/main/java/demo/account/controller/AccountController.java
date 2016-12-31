@@ -1,7 +1,7 @@
 package demo.account.controller;
 
-import demo.account.Account;
-import demo.account.AccountService;
+import demo.account.domain.Account;
+import demo.account.domain.AccountService;
 import demo.account.event.AccountEvent;
 import demo.event.EventController;
 import demo.event.EventService;

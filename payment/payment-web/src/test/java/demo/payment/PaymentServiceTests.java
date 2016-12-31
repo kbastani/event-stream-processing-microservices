@@ -1,7 +1,11 @@
 package demo.payment;
 
 import demo.event.EventService;
-import demo.event.PaymentEvent;
+import demo.payment.event.PaymentEvent;
+import demo.payment.domain.Payment;
+import demo.payment.domain.PaymentMethod;
+import demo.payment.repository.PaymentRepository;
+import demo.payment.domain.PaymentService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

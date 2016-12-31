@@ -2,8 +2,7 @@ package demo.order.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.domain.Aggregate;
-import demo.domain.Provider;
-import demo.order.OrderProvider;
+import demo.domain.Module;
 import demo.order.event.OrderEvent;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
@@ -77,7 +76,7 @@ public class Order extends Aggregate<OrderEvent, Long> {
     }
 
     public Order post() {
-        OrderProvider orderProvider = getProvider();
+        OrderModule orderProvider = getProvider();
         return orderProvider.getDefaultService()
                 .create(this);
     }
@@ -109,16 +108,16 @@ public class Order extends Aggregate<OrderEvent, Long> {
     }
 
     /**
-     * Retrieves an instance of the {@link Provider} for this instance
+     * Retrieves an instance of the {@link Module} for this instance
      *
      * @return the provider for this instance
      * @throws IllegalArgumentException if the application context is unavailable or the provider does not exist
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Provider<A>, A extends Aggregate<OrderEvent, Long>> T getProvider() throws
+    public <T extends Module<A>, A extends Aggregate<OrderEvent, Long>> T getProvider() throws
             IllegalArgumentException {
-        OrderProvider orderProvider = getProvider(OrderProvider.class);
+        OrderModule orderProvider = getProvider(OrderModule.class);
         return (T) orderProvider;
     }
 

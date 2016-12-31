@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * A {@link Service} is a functional unit that provides a need. Services are immutable and often stateless. Services
- * always consume or produce {@link Commodity} objects. Services are addressable and discoverable by other services.
+ * always consume or produce {@link Aggregate} objects. Services are addressable and discoverable by other services.
  *
  * @author Kenny Bastani
  */
