@@ -1,7 +1,7 @@
 package demo.domain;
 
 /**
- * A {@link Commodity} object is a {@link Value} object that is also an {@link Aggregate} root. A commodity object
+ * A {@link Commodity} object is a {@link Entity} object that is also an {@link Aggregate} root. A commodity object
  * describes all aspects of an aggregate and is both stateless and immutable. A commodity is a locator that connects
  * relationships of a value object to a {@link Provider}.
  * <p>

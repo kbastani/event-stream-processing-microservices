@@ -1,15 +1,14 @@
 package demo.order;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import demo.domain.Value;
+import demo.domain.Entity;
 
-import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-@Entity
-public class LineItem implements Value<Long> {
+@javax.persistence.Entity
+public class LineItem implements Entity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

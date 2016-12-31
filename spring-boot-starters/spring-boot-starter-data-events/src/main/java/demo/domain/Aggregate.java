@@ -21,14 +21,14 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
- * An {@link Aggregate} is an entity that contains references to one or more other {@link Value} objects. Aggregates
+ * An {@link Aggregate} is an entity that contains references to one or more other {@link Entity} objects. Aggregates
  * may contain a collection of references to a {@link Command}. All command references on an aggregate should be
  * explicitly typed.
  *
  * @author Kenny Bastani
  */
 public abstract class Aggregate<E extends Event, ID extends Serializable> extends ResourceSupport implements
-        Value<Link> {
+        Entity<Link> {
 
     @JsonProperty("id")
     public abstract ID getIdentity();
