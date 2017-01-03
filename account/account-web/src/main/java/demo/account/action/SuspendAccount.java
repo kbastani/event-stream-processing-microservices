@@ -25,7 +25,7 @@ public class SuspendAccount extends Action<Account> {
 
     public Consumer<Account> getConsumer() {
         return (account) -> {
-            Assert.isTrue(account.getStatus() == ACCOUNT_SUSPENDED, "The account is already suspended");
+            Assert.isTrue(account.getStatus() != ACCOUNT_SUSPENDED, "The account is already suspended");
             Assert.isTrue(account.getStatus() == ACCOUNT_ACTIVE, "An inactive account cannot be suspended");
             
             AccountService accountService = account.getModule(AccountModule.class)

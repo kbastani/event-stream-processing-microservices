@@ -12,6 +12,7 @@ import org.springframework.util.Assert;
 
 import java.util.function.Consumer;
 
+import static demo.account.domain.AccountStatus.ACCOUNT_CONFIRMED;
 import static demo.account.domain.AccountStatus.ACCOUNT_PENDING;
 
 /**
@@ -24,6 +25,7 @@ public class ConfirmAccount extends Action<Account> {
 
     public Consumer<Account> getConsumer() {
         return (account) -> {
+            Assert.isTrue(account.getStatus() != ACCOUNT_CONFIRMED, "The account has already been confirmed");
             Assert.isTrue(account.getStatus() == ACCOUNT_PENDING, "The account has already been confirmed");
 
             AccountService accountService = account.getModule(AccountModule.class)
