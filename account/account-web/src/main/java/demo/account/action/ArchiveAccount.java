@@ -13,6 +13,7 @@ import org.springframework.util.Assert;
 import java.util.function.Consumer;
 
 import static demo.account.domain.AccountStatus.ACCOUNT_ACTIVE;
+import static demo.account.domain.AccountStatus.ACCOUNT_ARCHIVED;
 
 /**
  * Archives an {@link Account}
@@ -24,6 +25,7 @@ public class ArchiveAccount extends Action<Account> {
 
     public Consumer<Account> getConsumer() {
         return (account) -> {
+            Assert.isTrue(account.getStatus() != ACCOUNT_ARCHIVED, "The account is already archived");
             Assert.isTrue(account.getStatus() == ACCOUNT_ACTIVE, "An inactive account cannot be archived");
             
             AccountService accountService = account.getModule(AccountModule.class)
@@ -34,7 +36,7 @@ public class ArchiveAccount extends Action<Account> {
             account = accountService.update(account);
 
             // Trigger the account archived event
-            account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED, account));
+            account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED, account));
         };
     }
 }

@@ -17,14 +17,14 @@ import java.util.function.BiFunction;
 import static demo.account.domain.AccountStatus.ACCOUNT_ACTIVE;
 
 /**
- * Confirms an {@link Account}
+ * Post a new {@link Order} for an {@link Account}
  *
  * @author Kenny Bastani
  */
 @Service
 public class PostOrder extends Action<Account> {
 
-    public BiFunction<Account, Order, Account> getFunction() {
+    public BiFunction<Account, Order, Order> getFunction() {
         return (account, order) -> {
             Assert.isTrue(account.getStatus() == ACCOUNT_ACTIVE, "Only active accounts can create an order");
             order = order.post();
@@ -40,7 +40,7 @@ public class PostOrder extends Action<Account> {
                     .withTemplateParameters(params)
                     .toObject(Order.class);
 
-            return account;
+            return order;
         };
     }
 }

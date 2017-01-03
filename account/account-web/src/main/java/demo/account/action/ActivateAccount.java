@@ -37,7 +37,7 @@ public class ActivateAccount extends Action<Account> {
             account = accountService.update(account);
 
             // Trigger the account activated event
-            account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED, account));
+            account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED, account));
         };
     }
 }

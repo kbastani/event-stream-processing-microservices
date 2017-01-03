@@ -32,7 +32,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
     @Bean
     @LoadBalanced
-    protected RestTemplate restTemplate(ObjectMapper objectMapper) {
+    public RestTemplate restTemplate(ObjectMapper objectMapper) {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper);
         return new RestTemplate(Collections.singletonList(converter));

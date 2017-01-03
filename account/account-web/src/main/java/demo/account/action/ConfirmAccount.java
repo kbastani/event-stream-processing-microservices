@@ -34,7 +34,7 @@ public class ConfirmAccount extends Action<Account> {
             account = accountService.update(account);
 
             // Trigger the account confirmed
-            account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED, account));
+            account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED, account));
         };
     }
 }

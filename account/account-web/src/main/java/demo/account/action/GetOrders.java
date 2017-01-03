@@ -8,19 +8,24 @@ import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
 
+/**
+ * Query action to get {@link demo.order.domain.Order}s for an an {@link Account}
+ *
+ * @author Kenny Bastani
+ */
 @Service
 public class GetOrders extends Action<Account> {
 
-    private OrderModule orderProvider;
+    private OrderModule orderModule;
 
-    public GetOrders(OrderModule orderProvider) {
-        this.orderProvider = orderProvider;
+    public GetOrders(OrderModule orderModule) {
+        this.orderModule = orderModule;
     }
 
     public Function<Account, Orders> getFunction() {
         return (account) -> {
             // Get orders from the order service
-            return orderProvider.getDefaultService()
+            return orderModule.getDefaultService()
                     .findOrdersByAccountId(account.getIdentity());
         };
     }

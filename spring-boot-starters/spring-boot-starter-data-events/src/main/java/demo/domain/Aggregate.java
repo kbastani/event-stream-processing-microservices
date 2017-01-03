@@ -91,9 +91,7 @@ public abstract class Aggregate<E extends Event, ID extends Serializable> extend
      */
 
     public E sendEvent(E event, Link... links) {
-        EventService<E, ID> eventService = getEventService();
-        event = eventService.send(appendEvent(event), links);
-        return event;
+        return getEventService().send(appendEvent(event), links);
     }
 
     /**

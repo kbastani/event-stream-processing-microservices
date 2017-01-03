@@ -123,8 +123,8 @@ public class AccountController {
 
     @RequestMapping(path = "/accounts/{id}/commands/postOrder", method = RequestMethod.POST)
     public ResponseEntity postOrder(@PathVariable Long id, @RequestBody Order order) {
-        return Optional.ofNullable(getAccountResource(accountService.get(id)
-                .postOrder(order)))
+        return Optional.ofNullable(accountService.get(id)
+                .postOrder(order))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -247,14 +247,20 @@ public class AccountController {
     private Resource<Account> getAccountResource(Account account) {
         Assert.notNull(account, "Account must not be null");
 
-        // Add command link
-        account.add(linkBuilder("getCommands", account.getIdentity()).withRel("commands"));
+        if(account.getLink("commands") == null) {
+            // Add command link
+            account.add(linkBuilder("getCommands", account.getIdentity()).withRel("commands"));
+        }
 
-        // Add get events link
-        account.add(linkBuilder("getAccountEvents", account.getIdentity()).withRel("events"));
+        if(account.getLink("events") == null) {
+            // Add get events link
+            account.add(linkBuilder("getAccountEvents", account.getIdentity()).withRel("events"));
+        }
 
-        // Add orders link
-        account.add(linkBuilder("getAccountOrders", account.getIdentity()).withRel("orders"));
+        if(account.getLink("orders") == null) {
+            // Add orders link
+            account.add(linkBuilder("getAccountOrders", account.getIdentity()).withRel("orders"));
+        }
 
         return new Resource<>(account);
     }

@@ -13,6 +13,7 @@ import org.springframework.util.Assert;
 import java.util.function.Consumer;
 
 import static demo.account.domain.AccountStatus.ACCOUNT_ACTIVE;
+import static demo.account.domain.AccountStatus.ACCOUNT_SUSPENDED;
 
 /**
  * Suspends an {@link Account}
@@ -24,6 +25,7 @@ public class SuspendAccount extends Action<Account> {
 
     public Consumer<Account> getConsumer() {
         return (account) -> {
+            Assert.isTrue(account.getStatus() == ACCOUNT_SUSPENDED, "The account is already suspended");
             Assert.isTrue(account.getStatus() == ACCOUNT_ACTIVE, "An inactive account cannot be suspended");
             
             AccountService accountService = account.getModule(AccountModule.class)
@@ -34,7 +36,7 @@ public class SuspendAccount extends Action<Account> {
             account = accountService.update(account);
 
             // Trigger the account suspended event
-            account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED, account));
+            account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED, account));
         };
     }
 }

@@ -3,6 +3,7 @@ package demo.event;
 import demo.domain.Aggregate;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Link;
@@ -36,7 +37,8 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
     private final Source eventStream;
     private final RestTemplate restTemplate;
 
-    EventServiceImpl(EventRepository<T, ID> eventRepository, Source eventStream, RestTemplate restTemplate) {
+    EventServiceImpl(EventRepository<T, ID> eventRepository, Source eventStream, @LoadBalanced RestTemplate
+            restTemplate) {
         this.eventRepository = eventRepository;
         this.eventStream = eventStream;
         this.restTemplate = restTemplate;
@@ -48,17 +50,13 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
                 .contentType(MediaTypes.HAL_JSON)
                 .body(new Resource<T>(event), Resource.class);
 
-        try {
-            // Send the event to the event stream processor
-            E entity = (E) restTemplate.exchange(requestEntity, event.getEntity()
-                    .getClass())
-                    .getBody();
+        // Send the event to the event stream processor
+        E entity = (E) restTemplate.exchange(requestEntity, event.getEntity()
+                .getClass())
+                .getBody();
 
-            // Set the applied entity reference to the event
-            event.setEntity(entity);
-        } catch (Exception ex) {
-            log.error(ex);
-        }
+        // Set the applied entity reference to the event
+        event.setEntity(entity);
 
         return event;
     }

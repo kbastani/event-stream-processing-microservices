@@ -4,25 +4,44 @@ import demo.account.event.AccountEvent;
 import demo.account.event.AccountEventType;
 import demo.account.repository.AccountRepository;
 import demo.domain.Service;
+import org.apache.log4j.Logger;
 import org.springframework.util.Assert;
 
 @org.springframework.stereotype.Service
 public class AccountService extends Service<Account, Long> {
 
+    private final Logger log = Logger.getLogger(AccountService.class);
     private final AccountRepository accountRepository;
 
     public AccountService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
     }
 
-    public Account registerAccount(Account account) {
+    /**
+     * Register a new {@link Account} and handle a synchronous event flow for account creation
+     *
+     * @param account is the {@link Account} to create
+     * @return the created account
+     * @throws IllegalStateException if the event flow fails
+     */
+    public Account registerAccount(Account account) throws IllegalStateException {
+        Account result;
+
         account = create(account);
 
-        // Trigger the account creation event
-        account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_CREATED, account));
+        try {
+            // Handle a synchronous event flow
+            result = account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_CREATED, account)).getEntity();
+            result.setIdentity(account.getIdentity());
+        } catch (Exception ex) {
+            log.error("Account registration failed", ex);
+            // Rollback the account creation
+            delete(account.getIdentity());
+            throw new IllegalStateException("Account registration failed", ex);
+        }
 
         // Return the result
-        return account;
+        return result;
     }
 
     /**

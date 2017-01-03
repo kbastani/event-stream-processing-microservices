@@ -125,11 +125,10 @@ public class Account extends AbstractEntity<AccountEvent, Long> {
     }
 
     @Command(method = "postOrder", controller = AccountController.class)
-    public Account postOrder(Order order) {
-        getAction(PostOrder.class)
+    public Order postOrder(Order order) {
+        return getAction(PostOrder.class)
                 .getFunction()
                 .apply(this, order);
-        return this;
     }
 
     /**
