@@ -1,25 +1,20 @@
 package demo.order.action;
 
 import demo.domain.Action;
-import demo.order.event.OrderEvent;
-import demo.order.event.OrderEventType;
 import demo.order.domain.Order;
 import demo.order.domain.OrderModule;
 import demo.order.domain.OrderService;
 import demo.order.domain.OrderStatus;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventType;
 import demo.payment.domain.Payment;
 import demo.payment.domain.PaymentMethod;
+import demo.payment.domain.PaymentService;
 import org.apache.log4j.Logger;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Creates a {@link Payment} for an {@link Order}.
@@ -29,54 +24,54 @@ import java.util.function.Consumer;
 @Service
 public class CreatePayment extends Action<Order> {
 
-    private final Logger log = Logger.getLogger(CreatePayment.class);
+    private final Logger log = Logger.getLogger(this.getClass());
+    private final PaymentService paymentService;
 
-    private RestTemplate restTemplate;
-
-    public CreatePayment(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public CreatePayment(PaymentService paymentService) {
+        this.paymentService = paymentService;
     }
 
-    public Consumer<Order> getConsumer() {
+    public Function<Order, Order> getFunction() {
         return order -> {
             Assert.isTrue(order.getPaymentId() == null, "Payment has already been created");
             Assert.isTrue(order.getStatus() == OrderStatus.ACCOUNT_CONNECTED, "Account must be connected first");
 
-            OrderService orderService = order.getModule(OrderModule.class)
-                    .getDefaultService();
+            // Get entity services
+            OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
+            Order result;
 
             Payment payment = new Payment();
-
-            // Calculate payment amount
             payment.setAmount(order.calculateTotal());
-
-            // Set payment method
             payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
+            payment = paymentService.create(payment);
 
-            // Create a new request entity
-            RequestEntity<Resource<Payment>> requestEntity = RequestEntity.post(
-                    URI.create("http://payment-web/v1/payments"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaTypes.HAL_JSON)
-                    .body(new Resource<>(payment), Resource.class);
+            log.info(payment);
 
-            // Update the order entity's status
-            Resource paymentResource = restTemplate
-                    .exchange(requestEntity, Resource.class)
-                    .getBody();
-
-            log.info(paymentResource);
-
-            // Update the status
+            // Update the order status
             order.setStatus(OrderStatus.PAYMENT_CREATED);
             order = orderService.update(order);
 
-            OrderEvent event = new OrderEvent(OrderEventType.PAYMENT_CREATED, order);
-            event.add(paymentResource.getLink("self")
-                    .withRel("payment"));
+            try {
+                OrderEvent event = new OrderEvent(OrderEventType.PAYMENT_CREATED, order);
+                event.add(payment.getLink("self").withRel("payment"));
 
-            // Trigger the payment created
-            order.sendAsyncEvent(event);
+                // Trigger payment created event
+                result = order.sendEvent(event).getEntity();
+            } catch (Exception ex) {
+                log.error("The order's payment could not be created", ex);
+
+                // Rollback the payment creation
+                if (payment.getIdentity() != null)
+                    paymentService.delete(payment.getIdentity());
+
+                order.setPaymentId(null);
+                order.setStatus(OrderStatus.ACCOUNT_CONNECTED);
+                orderService.update(order);
+
+                throw new IllegalStateException("Payment creation failed", ex);
+            }
+
+            return result;
         };
     }
 }

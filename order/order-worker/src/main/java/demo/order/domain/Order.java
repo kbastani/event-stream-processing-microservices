@@ -12,6 +12,10 @@ public class Order extends AbstractEntity {
 
     private Long id;
 
+    private Long accountId;
+
+    private Long paymentId;
+
     private OrderStatus status;
 
     private Set<OrderEvent> events = new HashSet<>();
@@ -66,6 +70,22 @@ public class Order extends AbstractEntity {
 
     public void addLineItem(LineItem lineItem) {
         lineItems.add(lineItem);
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    public Long getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(Long paymentId) {
+        this.paymentId = paymentId;
     }
 
     /**

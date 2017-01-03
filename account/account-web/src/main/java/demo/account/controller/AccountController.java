@@ -49,7 +49,8 @@ public class AccountController {
 
     @RequestMapping(path = "/accounts/{id}")
     public ResponseEntity getAccount(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(id))
+        return Optional.ofNullable(accountService.get(id))
+                .map(this::getAccountResource)
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -91,55 +92,46 @@ public class AccountController {
 
     @RequestMapping(path = "/accounts/{id}/commands/confirm")
     public ResponseEntity confirm(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(accountService.get(id)
-                .confirm()))
+        return Optional.ofNullable(accountService.get(id))
+                .map(Account::confirm)
+                .map(this::getAccountResource)
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @RequestMapping(path = "/accounts/{id}/commands/activate")
     public ResponseEntity activate(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(accountService.get(id)
-                .activate()))
+        return Optional.ofNullable(accountService.get(id))
+                .map(Account::activate)
+                .map(this::getAccountResource)
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @RequestMapping(path = "/accounts/{id}/commands/suspend")
     public ResponseEntity suspend(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(accountService.get(id)
-                .suspend()))
+        return Optional.ofNullable(accountService.get(id))
+                .map(Account::suspend)
+                .map(this::getAccountResource)
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @RequestMapping(path = "/accounts/{id}/commands/archive")
     public ResponseEntity archive(@PathVariable Long id) {
-        return Optional.ofNullable(getAccountResource(accountService.get(id)
-                .archive()))
+        return Optional.ofNullable(accountService.get(id))
+                .map(Account::archive)
+                .map(this::getAccountResource)
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
     @RequestMapping(path = "/accounts/{id}/commands/postOrder", method = RequestMethod.POST)
     public ResponseEntity postOrder(@PathVariable Long id, @RequestBody Order order) {
-        return Optional.ofNullable(accountService.get(id)
-                .postOrder(order))
-                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+        return Optional.ofNullable(accountService.get(id))
+                .map(a -> a.postOrder(order))
+                .map(o -> new ResponseEntity<>(o, HttpStatus.CREATED))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
-    }
-
-    /**
-     * Retrieves a hypermedia resource for {@link Account} with the specified identifier.
-     *
-     * @param id is the unique identifier for looking up the {@link Account} entity
-     * @return a hypermedia resource for the fetched {@link Account}
-     */
-    private Resource<Account> getAccountResource(Long id) {
-        // Get the account for the provided id
-        Account account = accountService.get(id);
-
-        return getAccountResource(account);
     }
 
     /**
@@ -247,17 +239,17 @@ public class AccountController {
     private Resource<Account> getAccountResource(Account account) {
         Assert.notNull(account, "Account must not be null");
 
-        if(account.getLink("commands") == null) {
+        if (!account.hasLink("commands")) {
             // Add command link
             account.add(linkBuilder("getCommands", account.getIdentity()).withRel("commands"));
         }
 
-        if(account.getLink("events") == null) {
+        if (!account.hasLink("events")) {
             // Add get events link
             account.add(linkBuilder("getAccountEvents", account.getIdentity()).withRel("events"));
         }
 
-        if(account.getLink("orders") == null) {
+        if (!account.hasLink("orders")) {
             // Add orders link
             account.add(linkBuilder("getAccountOrders", account.getIdentity()).withRel("orders"));
         }

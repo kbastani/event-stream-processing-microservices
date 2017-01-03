@@ -214,8 +214,8 @@ public class PaymentController {
         }
 
         // Add remote payment link
-        if (payment.getOrderId() != null) {
-            Link result = getRemoteLink("order-web", "/v1/orders/{id}", payment.getOrderId(), "order    ");
+        if (payment.getOrderId() != null && !payment.hasLink("order")) {
+            Link result = getRemoteLink("order-web", "/v1/orders/{id}", payment.getOrderId(), "order");
             if (result != null)
                 payment.add(result);
         }

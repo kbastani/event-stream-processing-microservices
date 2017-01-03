@@ -135,15 +135,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .and()
                     .withExternal()
                     .source(OrderStatus.PAYMENT_CREATED)
-                    .target(OrderStatus.PAYMENT_CONNECTED)
+                    .target(OrderStatus.PAYMENT_PENDING)
                     .event(OrderEventType.PAYMENT_CONNECTED)
                     .action(paymentConnected())
-                    .and()
-                    .withExternal()
-                    .source(OrderStatus.PAYMENT_CONNECTED)
-                    .target(OrderStatus.PAYMENT_PENDING)
-                    .event(OrderEventType.PAYMENT_PENDING)
-                    .action(paymentPending())
                     .and()
                     .withExternal()
                     .source(OrderStatus.PAYMENT_PENDING)
@@ -166,7 +160,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new OrderCreated(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -183,7 +177,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentPending(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -200,7 +194,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new ReservationPending(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -217,7 +211,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentFailed(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -231,19 +225,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
 
     @Bean
     public Action<OrderStatus, OrderEventType> paymentSucceeded() {
-        return context -> applyEvent(context,
-                new PaymentSucceeded(context, event -> {
-                    log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
-                    Traverson traverson = new Traverson(
-                            URI.create(event.getLink("order").getHref()),
-                            MediaTypes.HAL_JSON
-                    );
-
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
-                }));
+        return context -> applyEvent(context, new PaymentSucceeded(context));
     }
 
     @Bean
@@ -251,15 +233,16 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentConnected(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+
+                    // Create a traverson for the root order
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                    // Traverse to the process payment link
+                    return traverson.follow("self", "commands", "processPayment")
+                            .toObject(Order.class);
                 }));
     }
 
@@ -268,7 +251,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentCreated(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson paymentResource = new Traverson(
                             URI.create(event.getLink("payment").getHref()),
                             MediaTypes.HAL_JSON
@@ -307,7 +290,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new ReservationSucceeded(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -324,7 +307,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new ReservationSucceeded(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -341,7 +324,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new ReservationFailed(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON

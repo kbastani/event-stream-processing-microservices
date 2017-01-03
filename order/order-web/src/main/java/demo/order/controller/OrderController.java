@@ -212,23 +212,27 @@ public class OrderController {
      * @return is a hypermedia enriched resource for the supplied {@link Order} entity
      */
     private Resource<Order> getOrderResource(Order order) {
-        if(order == null) return null;
+        if (order == null) return null;
 
-        // Add command link
-        order.add(linkBuilder("getCommands", order.getIdentity()).withRel("commands"));
+        if (order.getLink("commands") == null) {
+            // Add command link
+            order.add(linkBuilder("getCommands", order.getIdentity()).withRel("commands"));
+        }
 
-        // Add get events link
-        order.add(linkBuilder("getOrderEvents", order.getIdentity()).withRel("events"));
+        if (order.getLink("events") == null) {
+            // Add get events link
+            order.add(linkBuilder("getOrderEvents", order.getIdentity()).withRel("events"));
+        }
 
         // Add remote account link
-        if (order.getAccountId() != null) {
+        if (order.getAccountId() != null && order.getLink("account") == null) {
             Link result = getRemoteLink("account-web", "/v1/accounts/{id}", order.getAccountId(), "account");
             if (result != null)
                 order.add(result);
         }
 
         // Add remote payment link
-        if (order.getPaymentId() != null) {
+        if (order.getPaymentId() != null && order.getLink("payment") == null) {
             Link result = getRemoteLink("payment-web", "/v1/payments/{id}", order.getPaymentId(), "payment");
             if (result != null)
                 order.add(result);

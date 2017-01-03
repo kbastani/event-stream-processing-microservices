@@ -3,10 +3,13 @@ package demo.order.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import demo.domain.AbstractEntity;
+import demo.domain.Aggregate;
 import demo.domain.Command;
-import demo.order.event.OrderEvent;
+import demo.domain.Module;
 import demo.order.action.*;
 import demo.order.controller.OrderController;
+import demo.order.event.OrderEvent;
+import demo.payment.domain.Payment;
 import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
@@ -97,34 +100,30 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
 
     @Command(method = "connectAccount", controller = OrderController.class)
     public Order connectAccount(Long accountId) {
-        getAction(ConnectAccount.class)
-                .getConsumer()
-                .accept(this, accountId);
-        return this;
+        return getAction(ConnectAccount.class)
+                .getFunction()
+                .apply(this, accountId);
     }
 
     @Command(method = "connectPayment", controller = OrderController.class)
     public Order connectPayment(Long paymentId) {
-        getAction(ConnectPayment.class)
-                .getConsumer()
-                .accept(this, paymentId);
-        return this;
+        return getAction(ConnectPayment.class)
+                .getFunction()
+                .apply(this, paymentId);
     }
 
     @Command(method = "createPayment", controller = OrderController.class)
     public Order createPayment() {
-        getAction(CreatePayment.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+        return getAction(CreatePayment.class)
+                .getFunction()
+                .apply(this);
     }
 
     @Command(method = "processPayment", controller = OrderController.class)
     public Order processPayment() {
-        getAction(ProcessPayment.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+        return getAction(ProcessPayment.class)
+                .getFunction()
+                .apply(this);
     }
 
     @Command(method = "reserveInventory", controller = OrderController.class)
@@ -149,6 +148,24 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
                 .stream()
                 .mapToDouble(a -> (a.getPrice() + a.getTax()) * a.getQuantity())
                 .sum();
+    }
+
+    @JsonIgnore
+    public Payment getPayment() {
+        Payment result = null;
+
+        if (paymentId != null)
+            result = getModule(OrderModule.class).getPaymentService().get(paymentId);
+
+        return result;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends Module<A>, A extends Aggregate<OrderEvent, Long>> T getModule() throws
+            IllegalArgumentException {
+        OrderModule orderModule = getModule(OrderModule.class);
+        return (T) orderModule;
     }
 
     /**

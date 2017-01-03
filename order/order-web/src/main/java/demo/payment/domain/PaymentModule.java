@@ -1,26 +1,22 @@
-package demo.order.domain;
+package demo.payment.domain;
 
 import demo.domain.Module;
 import demo.event.EventService;
 import demo.order.event.OrderEvent;
-import demo.payment.domain.PaymentService;
 
 @org.springframework.stereotype.Service
-public class OrderModule extends Module<Order> {
+public class PaymentModule extends Module<Payment> {
 
-    private final OrderService orderService;
     private final PaymentService paymentService;
     private final EventService<OrderEvent, Long> eventService;
 
-    public OrderModule(OrderService orderService, PaymentService paymentService, EventService<OrderEvent, Long>
-            eventService) {
-        this.orderService = orderService;
+    public PaymentModule(PaymentService paymentService, EventService<OrderEvent, Long> eventService) {
         this.paymentService = paymentService;
         this.eventService = eventService;
     }
 
-    public OrderService getOrderService() {
-        return orderService;
+    public PaymentService getPaymentService() {
+        return paymentService;
     }
 
     public EventService<OrderEvent, Long> getEventService() {
@@ -28,16 +24,12 @@ public class OrderModule extends Module<Order> {
     }
 
     @Override
-    public OrderService getDefaultService() {
-        return orderService;
+    public PaymentService getDefaultService() {
+        return paymentService;
     }
 
     @Override
     public EventService<OrderEvent, Long> getDefaultEventService() {
         return eventService;
-    }
-
-    public PaymentService getPaymentService() {
-        return paymentService;
     }
 }

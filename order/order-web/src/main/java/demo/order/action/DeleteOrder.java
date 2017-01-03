@@ -4,8 +4,9 @@ import demo.domain.Action;
 import demo.order.domain.Order;
 import demo.order.domain.OrderModule;
 import demo.payment.domain.Payment;
+import demo.payment.domain.PaymentService;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.function.Consumer;
 
@@ -17,19 +18,18 @@ import java.util.function.Consumer;
 @Service
 public class DeleteOrder extends Action<Order> {
 
-    private RestTemplate restTemplate;
+    private final Logger log = Logger.getLogger(this.getClass());
+    private final PaymentService paymentService;
 
-    public DeleteOrder(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public DeleteOrder(PaymentService paymentService) {
+        this.paymentService = paymentService;
     }
 
     public Consumer<Order> getConsumer() {
         return (order) -> {
             // Delete payment
-            if (order.getPaymentId() != null) {
-                String href = "http://payment-web/v1/payments/" + order.getPaymentId();
-                restTemplate.delete(href);
-            }
+            if (order.getPaymentId() != null)
+                paymentService.delete(order.getPaymentId());
 
             // Delete order
             order.getModule(OrderModule.class)
