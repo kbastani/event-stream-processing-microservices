@@ -97,11 +97,9 @@ public class Payment extends AbstractEntity<PaymentEvent, Long> {
 
     @Command(method = "processPayment", controller = PaymentController.class)
     public Payment processPayment() {
-        getAction(ProcessPayment.class)
-                .getConsumer()
-                .accept(this);
-
-        return this;
+        return getAction(ProcessPayment.class)
+                .getFunction()
+                .apply(this);
     }
 
     /**

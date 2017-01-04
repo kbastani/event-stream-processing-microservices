@@ -132,8 +132,6 @@ public class PaymentController {
         // Create the new payment
         payment = paymentService.registerPayment(payment);
 
-        payment.getLinks().clear();
-
         return new Resource<>(payment);
     }
 

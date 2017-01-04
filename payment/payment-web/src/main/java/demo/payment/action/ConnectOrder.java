@@ -7,6 +7,7 @@ import demo.payment.domain.PaymentService;
 import demo.payment.domain.PaymentStatus;
 import demo.payment.event.PaymentEvent;
 import demo.payment.event.PaymentEventType;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -14,6 +15,8 @@ import java.util.function.BiFunction;
 
 @Service
 public class ConnectOrder extends Action<Payment> {
+    private final Logger log = Logger.getLogger(this.getClass());
+
     public BiFunction<Payment, Long, Payment> getFunction() {
         return (payment, orderId) -> {
             Assert.isTrue(payment
@@ -33,9 +36,13 @@ public class ConnectOrder extends Action<Payment> {
                 // Trigger the payment connected
                 result = payment.sendEvent(new PaymentEvent(PaymentEventType.ORDER_CONNECTED, payment)).getEntity();
             } catch (IllegalStateException ex) {
+                log.error("Payment could not be connected to order", ex);
+
+                // Rollback operation
                 payment.setStatus(PaymentStatus.PAYMENT_CREATED);
                 payment.setOrderId(null);
                 paymentService.update(payment);
+
                 throw ex;
             }
 

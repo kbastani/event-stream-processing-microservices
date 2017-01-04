@@ -16,6 +16,8 @@ import java.util.Set;
 public class Order extends Aggregate<OrderEvent, Long> {
 
     private Long id;
+    private Long createdAt;
+    private Long lastModified;
     private List<OrderEvent> orderEvents = new ArrayList<>();
     private OrderStatus status;
     private Set<LineItem> lineItems = new HashSet<>();
@@ -33,6 +35,22 @@ public class Order extends Aggregate<OrderEvent, Long> {
         this.shippingAddress = shippingAddress;
         if (shippingAddress.getAddressType() == null)
             this.shippingAddress.setAddressType(AddressType.SHIPPING);
+    }
+
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Long lastModified) {
+        this.lastModified = lastModified;
     }
 
     public OrderStatus getStatus() {

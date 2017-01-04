@@ -4,13 +4,14 @@ import demo.account.domain.Account;
 import demo.account.domain.AccountModule;
 import demo.account.domain.AccountService;
 import demo.account.domain.AccountStatus;
-import demo.domain.Action;
 import demo.account.event.AccountEvent;
 import demo.account.event.AccountEventType;
+import demo.domain.Action;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static demo.account.domain.AccountStatus.ACCOUNT_ACTIVE;
 import static demo.account.domain.AccountStatus.ACCOUNT_ARCHIVED;
@@ -23,7 +24,9 @@ import static demo.account.domain.AccountStatus.ACCOUNT_ARCHIVED;
 @Service
 public class ArchiveAccount extends Action<Account> {
 
-    public Consumer<Account> getConsumer() {
+    private final Logger log = Logger.getLogger(this.getClass());
+
+    public Function<Account, Account> getFunction() {
         return (account) -> {
             Assert.isTrue(account.getStatus() != ACCOUNT_ARCHIVED, "The account is already archived");
             Assert.isTrue(account.getStatus() == ACCOUNT_ACTIVE, "An inactive account cannot be archived");
@@ -31,12 +34,29 @@ public class ArchiveAccount extends Action<Account> {
             AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
+            Account result;
+
+            AccountStatus status = account.getStatus();
+
             // Archive the account
             account.setStatus(AccountStatus.ACCOUNT_ARCHIVED);
             account = accountService.update(account);
 
-            // Trigger the account archived event
-            account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED, account));
+            try {
+                // Trigger the account archived event
+                result = account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED, account)).getEntity();
+                result.setIdentity(account.getIdentity());
+            } catch (Exception ex) {
+                log.error("Account could not be archived", ex);
+
+                // Rollback the operation
+                account.setStatus(status);
+                accountService.update(account);
+
+                throw ex;
+            }
+
+            return result;
         };
     }
 }

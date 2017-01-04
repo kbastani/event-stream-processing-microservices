@@ -1,10 +1,10 @@
 package demo.config;
 
-import demo.payment.Payment;
-import demo.payment.PaymentStatus;
 import demo.event.PaymentEvent;
 import demo.event.PaymentEventType;
 import demo.function.*;
+import demo.payment.Payment;
+import demo.payment.PaymentStatus;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +17,7 @@ import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.EnumSet;
@@ -81,12 +82,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Paymen
                     .and()
                     .withExternal()
                     .source(PaymentStatus.ORDER_CONNECTED)
-                    .target(PaymentStatus.PAYMENT_PENDING)
-                    .event(PaymentEventType.PAYMENT_PENDING)
-                    .action(paymentPending())
-                    .and()
-                    .withExternal()
-                    .source(PaymentStatus.PAYMENT_PENDING)
                     .target(PaymentStatus.PAYMENT_PROCESSED)
                     .event(PaymentEventType.PAYMENT_PROCESSED)
                     .action(paymentProcessed())
@@ -95,13 +90,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Paymen
                     .source(PaymentStatus.PAYMENT_PROCESSED)
                     .target(PaymentStatus.PAYMENT_SUCCEEDED)
                     .event(PaymentEventType.PAYMENT_SUCCEEDED)
-                    .action(paymentSucceeded())
+                    .action(paymentSucceeded(new RestTemplate()))
                     .and()
                     .withExternal()
                     .source(PaymentStatus.PAYMENT_PROCESSED)
                     .target(PaymentStatus.PAYMENT_FAILED)
                     .event(PaymentEventType.PAYMENT_FAILED)
-                    .action(paymentFailed());
+                    .action(paymentFailed(new RestTemplate()));
         } catch (Exception e) {
             throw new RuntimeException("Could not configure state machine transitions", e);
         }
@@ -120,7 +115,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Paymen
      * @param paymentFunction is the payment function to apply after the state machine has completed replication
      * @return an {@link PaymentEvent} only if this event has not yet been processed, otherwise returns null
      */
-    private PaymentEvent applyEvent(StateContext<PaymentStatus, PaymentEventType> context, PaymentFunction paymentFunction) {
+    private PaymentEvent applyEvent(StateContext<PaymentStatus, PaymentEventType> context, PaymentFunction
+            paymentFunction) {
         PaymentEvent paymentEvent = null;
 
         // Log out the progress of the state machine replication
@@ -207,37 +203,37 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Paymen
     }
 
     @Bean
-    public Action<PaymentStatus, PaymentEventType> paymentSucceeded() {
+    public Action<PaymentStatus, PaymentEventType> paymentSucceeded(RestTemplate restTemplate) {
         return context -> applyEvent(context,
                 new PaymentSucceeded(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("payment").getHref());
-                    // Get the payment resource for the event
-                    Traverson traverson = new Traverson(
-                            URI.create(event.getLink("payment").getHref()),
-                            MediaTypes.HAL_JSON
-                    );
-
-                    return traverson.follow("self")
-                            .toEntity(Payment.class)
-                            .getBody();
+                    return updatePaymentStatus(restTemplate, event, PaymentStatus.PAYMENT_SUCCEEDED);
                 }));
     }
 
     @Bean
-    public Action<PaymentStatus, PaymentEventType> paymentFailed() {
+    public Action<PaymentStatus, PaymentEventType> paymentFailed(RestTemplate restTemplate) {
         return context -> applyEvent(context,
                 new PaymentFailed(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("payment").getHref());
-                    // Get the payment resource for the event
-                    Traverson traverson = new Traverson(
-                            URI.create(event.getLink("payment").getHref()),
-                            MediaTypes.HAL_JSON
-                    );
-
-                    return traverson.follow("self")
-                            .toEntity(Payment.class)
-                            .getBody();
+                    return updatePaymentStatus(restTemplate, event, PaymentStatus.PAYMENT_FAILED);
                 }));
+    }
+
+    private Payment updatePaymentStatus(RestTemplate restTemplate, PaymentEvent event, PaymentStatus status) {
+        // Get the payment resource for the event
+        Traverson traverson = new Traverson(
+                URI.create(event.getLink("payment").getHref()),
+                MediaTypes.HAL_JSON
+        );
+
+        Payment payment = traverson.follow("self")
+                .toEntity(Payment.class)
+                .getBody();
+
+        payment.setStatus(status);
+        restTemplate.put(payment.getLink("self").getHref(), payment);
+        return payment;
     }
 }
 

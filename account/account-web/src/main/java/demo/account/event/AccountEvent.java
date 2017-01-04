@@ -28,7 +28,7 @@ public class AccountEvent extends Event<Account, AccountEventType, Long> {
     @Enumerated(EnumType.STRING)
     private AccountEventType type;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JsonIgnore
     private Account entity;
 

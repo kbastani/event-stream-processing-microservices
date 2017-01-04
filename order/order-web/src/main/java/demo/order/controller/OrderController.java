@@ -103,9 +103,10 @@ public class OrderController {
 
     @RequestMapping(path = "/orders/{id}/commands/createPayment")
     public ResponseEntity createPayment(@PathVariable Long id) {
-        return Optional.ofNullable(orderService.get(id)
-                .createPayment())
-                .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
+        return Optional.of(orderService.get(id))
+                .map(Order::createPayment)
+                .map(this::getOrderResource)
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
@@ -214,25 +215,25 @@ public class OrderController {
     private Resource<Order> getOrderResource(Order order) {
         if (order == null) return null;
 
-        if (order.getLink("commands") == null) {
+        if (!order.hasLink("commands")) {
             // Add command link
             order.add(linkBuilder("getCommands", order.getIdentity()).withRel("commands"));
         }
 
-        if (order.getLink("events") == null) {
+        if (!order.hasLink("events")) {
             // Add get events link
             order.add(linkBuilder("getOrderEvents", order.getIdentity()).withRel("events"));
         }
 
         // Add remote account link
-        if (order.getAccountId() != null && order.getLink("account") == null) {
+        if (order.getAccountId() != null && !order.hasLink("account")) {
             Link result = getRemoteLink("account-web", "/v1/accounts/{id}", order.getAccountId(), "account");
             if (result != null)
                 order.add(result);
         }
 
         // Add remote payment link
-        if (order.getPaymentId() != null && order.getLink("payment") == null) {
+        if (order.getPaymentId() != null && !order.hasLink("payment")) {
             Link result = getRemoteLink("payment-web", "/v1/payments/{id}", order.getPaymentId(), "payment");
             if (result != null)
                 order.add(result);

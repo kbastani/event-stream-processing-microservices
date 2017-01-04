@@ -44,7 +44,7 @@ public class ConnectPayment extends Action<Order> {
                 order.setPaymentId(null);
                 order.setStatus(OrderStatus.ORDER_CREATED);
                 orderService.update(order);
-                throw new IllegalStateException("Could not connect payment to order", ex);
+                throw ex;
             }
 
             return result;

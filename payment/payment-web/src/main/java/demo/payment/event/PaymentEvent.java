@@ -26,7 +26,7 @@ public class PaymentEvent extends Event<Payment, PaymentEventType, Long> {
     @Enumerated(EnumType.STRING)
     private PaymentEventType type;
 
-    @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JsonIgnore
     private Payment entity;
 

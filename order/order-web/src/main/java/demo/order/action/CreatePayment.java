@@ -68,7 +68,7 @@ public class CreatePayment extends Action<Order> {
                 order.setStatus(OrderStatus.ACCOUNT_CONNECTED);
                 orderService.update(order);
 
-                throw new IllegalStateException("Payment creation failed", ex);
+                throw ex;
             }
 
             return result;

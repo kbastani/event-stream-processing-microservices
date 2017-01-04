@@ -42,7 +42,7 @@ public class ConnectAccount extends Action<Order> {
                 order.setAccountId(null);
                 order.setStatus(OrderStatus.ORDER_CREATED);
                 orderService.update(order);
-                throw new IllegalStateException("Could not connect order to account", ex);
+                throw ex;
             }
 
             return result;

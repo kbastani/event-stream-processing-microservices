@@ -5,7 +5,9 @@ import demo.event.EventService;
 import demo.payment.event.PaymentEvent;
 import demo.payment.event.PaymentEventType;
 import demo.payment.repository.PaymentRepository;
+import org.apache.log4j.Logger;
 import org.springframework.util.Assert;
+import org.springframework.web.client.ResourceAccessException;
 
 /**
  * The {@link PaymentService} provides transactional support for managing {@link Payment} entities. This service also
@@ -18,6 +20,7 @@ import org.springframework.util.Assert;
 @org.springframework.stereotype.Service
 public class PaymentService extends Service<Payment, Long> {
 
+    private final Logger log = Logger.getLogger(this.getClass());
     private final PaymentRepository paymentRepository;
 
     public PaymentService(PaymentRepository paymentRepository, EventService<PaymentEvent, Long> eventService) {
@@ -25,19 +28,23 @@ public class PaymentService extends Service<Payment, Long> {
     }
 
     public Payment registerPayment(Payment payment) {
+        Payment result;
+
         payment = create(payment);
 
-        // Trigger the payment creation event
-        PaymentEvent event = payment.sendEvent(new PaymentEvent(PaymentEventType.PAYMENT_CREATED, payment));
-
-        // Attach payment identifier
-        event.getEntity()
-                .setIdentity(payment.getIdentity());
-
-        event.getEntity().getLinks().clear();
+        try {
+            // Handle a synchronous event flow
+            result = payment.sendEvent(new PaymentEvent(PaymentEventType.PAYMENT_CREATED, payment)).getEntity();
+            result.setIdentity(payment.getIdentity());
+        } catch (Exception ex) {
+            log.error("Payment creation failed", ex);
+            // Rollback the payment creation
+            delete(payment.getIdentity());
+            throw new ResourceAccessException(ex.getMessage());
+        }
 
         // Return the result
-        return event.getEntity();
+        return result;
     }
 
     public Payment get(Long id) {
@@ -62,7 +69,7 @@ public class PaymentService extends Service<Payment, Long> {
         currentPayment.setOrderId(payment.getOrderId());
         currentPayment.setAmount(payment.getAmount());
 
-        return paymentRepository.save(currentPayment);
+        return paymentRepository.saveAndFlush(currentPayment);
     }
 
     public boolean delete(Long id) {

@@ -11,9 +11,12 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.integration.support.MessageBuilder;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 
@@ -50,13 +53,17 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
                 .contentType(MediaTypes.HAL_JSON)
                 .body(new Resource<T>(event), Resource.class);
 
-        // Send the event to the event stream processor
-        E entity = (E) restTemplate.exchange(requestEntity, event.getEntity()
-                .getClass())
-                .getBody();
+        try {
+            // Send the event to the event stream processor
+            ResponseEntity<E> response = restTemplate.exchange(requestEntity, (Class<E>) event.getEntity().getClass());
+            E entity = response.getBody();
 
-        // Set the applied entity reference to the event
-        event.setEntity(entity);
+            // Set the applied entity reference to the event
+            event.setEntity(entity);
+        } catch (Exception ex) {
+            log.error(ex);
+            throw new ResourceAccessException(ex.getMessage(), new IOException(ex));
+        }
 
         return event;
     }

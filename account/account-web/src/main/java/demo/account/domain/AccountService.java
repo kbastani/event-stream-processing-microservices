@@ -37,7 +37,7 @@ public class AccountService extends Service<Account, Long> {
             log.error("Account registration failed", ex);
             // Rollback the account creation
             delete(account.getIdentity());
-            throw new IllegalStateException("Account registration failed", ex);
+            throw ex;
         }
 
         // Return the result

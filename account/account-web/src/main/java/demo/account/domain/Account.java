@@ -94,34 +94,30 @@ public class Account extends AbstractEntity<AccountEvent, Long> {
 
     @Command(method = "activate", controller = AccountController.class)
     public Account activate() {
-        getAction(ActivateAccount.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+        return getAction(ActivateAccount.class)
+                .getFunction()
+                .apply(this);
     }
 
     @Command(method = "archive", controller = AccountController.class)
     public Account archive() {
-        getAction(ArchiveAccount.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+        return getAction(ArchiveAccount.class)
+                .getFunction()
+                .apply(this);
     }
 
     @Command(method = "confirm", controller = AccountController.class)
     public Account confirm() {
-        getAction(ConfirmAccount.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+        return getAction(ConfirmAccount.class)
+                .getFunction()
+                .apply(this);
     }
 
     @Command(method = "suspend", controller = AccountController.class)
     public Account suspend() {
-        getAction(SuspendAccount.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+        return getAction(SuspendAccount.class)
+                .getFunction()
+                .apply(this);
     }
 
     @Command(method = "postOrder", controller = AccountController.class)

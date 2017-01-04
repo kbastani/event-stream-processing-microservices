@@ -322,7 +322,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
     @Bean
     public Action<OrderStatus, OrderEventType> accountConnected() {
         return context -> applyEvent(context,
-                new ReservationFailed(context, event -> {
+                new AccountConnected(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
                     // Get the order resource for the event
                     Traverson traverson = new Traverson(

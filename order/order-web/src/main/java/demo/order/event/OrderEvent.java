@@ -28,7 +28,7 @@ public class OrderEvent extends Event<Order, OrderEventType, Long> {
     @Enumerated(EnumType.STRING)
     private OrderEventType type;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JsonIgnore
     private Order entity;
 
