@@ -4,8 +4,6 @@ spring:
 ---
 spring:
   profiles: development
-  jackson:
-    default-property-inclusion: non_null
   cloud:
     stream:
       bindings:
@@ -32,3 +30,26 @@ events:
 eureka:
   client:
     enabled: false
+---
+spring:
+  profiles: cloud
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: account
+          contentType: 'application/json'
+events:
+  worker: http://account-worker/v1/events
+eureka:
+  instance:
+    hostname: ${vcap.application.uris[0]:localhost}
+    nonSecurePort: 80
+    metadataMap:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+    leaseRenewalIntervalInSeconds: 5
+  client:
+    region: default
+    registryFetchIntervalSeconds: 5
+    serviceUrl:
+      defaultZone: ${vcap.services.discovery-service.credentials.uri:http://localhost:8761}/eureka/

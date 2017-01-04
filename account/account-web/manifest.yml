@@ -5,7 +5,7 @@ path: ./target/account-web-0.0.1-SNAPSHOT.jar
 buildpack: java_buildpack
 services:
 - rabbit-events
-- redis-cache
+- discovery-service
 disk_quota: 1024M
 host: account-event-web
 domain: cfapps.io

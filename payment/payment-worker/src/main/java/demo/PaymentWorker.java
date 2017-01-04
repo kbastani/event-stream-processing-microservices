@@ -9,9 +9,9 @@ import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableHypermediaSupport(type = {HypermediaType.HAL})
-public class PaymentStreamModuleApplication {
+public class PaymentWorker {
     public static void main(String[] args) {
-        SpringApplication.run(PaymentStreamModuleApplication.class, args);
+        SpringApplication.run(PaymentWorker.class, args);
     }
 }
 
