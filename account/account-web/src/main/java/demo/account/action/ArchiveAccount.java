@@ -34,8 +34,6 @@ public class ArchiveAccount extends Action<Account> {
             AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
-            Account result;
-
             AccountStatus status = account.getStatus();
 
             // Archive the account
@@ -44,8 +42,7 @@ public class ArchiveAccount extends Action<Account> {
 
             try {
                 // Trigger the account archived event
-                result = account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED, account)).getEntity();
-                result.setIdentity(account.getIdentity());
+                account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_ARCHIVED, account));
             } catch (Exception ex) {
                 log.error("Account could not be archived", ex);
 
@@ -56,7 +53,7 @@ public class ArchiveAccount extends Action<Account> {
                 throw ex;
             }
 
-            return result;
+            return account;
         };
     }
 }

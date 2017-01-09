@@ -3,7 +3,6 @@ package demo.account.controller;
 import demo.account.domain.Account;
 import demo.account.domain.AccountService;
 import demo.account.event.AccountEvent;
-import demo.event.EventController;
 import demo.event.EventService;
 import demo.event.Events;
 import demo.order.domain.Order;
@@ -67,6 +66,13 @@ public class AccountController {
         return Optional.of(getAccountEventResources(id))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("Could not get account events"));
+    }
+
+    @RequestMapping(path = "/accounts/{id}/events/{eventId}")
+    public ResponseEntity getAccountEvent(@PathVariable Long id, @PathVariable Long eventId) {
+        return Optional.of(getEventResource(eventId))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("Could not get order events"));
     }
 
     @PostMapping(path = "/accounts/{id}/events")
@@ -203,7 +209,9 @@ public class AccountController {
         account.sendAsyncEvent(event);
 
         return new Resource<>(event,
-                linkTo(EventController.class)
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(accountId)
                         .slash("events")
                         .slash(event.getEventId())
                         .withSelfRel(),
@@ -212,6 +220,10 @@ public class AccountController {
                         .slash(accountId)
                         .withRel("account")
         );
+    }
+
+    private AccountEvent getEventResource(Long eventId) {
+        return eventService.findOne(eventId);
     }
 
     private Events getAccountEventResources(Long id) {

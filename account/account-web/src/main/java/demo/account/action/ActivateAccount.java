@@ -34,8 +34,6 @@ public class ActivateAccount extends Action<Account> {
             AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
-            Account result;
-
             AccountStatus status = account.getStatus();
 
             // Activate the account
@@ -44,8 +42,7 @@ public class ActivateAccount extends Action<Account> {
 
             try {
                 // Trigger the account activated event
-                result = account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED, account)).getEntity();
-                result.setIdentity(account.getIdentity());
+                account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_ACTIVATED, account));
             } catch (Exception ex) {
                 log.error("Account could not be activated", ex);
 
@@ -56,7 +53,7 @@ public class ActivateAccount extends Action<Account> {
                 throw ex;
             }
 
-            return result;
+            return account;
         };
     }
 }

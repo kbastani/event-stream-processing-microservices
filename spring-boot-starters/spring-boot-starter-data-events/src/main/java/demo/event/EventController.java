@@ -12,8 +12,6 @@ import java.util.Optional;
  *
  * @author Kenny Bastani
  */
-@RestController
-@RequestMapping("/v1")
 public class EventController<T extends Event, ID extends Serializable> {
 
     private final EventService<T, Long> eventService;

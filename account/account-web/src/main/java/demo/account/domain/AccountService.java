@@ -25,14 +25,11 @@ public class AccountService extends Service<Account, Long> {
      * @throws IllegalStateException if the event flow fails
      */
     public Account registerAccount(Account account) throws IllegalStateException {
-        Account result;
-
         account = create(account);
 
         try {
             // Handle a synchronous event flow
-            result = account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_CREATED, account)).getEntity();
-            result.setIdentity(account.getIdentity());
+            account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_CREATED, account));
         } catch (Exception ex) {
             log.error("Account registration failed", ex);
             // Rollback the account creation
@@ -41,7 +38,7 @@ public class AccountService extends Service<Account, Long> {
         }
 
         // Return the result
-        return result;
+        return account;
     }
 
     /**

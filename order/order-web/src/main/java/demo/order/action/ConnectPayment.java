@@ -28,7 +28,6 @@ public class ConnectPayment extends Action<Order> {
             Assert.isTrue(order
                     .getStatus() == OrderStatus.PAYMENT_CREATED, "Order must be in a payment created state");
 
-            Order result;
             OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
 
             // Connect the payment
@@ -38,7 +37,7 @@ public class ConnectPayment extends Action<Order> {
 
             try {
                 // Trigger the payment connected event
-                result = order.sendEvent(new OrderEvent(OrderEventType.PAYMENT_CONNECTED, order)).getEntity();
+                order.sendAsyncEvent(new OrderEvent(OrderEventType.PAYMENT_CONNECTED, order));
             } catch (Exception ex) {
                 log.error("Could not connect payment to order", ex);
                 order.setPaymentId(null);
@@ -47,7 +46,7 @@ public class ConnectPayment extends Action<Order> {
                 throw ex;
             }
 
-            return result;
+            return order;
         };
     }
 }

@@ -1,11 +1,10 @@
 package demo.payment.controller;
 
-import demo.event.EventController;
 import demo.event.EventService;
 import demo.event.Events;
-import demo.payment.event.PaymentEvent;
 import demo.payment.domain.Payment;
 import demo.payment.domain.PaymentService;
+import demo.payment.event.PaymentEvent;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.hateoas.*;
@@ -73,6 +72,13 @@ public class PaymentController {
     @RequestMapping(path = "/payments/{id}/events", method = RequestMethod.GET)
     public ResponseEntity getPaymentEvents(@PathVariable Long id) {
         return Optional.ofNullable(getPaymentEventResources(id))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("Could not get payment events"));
+    }
+
+    @RequestMapping(path = "/payments/{id}/events/{eventId}")
+    public ResponseEntity getPaymentEvent(@PathVariable Long id, @PathVariable Long eventId) {
+        return Optional.of(getEventResource(eventId))
                 .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("Could not get payment events"));
     }
@@ -162,7 +168,9 @@ public class PaymentController {
 
         if (event != null) {
             eventResource = new Resource<>(event,
-                    linkTo(EventController.class)
+                    linkTo(PaymentController.class)
+                            .slash("payments")
+                            .slash(paymentId)
                             .slash("events")
                             .slash(event.getEventId())
                             .withSelfRel(),
@@ -174,6 +182,10 @@ public class PaymentController {
         }
 
         return eventResource;
+    }
+
+    private PaymentEvent getEventResource(Long eventId) {
+        return eventService.findOne(eventId);
     }
 
     private Events getPaymentEventResources(Long id) {

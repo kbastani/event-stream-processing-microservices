@@ -31,6 +31,7 @@
         <module>account</module>
         <module>order</module>
         <module>payment</module>
+        <module>warehouse</module>
     </modules>
 
     <dependencies>

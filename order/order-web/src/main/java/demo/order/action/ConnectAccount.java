@@ -26,7 +26,6 @@ public class ConnectAccount extends Action<Order> {
         return (order, accountId) -> {
             Assert.isTrue(order.getStatus() == OrderStatus.ORDER_CREATED, "Order must be in a created state");
 
-            Order result;
             OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
 
             // Connect the account
@@ -36,7 +35,7 @@ public class ConnectAccount extends Action<Order> {
 
             try {
                 // Trigger the account connected event
-                result = order.sendEvent(new OrderEvent(OrderEventType.ACCOUNT_CONNECTED, order)).getEntity();
+                order.sendAsyncEvent(new OrderEvent(OrderEventType.ACCOUNT_CONNECTED, order));
             } catch (Exception ex) {
                 log.error("Could not connect order to account", ex);
                 order.setAccountId(null);
@@ -45,7 +44,7 @@ public class ConnectAccount extends Action<Order> {
                 throw ex;
             }
 
-            return result;
+            return order;
         };
     }
 

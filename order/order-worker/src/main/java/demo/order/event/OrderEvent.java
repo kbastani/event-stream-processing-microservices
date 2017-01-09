@@ -23,7 +23,7 @@ public class OrderEvent extends AbstractEntity {
 
     @Override
     public String toString() {
-        return "AccountEvent{" +
+        return "OrderEvent{" +
                 "type=" + type +
                 "} " + super.toString();
     }

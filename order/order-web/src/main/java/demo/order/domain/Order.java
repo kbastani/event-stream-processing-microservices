@@ -10,10 +10,13 @@ import demo.order.action.*;
 import demo.order.controller.OrderController;
 import demo.order.event.OrderEvent;
 import demo.payment.domain.Payment;
+import demo.reservation.domain.Reservations;
 import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -29,6 +32,11 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<LineItem> lineItems = new HashSet<>();
+
+    @JsonIgnore
+    @ElementCollection
+    @CollectionTable(name = "reservations")
+    private List<Long> reservationIds = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     private Address shippingAddress;
@@ -98,6 +106,21 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
         this.paymentId = paymentId;
     }
 
+    public List<Long> getReservationIds() {
+        return reservationIds;
+    }
+
+    public void setReservationIds(List<Long> reservationIds) {
+        this.reservationIds = reservationIds;
+    }
+
+    @JsonIgnore
+    public Reservations getReservations() {
+        return getAction(GetReservations.class)
+                .getFunction()
+                .apply(this);
+    }
+
     @Command(method = "connectAccount", controller = OrderController.class)
     public Order connectAccount(Long accountId) {
         return getAction(ConnectAccount.class)
@@ -127,11 +150,24 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
     }
 
     @Command(method = "reserveInventory", controller = OrderController.class)
-    public Order reserveInventory(Long paymentId) {
-        getAction(ReserveInventory.class)
-                .getConsumer()
-                .accept(this);
-        return this;
+    public Order reserveInventory() {
+        return getAction(ReserveInventory.class)
+                .getFunction()
+                .apply(this);
+    }
+
+    @Command(method = "addReservation", controller = OrderController.class)
+    public Order addReservation(Long reservationId) {
+        return getAction(AddReservation.class)
+                .getFunction()
+                .apply(this, reservationId);
+    }
+
+    @Command(method = "completeReservation", controller = OrderController.class)
+    public Order completeReservation() {
+        return getAction(CompleteReservation.class)
+                .getFunction()
+                .apply(this);
     }
 
     public boolean delete() {

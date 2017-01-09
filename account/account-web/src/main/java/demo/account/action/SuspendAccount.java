@@ -34,8 +34,6 @@ public class SuspendAccount extends Action<Account> {
             AccountService accountService = account.getModule(AccountModule.class)
                     .getDefaultService();
 
-            Account result;
-
             AccountStatus status = account.getStatus();
 
             // Suspend the account
@@ -44,8 +42,7 @@ public class SuspendAccount extends Action<Account> {
 
             try {
                 // Trigger the account suspended event
-                result = account.sendEvent(new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED, account)).getEntity();
-                result.setIdentity(account.getIdentity());
+                account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_SUSPENDED, account));
             } catch (Exception ex) {
                 log.error("Account could not be suspended", ex);
 
@@ -56,7 +53,7 @@ public class SuspendAccount extends Action<Account> {
                 throw ex;
             }
 
-            return result;
+            return account;
         };
     }
 }

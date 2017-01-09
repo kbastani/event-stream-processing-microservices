@@ -34,34 +34,29 @@ public class ProcessPayment extends Action<Payment> {
             Assert.isTrue(payment.getStatus() == PaymentStatus.ORDER_CONNECTED,
                     "Payment must be connected to an order");
 
-            Payment result = null;
-
             payment.setStatus(PaymentStatus.PAYMENT_PROCESSED);
             payment = paymentService.update(payment);
 
             try {
                 // Trigger the payment processed event
-                result = payment.sendEvent(new PaymentEvent(PaymentEventType.PAYMENT_PROCESSED, payment)).getEntity();
+                payment.sendAsyncEvent(new PaymentEvent(PaymentEventType.PAYMENT_PROCESSED, payment));
             } catch (Exception ex) {
                 log.error("Payment could not be processed", ex);
+                finalizePayment(payment, PAYMENT_FAILED);
+                throw ex;
             } finally {
                 // Handle the result asynchronously
-                if (result != null && result.getStatus() == PaymentStatus.PAYMENT_PROCESSED) {
-                    payment = finalizePayment(payment, PAYMENT_SUCCEEDED);
-                } else {
-                    payment = finalizePayment(payment, PAYMENT_FAILED);
-                }
+                finalizePayment(payment, PAYMENT_SUCCEEDED);
             }
 
-            return result;
+            return payment;
         };
     }
 
     private Payment finalizePayment(Payment payment, PaymentStatus paymentStatus) {
         payment = paymentService.get(payment.getIdentity());
         payment.setStatus(paymentStatus);
-        payment.sendAsyncEvent(new PaymentEvent(PaymentEventType
-                .valueOf(paymentStatus.toString()), payment));
+        payment.sendAsyncEvent(new PaymentEvent(PaymentEventType.valueOf(paymentStatus.toString()), payment));
         return payment;
     }
 }

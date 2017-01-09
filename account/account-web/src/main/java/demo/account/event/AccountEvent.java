@@ -1,13 +1,17 @@
 package demo.account.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import demo.account.controller.AccountController;
 import demo.account.domain.Account;
 import demo.event.Event;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The domain event {@link AccountEvent} tracks the type and state of events as applied to the {@link Account} domain
@@ -19,6 +23,7 @@ import javax.persistence.*;
  */
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Table(indexes = { @Index(name = "IDX_ACCOUNT_EVENT", columnList = "entity_id") })
 public class AccountEvent extends Event<Account, AccountEventType, Long> {
 
     @Id
@@ -100,6 +105,12 @@ public class AccountEvent extends Event<Account, AccountEventType, Long> {
         this.lastModified = lastModified;
     }
 
+    @Override
+    public Link getId() {
+        return linkTo(AccountController.class).slash("accounts").slash(getEntity().getIdentity()).slash("events")
+                .slash(getEventId()).withSelfRel();
+    }
+    
     @Override
     public String toString() {
         return "AccountEvent{" +

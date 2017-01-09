@@ -1,13 +1,13 @@
 package demo.config;
 
-import demo.order.event.OrderEvent;
-import demo.order.event.OrderEventType;
 import demo.function.*;
 import demo.order.domain.Order;
 import demo.order.domain.OrderStatus;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventProcessor;
+import demo.order.event.OrderEventType;
 import demo.order.event.OrderEvents;
 import demo.payment.domain.Payment;
-import demo.order.event.OrderEventProcessor;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -114,6 +114,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .target(OrderStatus.RESERVATION_PENDING)
                     .event(OrderEventType.RESERVATION_PENDING)
                     .action(reservationPending())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.RESERVATION_PENDING)
+                    .target(OrderStatus.RESERVATION_PENDING)
+                    .event(OrderEventType.INVENTORY_RESERVED)
+                    .action(inventoryReserved())
                     .and()
                     .withExternal()
                     .source(OrderStatus.RESERVATION_PENDING)
@@ -282,6 +288,24 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             .toObject(Order.class);
 
                     return order;
+                }));
+    }
+
+    @Bean
+    public Action<OrderStatus, OrderEventType> inventoryReserved() {
+        return context -> applyEvent(context,
+                new InventoryReserved(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("order").getHref());
+
+                    // Create a traverson for the root order
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("order").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Order.class)
+                            .getBody();
                 }));
     }
 

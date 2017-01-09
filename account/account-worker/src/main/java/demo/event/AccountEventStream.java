@@ -34,7 +34,7 @@ public class AccountEventStream {
      * @param accountEvent is the {@link Account} domain event to process
      */
     @StreamListener(Sink.INPUT)
-    public void streamListerner(AccountEvent accountEvent) {
+    public void streamListener(AccountEvent accountEvent) {
         eventService.apply(accountEvent);
     }
 }

@@ -2,12 +2,16 @@ package demo.order.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.event.Event;
+import demo.order.controller.OrderController;
 import demo.order.domain.Order;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The domain event {@link OrderEvent} tracks the type and state of events as applied to the {@link Order} domain
@@ -19,6 +23,7 @@ import javax.persistence.*;
  */
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Table(indexes = {@Index(name = "IDX_ORDER_EVENT", columnList = "entity_id")})
 public class OrderEvent extends Event<Order, OrderEventType, Long> {
 
     @Id
@@ -98,6 +103,12 @@ public class OrderEvent extends Event<Order, OrderEventType, Long> {
     @Override
     public void setLastModified(Long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    public Link getId() {
+        return linkTo(OrderController.class).slash("orders").slash(getEntity().getIdentity()).slash("events")
+                .slash(getEventId()).withSelfRel();
     }
 
     @Override

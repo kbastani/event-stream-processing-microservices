@@ -11,7 +11,7 @@ import java.io.Serializable;
  * @author Kenny Bastani
  * @see Event
  * @see Events
- * @see EventServiceImpl
+ * @see BasicEventService
  */
 public interface EventService<T extends Event, ID extends Serializable> {
 

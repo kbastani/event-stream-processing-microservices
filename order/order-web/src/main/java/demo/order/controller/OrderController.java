@@ -1,11 +1,11 @@
 package demo.order.controller;
 
-import demo.event.EventController;
 import demo.event.EventService;
 import demo.event.Events;
-import demo.order.event.OrderEvent;
 import demo.order.domain.Order;
 import demo.order.domain.OrderService;
+import demo.order.event.OrderEvent;
+import demo.reservation.domain.Reservations;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.hateoas.*;
@@ -71,6 +71,13 @@ public class OrderController {
                 .orElseThrow(() -> new RuntimeException("Could not get order events"));
     }
 
+    @RequestMapping(path = "/orders/{id}/events/{eventId}")
+    public ResponseEntity getOrderEvent(@PathVariable Long id, @PathVariable Long eventId) {
+        return Optional.of(getEventResource(eventId))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("Could not get order events"));
+    }
+
     @PostMapping(path = "/orders/{id}/events")
     public ResponseEntity createOrder(@PathVariable Long id, @RequestBody OrderEvent event) {
         return Optional.ofNullable(appendEventResource(id, event))
@@ -120,8 +127,22 @@ public class OrderController {
 
     @RequestMapping(path = "/orders/{id}/commands/reserveInventory")
     public ResponseEntity reserveInventory(@PathVariable Long id) {
-        return Optional.ofNullable(orderService.get(id)
-                .reserveInventory(id))
+        return Optional.ofNullable(orderService.get(id).reserveInventory())
+                .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/orders/{id}/commands/addReservation")
+    public ResponseEntity addReservation(@PathVariable Long id, @RequestParam(value = "reservationId") Long
+            reservationId) {
+        return Optional.ofNullable(orderService.get(id).addReservation(reservationId))
+                .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/orders/{id}/commands/completeReservation")
+    public ResponseEntity completeReservation(@PathVariable Long id) {
+        return Optional.ofNullable(orderService.get(id).completeReservation())
                 .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
@@ -131,6 +152,34 @@ public class OrderController {
         return Optional.ofNullable(orderService.findOrdersByAccountId(accountId))
                 .map(e -> new ResponseEntity<>(new Resources<Order>(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/orders/{id}/reservations")
+    public ResponseEntity getOrderReservations(@PathVariable Long id) {
+        return Optional.of(getOrderReservationsResource(id))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("Could not get order reservations"));
+    }
+
+    private Reservations getOrderReservationsResource(Long orderId) {
+        Order order = orderService.get(orderId);
+        Assert.notNull(order, "Order could not be found");
+
+        Reservations orderReservations = order.getReservations();
+
+        orderReservations.add(
+                linkTo(OrderController.class)
+                        .slash("orders")
+                        .slash(orderId)
+                        .slash("reservations")
+                        .withSelfRel(),
+                linkTo(OrderController.class)
+                        .slash("orders")
+                        .slash(orderId)
+                        .withRel("order")
+        );
+
+        return orderReservations;
     }
 
     /**
@@ -176,7 +225,9 @@ public class OrderController {
 
         if (event != null) {
             eventResource = new Resource<>(event,
-                    linkTo(EventController.class)
+                    linkTo(OrderController.class)
+                            .slash("orders")
+                            .slash(orderId)
                             .slash("events")
                             .slash(event.getEventId())
                             .withSelfRel(),
@@ -188,6 +239,10 @@ public class OrderController {
         }
 
         return eventResource;
+    }
+
+    private OrderEvent getEventResource(Long eventId) {
+        return eventService.findOne(eventId);
     }
 
     private Events getOrderEventResources(Long id) {
@@ -223,6 +278,11 @@ public class OrderController {
         if (!order.hasLink("events")) {
             // Add get events link
             order.add(linkBuilder("getOrderEvents", order.getIdentity()).withRel("events"));
+        }
+
+        if (!order.hasLink("reservations")) {
+            // Add get reservations link
+            order.add(linkBuilder("getOrderReservations", order.getIdentity()).withRel("reservations"));
         }
 
         // Add remote account link

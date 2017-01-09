@@ -35,8 +35,6 @@ public class ProcessPayment extends Action<Order> {
                     .contains(order.getStatus()), "Payment has already been processed");
             Assert.isTrue(order.getStatus() == OrderStatus.PAYMENT_CONNECTED, "Payment must be connected to an order");
 
-            Order result = order;
-
             // Get entity services
             OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
 
@@ -58,18 +56,18 @@ public class ProcessPayment extends Action<Order> {
                 event.add(payment.getLink("self").withRel("payment"));
 
                 // Trigger payment failed event
-                result = order.sendEvent(event).getEntity();
-            } finally {
-                if (result.getStatus() != OrderStatus.PAYMENT_FAILED) {
-                    OrderEvent event = new OrderEvent(OrderEventType.PAYMENT_SUCCEEDED, result);
-                    event.add(payment.getLink("self").withRel("payment"));
+                order.sendAsyncEvent(event);
 
-                    // Trigger payment created event
-                    result = order.sendEvent(event).getEntity();
-                }
+                throw ex;
+            } finally {
+                OrderEvent event = new OrderEvent(OrderEventType.PAYMENT_SUCCEEDED, order);
+                event.add(payment.getLink("self").withRel("payment"));
+
+                // Trigger payment created event
+                order.sendAsyncEvent(event);
             }
 
-            return result;
+            return order;
         };
     }
 }

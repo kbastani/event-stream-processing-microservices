@@ -10,8 +10,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-
 /**
  * Abstract implementation of the {@link Event} entity.
  *
@@ -61,10 +59,5 @@ public abstract class Event<T extends Aggregate, E, ID extends Serializable> ext
     @Override
     public String toString() {
         return String.format("links: %s", getLinks().toString());
-    }
-
-    @Override
-    public Link getId() {
-        return linkTo(EventController.class).slash("events").slash(getEventId()).withSelfRel();
     }
 }

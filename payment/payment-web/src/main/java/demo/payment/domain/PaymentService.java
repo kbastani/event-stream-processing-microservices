@@ -28,14 +28,11 @@ public class PaymentService extends Service<Payment, Long> {
     }
 
     public Payment registerPayment(Payment payment) {
-        Payment result;
-
         payment = create(payment);
 
         try {
             // Handle a synchronous event flow
-            result = payment.sendEvent(new PaymentEvent(PaymentEventType.PAYMENT_CREATED, payment)).getEntity();
-            result.setIdentity(payment.getIdentity());
+            payment.sendAsyncEvent(new PaymentEvent(PaymentEventType.PAYMENT_CREATED, payment));
         } catch (Exception ex) {
             log.error("Payment creation failed", ex);
             // Rollback the payment creation
@@ -44,7 +41,7 @@ public class PaymentService extends Service<Payment, Long> {
         }
 
         // Return the result
-        return result;
+        return payment;
     }
 
     public Payment get(Long id) {

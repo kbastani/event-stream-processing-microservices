@@ -29,9 +29,9 @@ import java.net.URI;
  * @see EventService
  */
 @SuppressWarnings("unchecked")
-class EventServiceImpl<T extends Event, ID extends Serializable> implements EventService<T, ID> {
+public class BasicEventService<T extends Event, ID extends Serializable> implements EventService<T, ID> {
 
-    private static final Logger log = Logger.getLogger(EventServiceImpl.class);
+    private static final Logger log = Logger.getLogger(BasicEventService.class);
 
     @Value("${events.worker:http://localhost:8080/v1/events}")
     private String eventsWorker;
@@ -40,7 +40,7 @@ class EventServiceImpl<T extends Event, ID extends Serializable> implements Even
     private final Source eventStream;
     private final RestTemplate restTemplate;
 
-    EventServiceImpl(EventRepository<T, ID> eventRepository, Source eventStream, @LoadBalanced RestTemplate
+    public BasicEventService(EventRepository<T, ID> eventRepository, Source eventStream, @LoadBalanced RestTemplate
             restTemplate) {
         this.eventRepository = eventRepository;
         this.eventStream = eventStream;

@@ -2,12 +2,16 @@ package demo.payment.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.event.Event;
+import demo.payment.controller.PaymentController;
 import demo.payment.domain.Payment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.hateoas.Link;
 
 import javax.persistence.*;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The domain event {@link PaymentEvent} tracks the type and state of events as applied to the {@link Payment} domain
@@ -17,6 +21,7 @@ import javax.persistence.*;
  */
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Table(indexes = { @Index(name = "IDX_PAYMENT_EVENT", columnList = "entity_id") })
 public class PaymentEvent extends Event<Payment, PaymentEventType, Long> {
 
     @Id
@@ -96,6 +101,12 @@ public class PaymentEvent extends Event<Payment, PaymentEventType, Long> {
     @Override
     public void setLastModified(Long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    public Link getId() {
+        return linkTo(PaymentController.class).slash("payments").slash(getEntity().getIdentity()).slash("events")
+                .slash(getEventId()).withSelfRel();
     }
 }
 

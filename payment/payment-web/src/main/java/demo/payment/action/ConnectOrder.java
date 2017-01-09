@@ -22,8 +22,6 @@ public class ConnectOrder extends Action<Payment> {
             Assert.isTrue(payment
                     .getStatus() == PaymentStatus.PAYMENT_CREATED, "Payment has already been connected to an order");
 
-            Payment result;
-
             PaymentService paymentService = payment.getModule(PaymentModule.class)
                     .getDefaultService();
 
@@ -34,7 +32,7 @@ public class ConnectOrder extends Action<Payment> {
 
             try {
                 // Trigger the payment connected
-                result = payment.sendEvent(new PaymentEvent(PaymentEventType.ORDER_CONNECTED, payment)).getEntity();
+                payment.sendAsyncEvent(new PaymentEvent(PaymentEventType.ORDER_CONNECTED, payment));
             } catch (IllegalStateException ex) {
                 log.error("Payment could not be connected to order", ex);
 
@@ -46,7 +44,7 @@ public class ConnectOrder extends Action<Payment> {
                 throw ex;
             }
 
-            return result;
+            return payment;
         };
     }
 }
