@@ -16,7 +16,7 @@ import org.springframework.statemachine.StateMachine;
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
-@Profile({ "cloud", "development" })
+@Profile({ "cloud", "development", "docker" })
 public class AccountEventStream {
 
     private EventService eventService;

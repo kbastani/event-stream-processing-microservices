@@ -1,48 +1,42 @@
 spring:
   profiles:
     active: development
----
-spring:
-  profiles: development
   cloud:
     stream:
       bindings:
         output:
           destination: order
           contentType: 'application/json'
-  jackson:
-    default-property-inclusion: non_null
 server:
   port: 0
 events:
   worker: http://order-worker/v1/events
+---
+spring:
+  profiles: development
+---
+spring:
+  profiles: docker
+  rabbitmq:
+    host: ${DOCKER_IP:192.168.99.100}
+    port: 5672
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${DOCKER_IP:192.168.99.100}:8761/eureka
+    registryFetchIntervalSeconds: 5
+  instance:
+    hostname: ${DOCKER_IP:192.168.99.100}
+    leaseRenewalIntervalInSeconds: 5
 ---
 spring:
   profiles: test
-  cloud:
-    stream:
-      bindings:
-        output:
-          destination: order
-          contentType: 'application/json'
-server:
-  port: 0
-events:
-  worker: http://order-worker/v1/events
 eureka:
   client:
     enabled: false
 ---
 spring:
   profiles: cloud
-  cloud:
-    stream:
-      bindings:
-        output:
-          destination: order
-          contentType: 'application/json'
-events:
-  worker: http://order-worker/v1/events
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

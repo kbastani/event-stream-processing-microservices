@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static demo.order.domain.OrderStatus.RESERVATION_FAILED;
+import static demo.order.domain.OrderStatus.RESERVATION_SUCCEEDED;
+
 /**
  * Reserves inventory for an {@link Order}.
  *
@@ -29,8 +32,13 @@ public class CompleteReservation extends Action<Order> {
 
     public Function<Order, Order> getFunction() {
         return (order) -> {
-            Assert.isTrue(order.getStatus() == OrderStatus.RESERVATION_PENDING,
-                    "The order must be in a reservation pending state");
+            if (order.getStatus() != RESERVATION_SUCCEEDED && order.getStatus() != RESERVATION_FAILED) {
+                Assert.isTrue(order.getStatus() == OrderStatus.RESERVATION_PENDING,
+                        "The order must be in a reservation pending state");
+            } else {
+                // Reservation has already completed
+                return order;
+            }
 
             OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
 
@@ -50,12 +58,12 @@ public class CompleteReservation extends Action<Order> {
 
                 if (orderReserved && order.getStatus() == OrderStatus.RESERVATION_PENDING) {
                     // Succeed the reservation and commit all inventory associated with order
-                    order.setStatus(OrderStatus.RESERVATION_SUCCEEDED);
+                    order.setStatus(RESERVATION_SUCCEEDED);
                     order = orderService.update(order);
                     order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_SUCCEEDED, order));
                 } else if (reservationFailed && order.getStatus() == OrderStatus.RESERVATION_PENDING) {
                     // Fail the reservation and release all inventory associated with order
-                    order.setStatus(OrderStatus.RESERVATION_FAILED);
+                    order.setStatus(RESERVATION_FAILED);
                     order = orderService.update(order);
                     order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_FAILED, order));
                 }

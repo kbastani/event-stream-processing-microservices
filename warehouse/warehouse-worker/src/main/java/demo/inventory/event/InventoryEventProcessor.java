@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
  */
 @EnableAutoConfiguration
 @EnableBinding(InventoryEventSink.class)
-@Profile({"cloud", "development"})
+@Profile({"cloud", "development", "docker"})
 public class InventoryEventProcessor {
 
     private InventoryStateFactory stateFactory;

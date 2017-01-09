@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.function.BiFunction;
 
 /**
- * Reserves inventory for an {@link Inventory}.
+ * Updates the status of a {@link Inventory} entity.
  *
  * @author Kenny Bastani
  */

@@ -1,16 +1,13 @@
 spring:
   profiles:
     active: development
----
-spring:
-  profiles: development
   cloud:
     stream:
       bindings:
         input:
+          contentType: 'application/json'
           destination: payment
           group: payment-group
-          contentType: 'application/json'
           consumer:
             durableSubscription: true
 server:
@@ -21,6 +18,23 @@ amazon:
     access-key-secret: replace
 ---
 spring:
+  profiles: development
+---
+spring:
+  profiles: docker
+  rabbitmq:
+    host: ${DOCKER_IP:192.168.99.100}
+    port: 5672
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${DOCKER_IP:192.168.99.100}:8761/eureka
+    registryFetchIntervalSeconds: 5
+  instance:
+    hostname: ${DOCKER_IP:192.168.99.100}
+    leaseRenewalIntervalInSeconds: 5
+---
+spring:
   profiles: test
 eureka:
   client:
@@ -28,15 +42,6 @@ eureka:
 ---
 spring:
   profiles: cloud
-  cloud:
-    stream:
-      bindings:
-        input:
-          destination: payment
-          group: payment-group
-          contentType: 'application/json'
-          consumer:
-            durableSubscription: true
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

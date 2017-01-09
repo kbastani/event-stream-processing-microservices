@@ -26,6 +26,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import static demo.order.domain.OrderStatus.RESERVATION_PENDING;
+
 /**
  * A configuration adapter for describing a {@link StateMachine} factory that maps actions to functional
  * expressions. Actions are executed during transitions between a source state and a target state.
@@ -75,7 +77,7 @@ public class ReservationStateMachineConfig extends EnumStateMachineConfigurerAda
      */
     private ReservationEvent applyEvent(StateContext<ReservationStatus, ReservationEventType> context,
             ReservationFunction
-            reservationFunction) {
+                    reservationFunction) {
         ReservationEvent event = null;
         log.info(String.format("Replicate event: %s", context.getMessage().getPayload()));
 
@@ -261,8 +263,14 @@ public class ReservationStateMachineConfig extends EnumStateMachineConfigurerAda
                             MediaTypes.HAL_JSON
                     );
 
-                    traverson.follow("self", "order", "commands", "completeReservation")
-                            .toObject(Order.class);
+                    // Get the attached order
+                    Order order = traverson.follow("self", "order").toObject(Order.class);
+
+                    // Complete the reservation if the status is still pending
+                    if (order.getStatus() == RESERVATION_PENDING) {
+                        traverson.follow("self", "order", "commands", "completeReservation")
+                                .toObject(Order.class);
+                    }
 
                     return traverson.follow("self")
                             .toEntity(Reservation.class)

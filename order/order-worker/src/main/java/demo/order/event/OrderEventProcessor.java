@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Profile;
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
-@Profile({"cloud", "development"})
+@Profile({"cloud", "development", "docker"})
 public class OrderEventProcessor {
 
     private StateFactory stateFactory;

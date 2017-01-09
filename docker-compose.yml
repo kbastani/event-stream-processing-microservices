@@ -1,0 +1,68 @@
+mysql:
+  image: mysql:latest
+  ports:
+   - 3306:3306
+  environment:
+   - MYSQL_ROOT_PASSWORD=dbpass
+   - MYSQL_DATABASE=dev]
+  net: host
+rabbit:
+  container_name: rabbit
+  image: rabbitmq:3-management
+  net: host
+account-web:
+  image: account-web
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+account-worker:
+  image: account-worker
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+order-web:
+  image: order-web
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+order-worker:
+  image: order-worker
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+payment-web:
+  image: payment-web
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+payment-worker:
+  image: payment-worker
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+warehouse-web:
+  image: warehouse-web
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+warehouse-worker:
+  image: warehouse-worker
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host
+discovery:
+  image: discovery
+  ports:
+   - 8761:8761
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host

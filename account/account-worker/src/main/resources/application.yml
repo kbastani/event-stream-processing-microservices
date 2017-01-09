@@ -1,9 +1,6 @@
 spring:
   profiles:
     active: development
----
-spring:
-  profiles: development
   cloud:
     stream:
       bindings:
@@ -13,8 +10,6 @@ spring:
           contentType: 'application/json'
           consumer:
             durableSubscription: true
-  jackson:
-    default-property-inclusion: non_null
 server:
   port: 0
 amazon:
@@ -23,22 +18,30 @@ amazon:
     access-key-secret: replace
 ---
 spring:
+  profiles: development
+---
+spring:
   profiles: test
 eureka:
   client:
     enabled: false
 ---
 spring:
+  profiles: docker
+  rabbitmq:
+    host: ${DOCKER_IP:192.168.99.100}
+    port: 5672
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${DOCKER_IP:192.168.99.100}:8761/eureka
+    registryFetchIntervalSeconds: 5
+  instance:
+    hostname: ${DOCKER_IP:192.168.99.100}
+    leaseRenewalIntervalInSeconds: 5
+---
+spring:
   profiles: cloud
-  cloud:
-    stream:
-      bindings:
-        input:
-          destination: account
-          group: account-group
-          contentType: 'application/json'
-          consumer:
-            durableSubscription: true
 amazon:
   aws:
     access-key-id: ${AMAZON_AWS_ACCESS_KEY_ID:replace}

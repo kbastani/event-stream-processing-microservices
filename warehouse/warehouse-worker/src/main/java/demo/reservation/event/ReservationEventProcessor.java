@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
  */
 @EnableAutoConfiguration
 @EnableBinding(ReservationEventSink.class)
-@Profile({"cloud", "development"})
+@Profile({"cloud", "development", "docker"})
 public class ReservationEventProcessor {
 
     private ReservationStateFactory stateFactory;

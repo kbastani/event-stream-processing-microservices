@@ -5,41 +5,51 @@ spring:
       stream:
         bindings:
           warehouse:
+            contentType: 'application/json'
             destination: warehouse
             group: warehouse-group
-            contentType: 'application/json'
             consumer:
               durableSubscription: true
           reservation:
+            contentType: 'application/json'
             destination: reservation
             group: reservation-group
-            contentType: 'application/json'
             consumer:
               durableSubscription: true
           inventory:
+            contentType: 'application/json'
             destination: inventory
             group: inventory-group
-            contentType: 'application/json'
             consumer:
               durableSubscription: true
+server:
+  port: 0
 ---
 spring:
   profiles: development
-server:
-  port: 0
+---
+spring:
+  profiles: docker
+  rabbitmq:
+    host: ${DOCKER_IP:192.168.99.100}
+    port: 5672
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${DOCKER_IP:192.168.99.100}:8761/eureka
+    registryFetchIntervalSeconds: 5
+  instance:
+    hostname: ${DOCKER_IP:192.168.99.100}
+    leaseRenewalIntervalInSeconds: 5
 ---
 spring:
   profiles: test
 eureka:
   client:
     enabled: false
-server:
-  port: 0
 ---
 spring:
   profiles: cloud
-server:
-  port: 0
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

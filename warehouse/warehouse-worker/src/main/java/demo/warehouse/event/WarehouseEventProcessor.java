@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
  */
 @EnableAutoConfiguration
 @EnableBinding(WarehouseEventSink.class)
-@Profile({"cloud", "development"})
+@Profile({"cloud", "development", "docker"})
 public class WarehouseEventProcessor {
 
     private WarehouseStateFactory stateFactory;
