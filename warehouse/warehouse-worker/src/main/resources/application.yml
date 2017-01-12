@@ -10,18 +10,21 @@ spring:
             group: warehouse-group
             consumer:
               durableSubscription: true
+              concurrency: 5
           reservation:
             contentType: 'application/json'
             destination: reservation
             group: reservation-group
             consumer:
               durableSubscription: true
+              concurrency: 5
           inventory:
             contentType: 'application/json'
             destination: inventory
             group: inventory-group
             consumer:
               durableSubscription: true
+              concurrency: 5
 server:
   port: 0
 ---
@@ -40,6 +43,7 @@ eureka:
     registryFetchIntervalSeconds: 5
   instance:
     hostname: ${DOCKER_IP:192.168.99.100}
+    instance-id: ${spring.application.name}:${random.int}
     leaseRenewalIntervalInSeconds: 5
 ---
 spring:

@@ -1,6 +1,13 @@
 spring:
   profiles:
     active: development
+server:
+  port: 0
+events:
+  worker: http://warehouse-worker/v1/events
+---
+spring:
+  profiles: development
   cloud:
     stream:
       bindings:
@@ -13,19 +20,29 @@ spring:
         inventory:
           contentType: 'application/json'
           destination: inventory
-server:
-  port: 0
-events:
-  worker: http://warehouse-worker/v1/events
----
-spring:
-  profiles: development
 ---
 spring:
   profiles: docker
   rabbitmq:
     host: ${DOCKER_IP:192.168.99.100}
     port: 5672
+  datasource:
+    url: jdbc:h2:mem:AZ;MVCC=TRUE
+  redis:
+    host: ${DOCKER_IP:192.168.99.100}
+    port: 6379
+  cloud:
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
 eureka:
   client:
     service-url:
@@ -33,16 +50,32 @@ eureka:
     registryFetchIntervalSeconds: 5
   instance:
     hostname: ${DOCKER_IP:192.168.99.100}
+    instance-id: ${spring.application.name}:${random.int}
     leaseRenewalIntervalInSeconds: 5
 ---
 spring:
   profiles: test
+  redis:
+    host: localhost
+    port: 6379
 eureka:
   client:
     enabled: false
 ---
 spring:
   profiles: cloud
+  cloud:
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

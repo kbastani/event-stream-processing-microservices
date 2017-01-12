@@ -32,6 +32,7 @@ eureka:
     registryFetchIntervalSeconds: 5
   instance:
     hostname: ${DOCKER_IP:192.168.99.100}
+    instance-id: ${spring.application.name}:${random.int}
     leaseRenewalIntervalInSeconds: 5
 ---
 spring:

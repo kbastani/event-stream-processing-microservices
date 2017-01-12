@@ -3,16 +3,23 @@ package demo.inventory.domain;
 import demo.domain.Service;
 import demo.inventory.repository.InventoryRepository;
 import demo.reservation.domain.Reservation;
-import org.springframework.transaction.annotation.Transactional;
+import org.apache.log4j.Logger;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.util.Assert;
+
+import java.util.concurrent.TimeUnit;
 
 @org.springframework.stereotype.Service
 public class InventoryService extends Service<Inventory, Long> {
 
+    private final Logger log = Logger.getLogger(InventoryService.class);
     private final InventoryRepository inventoryRepository;
+    private final RedissonClient redissonClient;
 
-    public InventoryService(InventoryRepository inventoryRepository) {
+    public InventoryService(InventoryRepository inventoryRepository, RedissonClient redissonClient) {
         this.inventoryRepository = inventoryRepository;
+        this.redissonClient = redissonClient;
     }
 
     /**
@@ -79,19 +86,44 @@ public class InventoryService extends Service<Inventory, Long> {
      * @param reservation is the reservation to connect to the inventory
      * @return the first available inventory in the warehouse or null
      */
-    @Transactional
     public Inventory findAvailableInventory(Reservation reservation) {
         Assert.notNull(reservation.getWarehouse(), "Reservation must be connected to a warehouse");
         Assert.notNull(reservation.getProductId(), "Reservation must contain a valid product identifier");
 
-        Inventory inventory = inventoryRepository
-                .findFirstInventoryByWarehouseIdAndProductIdAndStatus(reservation.getWarehouse()
-                        .getIdentity(), reservation.getProductId(), InventoryStatus.RESERVATION_PENDING)
-                .orElse(null);
+        Boolean reserved = false;
+        Inventory inventory = null;
 
-        if (inventory != null) {
-            // Reserve the inventory
-            inventory = inventory.reserve(reservation.getIdentity());
+        while (!reserved) {
+            inventory = inventoryRepository
+                    .findFirstInventoryByWarehouseIdAndProductIdAndStatus(reservation.getWarehouse()
+                            .getIdentity(), reservation.getProductId(), InventoryStatus.RESERVATION_PENDING);
+            if (inventory != null) {
+                // Acquire lock
+                RLock inventoryLock = redissonClient
+                        .getLock(String.format("inventory_%s", inventory.getIdentity().toString()));
+
+                Boolean lock = false;
+
+                try {
+                    lock = inventoryLock.tryLock(30, 5000, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    log.error("Interrupted while acquiring lock on inventory", e);
+                }
+
+                if (lock) {
+                    inventory.setStatus(InventoryStatus.RESERVATION_CONNECTED);
+                    inventory = update(inventory);
+
+                    // Reserve the inventory
+                    inventory = inventory.reserve(reservation.getIdentity());
+
+                    inventoryLock.unlock();
+                }
+
+                reserved = lock;
+            } else {
+                reserved = true;
+            }
         }
 
         return inventory;

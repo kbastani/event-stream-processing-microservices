@@ -34,7 +34,7 @@ public class Inventory extends AbstractEntity<InventoryEvent, Long> {
     private Reservation reservation;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Warehouse warehouse;
 
     public Inventory() {
@@ -111,9 +111,16 @@ public class Inventory extends AbstractEntity<InventoryEvent, Long> {
      */
     @Override
     public Link getId() {
-        return linkTo(InventoryController.class)
-                .slash("inventory")
-                .slash(getIdentity())
-                .withSelfRel();
+        Link link;
+        try {
+            link = linkTo(InventoryController.class)
+                    .slash("inventory")
+                    .slash(getIdentity())
+                    .withSelfRel();
+        } catch (Exception ex) {
+            link = new Link("http://warehouse-service/v1/inventory/" + id, "self");
+        }
+
+        return link;
     }
 }

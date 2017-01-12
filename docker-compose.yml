@@ -6,6 +6,10 @@ mysql:
    - MYSQL_ROOT_PASSWORD=dbpass
    - MYSQL_DATABASE=dev]
   net: host
+redis:
+  container_name: redis
+  image: redis:latest
+  net: host
 rabbit:
   container_name: rabbit
   image: rabbitmq:3-management

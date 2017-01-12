@@ -35,18 +35,13 @@ public class ReserveInventory extends Action<Inventory> {
 
     public BiFunction<Inventory, Long, Inventory> getFunction() {
         return (inventory, reservationId) -> {
-            Assert.isTrue(inventory.getStatus() == InventoryStatus.RESERVATION_PENDING,
-                    "Inventory must be in a reservation pending state");
+            Assert.isTrue(inventory.getStatus() == InventoryStatus.RESERVATION_CONNECTED,
+                    "Inventory must be in a reservation connected state");
             Assert.isTrue(inventory.getReservation() == null,
                     "There is already a reservation attached to the inventory");
 
             Reservation reservation = reservationService.get(reservationId);
-
             Assert.notNull(reservation, "Reserve inventory failed, the reservation does not exist");
-
-            inventory.setReservation(reservation);
-            inventory.setStatus(RESERVATION_CONNECTED);
-            inventory = inventoryService.update(inventory);
 
             try {
                 // Trigger the reservation connected event
