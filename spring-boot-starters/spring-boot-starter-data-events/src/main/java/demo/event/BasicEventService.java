@@ -4,7 +4,6 @@ import demo.domain.Aggregate;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -37,13 +36,13 @@ public class BasicEventService<T extends Event, ID extends Serializable> impleme
     private String eventsWorker;
 
     private final EventRepository<T, ID> eventRepository;
-    private final Source eventStream;
+    private final EventSource eventSource;
     private final RestTemplate restTemplate;
 
-    public BasicEventService(EventRepository<T, ID> eventRepository, Source eventStream, @LoadBalanced RestTemplate
+    public BasicEventService(EventRepository<T, ID> eventRepository, EventSource eventSource, @LoadBalanced RestTemplate
             restTemplate) {
         this.eventRepository = eventRepository;
-        this.eventStream = eventStream;
+        this.eventSource = eventSource;
         this.restTemplate = restTemplate;
     }
 
@@ -69,7 +68,7 @@ public class BasicEventService<T extends Event, ID extends Serializable> impleme
     }
 
     public <S extends T> Boolean sendAsync(S event, Link... links) {
-        return eventStream.output()
+        return eventSource.getChannel()
                 .send(MessageBuilder.withPayload(event)
                         .setHeader("contentType", MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .build());

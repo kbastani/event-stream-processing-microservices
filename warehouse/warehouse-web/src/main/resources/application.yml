@@ -20,6 +20,9 @@ spring:
         inventory:
           contentType: 'application/json'
           destination: inventory
+        output:
+          contentType: 'application/json'
+          destination: warehouse-stream
   jpa:
     show_sql: false
     database: H2
@@ -47,6 +50,9 @@ spring:
         inventory:
           contentType: 'application/json'
           destination: inventory
+        output:
+          contentType: 'application/json'
+          destination: warehouse-stream
   datasource:
     url: jdbc:mysql://${DOCKER_IP:192.168.99.100}:3306/dev
     username: root
@@ -93,6 +99,9 @@ spring:
         inventory:
           contentType: 'application/json'
           destination: inventory
+        output:
+          contentType: 'application/json'
+          destination: warehouse-stream
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

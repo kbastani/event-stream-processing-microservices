@@ -20,18 +20,21 @@ import org.springframework.web.client.RestTemplate;
 public class EventAutoConfig {
 
     private EventRepository eventRepository;
-    private Source source;
     private RestTemplate restTemplate;
 
-    public EventAutoConfig(EventRepository eventRepository, Source source, RestTemplate restTemplate) {
+    public EventAutoConfig(EventRepository eventRepository, RestTemplate restTemplate) {
         this.eventRepository = eventRepository;
-        this.source = source;
         this.restTemplate = restTemplate;
     }
 
     @SuppressWarnings("unchecked")
     @Bean
-    public EventService eventService() {
-        return new BasicEventService(eventRepository, source, restTemplate);
+    public EventService eventService(EventSource eventSource) {
+        return new BasicEventService(eventRepository, eventSource, restTemplate);
+    }
+
+    @Bean
+    public EventSource eventSource(Source source) {
+        return new EventSource(source.output());
     }
 }

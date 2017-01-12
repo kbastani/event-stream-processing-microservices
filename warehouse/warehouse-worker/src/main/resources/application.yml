@@ -7,29 +7,29 @@ server:
 spring:
   profiles: development
   cloud:
-      stream:
-        bindings:
-          warehouse:
-            contentType: 'application/json'
-            destination: warehouse
-            group: warehouse-group
-            consumer:
-              durableSubscription: true
-              concurrency: 5
-          reservation:
-            contentType: 'application/json'
-            destination: reservation
-            group: reservation-group
-            consumer:
-              durableSubscription: true
-              concurrency: 5
-          inventory:
-            contentType: 'application/json'
-            destination: inventory
-            group: inventory-group
-            consumer:
-              durableSubscription: true
-              concurrency: 5
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+          group: warehouse-group
+          consumer:
+            durableSubscription: true
+            concurrency: 5
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+          group: reservation-group
+          consumer:
+            durableSubscription: true
+            concurrency: 5
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
+          group: inventory-group
+          consumer:
+            durableSubscription: true
+            concurrency: 5
 ---
 spring:
   profiles: docker
@@ -37,29 +37,29 @@ spring:
     host: ${DOCKER_IP:192.168.99.100}
     port: 5672
   cloud:
-      stream:
-        bindings:
-          warehouse:
-            contentType: 'application/json'
-            destination: warehouse
-            group: warehouse-group
-            consumer:
-              durableSubscription: true
-              concurrency: 20
-          reservation:
-            contentType: 'application/json'
-            destination: reservation
-            group: reservation-group
-            consumer:
-              durableSubscription: true
-              concurrency: 20
-          inventory:
-            contentType: 'application/json'
-            destination: inventory
-            group: inventory-group
-            consumer:
-              durableSubscription: true
-              concurrency: 20
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+          group: warehouse-group
+          consumer:
+            durableSubscription: true
+            concurrency: 20
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+          group: reservation-group
+          consumer:
+            durableSubscription: true
+            concurrency: 20
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
+          group: inventory-group
+          consumer:
+            durableSubscription: true
+            concurrency: 20
 eureka:
   client:
     service-url:
@@ -79,29 +79,29 @@ eureka:
 spring:
   profiles: cloud
   cloud:
-      stream:
-        bindings:
-          warehouse:
-            contentType: 'application/json'
-            destination: warehouse
-            group: warehouse-group
-            consumer:
-              durableSubscription: true
-              concurrency: 5
-          reservation:
-            contentType: 'application/json'
-            destination: reservation
-            group: reservation-group
-            consumer:
-              durableSubscription: true
-              concurrency: 5
-          inventory:
-            contentType: 'application/json'
-            destination: inventory
-            group: inventory-group
-            consumer:
-              durableSubscription: true
-              concurrency: 5
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+          group: warehouse-group
+          consumer:
+            durableSubscription: true
+            concurrency: 5
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+          group: reservation-group
+          consumer:
+            durableSubscription: true
+            concurrency: 5
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
+          group: inventory-group
+          consumer:
+            durableSubscription: true
+            concurrency: 5
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}
