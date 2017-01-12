@@ -40,6 +40,7 @@ spring:
           contentType: 'application/json'
           consumer:
             durableSubscription: true
+            concurrency: 20
 eureka:
   client:
     service-url:

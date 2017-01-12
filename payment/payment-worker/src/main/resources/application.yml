@@ -34,6 +34,7 @@ spring:
           group: payment-group
           consumer:
             durableSubscription: true
+          concurrency: 20
 eureka:
   client:
     service-url:

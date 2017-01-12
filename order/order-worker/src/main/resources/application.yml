@@ -34,7 +34,7 @@ spring:
           group: order-group
           consumer:
             durableSubscription: true
-            concurrency: 5
+            concurrency: 20
 eureka:
   client:
     service-url:

@@ -45,21 +45,21 @@ spring:
             group: warehouse-group
             consumer:
               durableSubscription: true
-              concurrency: 5
+              concurrency: 20
           reservation:
             contentType: 'application/json'
             destination: reservation
             group: reservation-group
             consumer:
               durableSubscription: true
-              concurrency: 5
+              concurrency: 20
           inventory:
             contentType: 'application/json'
             destination: inventory
             group: inventory-group
             consumer:
               durableSubscription: true
-              concurrency: 5
+              concurrency: 20
 eureka:
   client:
     service-url:
