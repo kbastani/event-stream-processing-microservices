@@ -1,12 +1,6 @@
 spring:
   profiles:
     active: development
-  cloud:
-    stream:
-      bindings:
-        output:
-          contentType: 'application/json'
-          destination: payment
 server:
   port: 0
 events:
@@ -14,12 +8,24 @@ events:
 ---
 spring:
   profiles: development
+  cloud:
+    stream:
+      bindings:
+        output:
+          contentType: 'application/json'
+          destination: payment
 ---
 spring:
   profiles: docker
   rabbitmq:
     host: ${DOCKER_IP:192.168.99.100}
     port: 5672
+  cloud:
+    stream:
+      bindings:
+        output:
+          contentType: 'application/json'
+          destination: payment
 eureka:
   client:
     service-url:
@@ -38,6 +44,12 @@ eureka:
 ---
 spring:
   profiles: cloud
+  cloud:
+    stream:
+      bindings:
+        output:
+          contentType: 'application/json'
+          destination: payment
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

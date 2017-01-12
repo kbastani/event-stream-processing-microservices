@@ -1,6 +1,11 @@
 spring:
   profiles:
     active: development
+server:
+  port: 0
+---
+spring:
+  profiles: development
   cloud:
       stream:
         bindings:
@@ -25,17 +30,36 @@ spring:
             consumer:
               durableSubscription: true
               concurrency: 5
-server:
-  port: 0
----
-spring:
-  profiles: development
 ---
 spring:
   profiles: docker
   rabbitmq:
     host: ${DOCKER_IP:192.168.99.100}
     port: 5672
+  cloud:
+      stream:
+        bindings:
+          warehouse:
+            contentType: 'application/json'
+            destination: warehouse
+            group: warehouse-group
+            consumer:
+              durableSubscription: true
+              concurrency: 5
+          reservation:
+            contentType: 'application/json'
+            destination: reservation
+            group: reservation-group
+            consumer:
+              durableSubscription: true
+              concurrency: 5
+          inventory:
+            contentType: 'application/json'
+            destination: inventory
+            group: inventory-group
+            consumer:
+              durableSubscription: true
+              concurrency: 5
 eureka:
   client:
     service-url:
@@ -54,6 +78,30 @@ eureka:
 ---
 spring:
   profiles: cloud
+  cloud:
+      stream:
+        bindings:
+          warehouse:
+            contentType: 'application/json'
+            destination: warehouse
+            group: warehouse-group
+            consumer:
+              durableSubscription: true
+              concurrency: 5
+          reservation:
+            contentType: 'application/json'
+            destination: reservation
+            group: reservation-group
+            consumer:
+              durableSubscription: true
+              concurrency: 5
+          inventory:
+            contentType: 'application/json'
+            destination: inventory
+            group: inventory-group
+            consumer:
+              durableSubscription: true
+              concurrency: 5
 eureka:
   instance:
     hostname: ${vcap.application.uris[0]:localhost}

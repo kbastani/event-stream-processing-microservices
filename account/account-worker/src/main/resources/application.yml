@@ -1,15 +1,6 @@
 spring:
   profiles:
     active: development
-  cloud:
-    stream:
-      bindings:
-        input:
-          destination: account
-          group: account-group
-          contentType: 'application/json'
-          consumer:
-            durableSubscription: true
 server:
   port: 0
 amazon:
@@ -19,6 +10,15 @@ amazon:
 ---
 spring:
   profiles: development
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: account
+          group: account-group
+          contentType: 'application/json'
+          consumer:
+            durableSubscription: true
 ---
 spring:
   profiles: test
@@ -31,6 +31,15 @@ spring:
   rabbitmq:
     host: ${DOCKER_IP:192.168.99.100}
     port: 5672
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: account
+          group: account-group
+          contentType: 'application/json'
+          consumer:
+            durableSubscription: true
 eureka:
   client:
     service-url:
@@ -43,6 +52,15 @@ eureka:
 ---
 spring:
   profiles: cloud
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: account
+          group: account-group
+          contentType: 'application/json'
+          consumer:
+            durableSubscription: true
 amazon:
   aws:
     access-key-id: ${AMAZON_AWS_ACCESS_KEY_ID:replace}
