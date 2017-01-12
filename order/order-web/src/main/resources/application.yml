@@ -14,6 +14,12 @@ spring:
         output:
           destination: order
           contentType: 'application/json'
+  jpa:
+    show_sql: false
+    database: H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    initialize: false
 ---
 spring:
   profiles: docker
@@ -26,6 +32,16 @@ spring:
         output:
           destination: order
           contentType: 'application/json'
+  datasource:
+    url: jdbc:mysql://${DOCKER_IP:192.168.99.100}:3306/dev
+    username: root
+    password: dbpass
+    initialize: true
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
 eureka:
   client:
     service-url:
@@ -38,6 +54,12 @@ eureka:
 ---
 spring:
   profiles: test
+  jpa:
+    show_sql: false
+    database: H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    initialize: false
 eureka:
   client:
     enabled: false

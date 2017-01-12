@@ -9,11 +9,11 @@ import org.springframework.statemachine.StateContext;
 
 import java.util.function.Function;
 
-public class InventoryReserved extends OrderFunction {
+public class ReservationAdded extends OrderFunction {
 
-    final private Logger log = Logger.getLogger(InventoryReserved.class);
+    final private Logger log = Logger.getLogger(ReservationAdded.class);
 
-    public InventoryReserved(StateContext<OrderStatus, OrderEventType> context, Function<OrderEvent, Order> lambda) {
+    public ReservationAdded(StateContext<OrderStatus, OrderEventType> context, Function<OrderEvent, Order> lambda) {
         super(context, lambda);
     }
 
@@ -25,7 +25,7 @@ public class InventoryReserved extends OrderFunction {
      */
     @Override
     public Order apply(OrderEvent event) {
-        log.info("Executing workflow for some inventory reserved...");
+        log.info("Executing workflow for reservation added...");
         return super.apply(event);
     }
 }

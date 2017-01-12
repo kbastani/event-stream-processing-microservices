@@ -4,6 +4,7 @@ import demo.domain.Service;
 import demo.order.event.OrderEvent;
 import demo.order.event.OrderEventType;
 import demo.order.repository.OrderRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 @org.springframework.stereotype.Service
@@ -55,6 +56,7 @@ public class OrderService extends Service<Order, Long> {
      * @param order is the {@link Order} containing updated fields
      * @return the updated {@link Order} entity
      */
+    @Transactional
     public Order update(Order order) {
         Assert.notNull(order.getIdentity(), "Order id must be present in the resource URL");
         Assert.notNull(order, "Order request body cannot be null");

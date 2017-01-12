@@ -3,7 +3,7 @@ package demo.order.domain;
 import javax.persistence.*;
 import java.io.Serializable;
 
-@Entity
+@Entity(name = "order_address")
 public class Address implements Serializable {
 
     @Id

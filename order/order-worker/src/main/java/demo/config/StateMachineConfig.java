@@ -121,8 +121,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .withExternal()
                     .source(OrderStatus.RESERVATION_PENDING)
                     .target(OrderStatus.RESERVATION_PENDING)
-                    .event(OrderEventType.INVENTORY_RESERVED)
-                    .action(inventoryReserved())
+                    .event(OrderEventType.RESERVATION_ADDED)
+                    .action(reservationAdded())
                     .and()
                     .withExternal()
                     .source(OrderStatus.RESERVATION_PENDING)
@@ -137,7 +137,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .action(reservationFailed())
                     .and()
                     .withExternal()
-                    .source(OrderStatus.ACCOUNT_CONNECTED)
+                    .source(OrderStatus.RESERVATION_FAILED)
+                    .target(OrderStatus.ORDER_FAILED)
+                    .event(OrderEventType.ORDER_FAILED)
+                    .action(orderFailed())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.RESERVATION_SUCCEEDED)
                     .target(OrderStatus.PAYMENT_CREATED)
                     .event(OrderEventType.PAYMENT_CREATED)
                     .action(paymentCreated())
@@ -158,7 +164,19 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .source(OrderStatus.PAYMENT_PENDING)
                     .target(OrderStatus.PAYMENT_FAILED)
                     .event(OrderEventType.PAYMENT_FAILED)
-                    .action(paymentFailed());
+                    .action(paymentFailed())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.PAYMENT_FAILED)
+                    .target(OrderStatus.ORDER_FAILED)
+                    .event(OrderEventType.ORDER_FAILED)
+                    .action(orderFailed())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.PAYMENT_SUCCEEDED)
+                    .target(OrderStatus.ORDER_SUCCEEDED)
+                    .event(OrderEventType.ORDER_SUCCEEDED)
+                    .action(orderSucceeded());
         } catch (Exception e) {
             throw new RuntimeException("Could not configure state machine transitions", e);
         }
@@ -226,7 +244,24 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
+                    // Release the inventory reservations
+                    Reservations reservations = traverson.follow("self", "reservations")
+                            .toObject(Reservations.class);
+
+                    reservations.getContent().stream()
+                            .filter(r -> r.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED)
+                            .parallel()
+                            .forEach(r -> {
+                                Traverson res = new Traverson(
+                                        URI.create(r.getLink("self").getHref()),
+                                        MediaTypes.HAL_JSON
+                                );
+
+                                res.follow("self", "commands", "releaseInventory")
+                                        .toObject(Reservation.class);
+                            });
+
+                    return traverson.follow("self", "commands", "completeOrder")
                             .toEntity(Order.class)
                             .getBody();
                 }));
@@ -295,9 +330,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
     }
 
     @Bean
-    public Action<OrderStatus, OrderEventType> inventoryReserved() {
+    public Action<OrderStatus, OrderEventType> reservationAdded() {
         return context -> applyEvent(context,
-                new InventoryReserved(context, event -> {
+                new ReservationAdded(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
 
                     // Create a traverson for the root order
@@ -323,9 +358,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                    // Create a payment
+                    return traverson.follow("self", "commands", "createPayment")
+                            .toObject(Order.class);
                 }));
     }
 
@@ -346,6 +381,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
 
                     reservations.getContent().stream()
                             .filter(r -> r.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED)
+                            .parallel()
                             .forEach(r -> {
                                 Traverson res = new Traverson(
                                         URI.create(r.getLink("self").getHref()),
@@ -356,7 +392,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                                         .toObject(Reservation.class);
                             });
 
-                    return traverson.follow("self")
+                    return traverson.follow("self", "commands", "completeOrder")
                             .toEntity(Order.class)
                             .getBody();
                 }));
@@ -373,10 +409,20 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                    // Reserve inventory for order
+                    return traverson.follow("self", "commands", "reserveInventory")
+                            .toObject(Order.class);
                 }));
+    }
+
+    @Bean
+    public Action<OrderStatus, OrderEventType> orderFailed() {
+        return context -> applyEvent(context, new OrderFailed(context));
+    }
+
+    @Bean
+    public Action<OrderStatus, OrderEventType> orderSucceeded() {
+        return context -> applyEvent(context, new OrderSucceeded(context));
     }
 
 }

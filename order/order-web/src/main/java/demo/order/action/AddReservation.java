@@ -42,8 +42,8 @@ public class AddReservation extends Action<Order> {
                     .toString()).withRel("reservation");
 
             try {
-                // Trigger the account connected event
-                order.sendAsyncEvent(new OrderEvent(OrderEventType.INVENTORY_RESERVED, order), reservationLink);
+                // Trigger reservation added event
+                order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_ADDED, order), reservationLink);
             } catch (Exception ex) {
                 log.error("Could not add reservation to order", ex);
                 order.getReservationIds().remove(reservationId);

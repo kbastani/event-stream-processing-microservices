@@ -39,7 +39,8 @@ public class CreatePayment extends Action<Order> {
                     OrderStatus.PAYMENT_CONNECTED,
                     OrderStatus.PAYMENT_SUCCEEDED,
                     OrderStatus.PAYMENT_PENDING).contains(order.getStatus()), "Payment has already been created");
-            Assert.isTrue(order.getStatus() == OrderStatus.ACCOUNT_CONNECTED, "Account must be connected first");
+            Assert.isTrue(order.getStatus() == OrderStatus.RESERVATION_SUCCEEDED,
+                    "Inventory reservations for the order must be made first before creating a payment");
 
             // Get entity services
             OrderService orderService = order.getModule(OrderModule.class).getDefaultService();

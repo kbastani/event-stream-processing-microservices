@@ -52,6 +52,11 @@ public class PaymentSucceeded extends OrderFunction {
         // Set the order to a pending state
         order = setOrderPaymentSucceededStatus(event, order);
 
+        if (order.getStatus() == OrderStatus.PAYMENT_SUCCEEDED) {
+            order = traverson.follow("self", "commands", "completeOrder")
+                    .toObject(Order.class);
+        }
+
         context.getExtendedState().getVariables().put("order", order);
 
         return order;

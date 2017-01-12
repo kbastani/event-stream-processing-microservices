@@ -4,6 +4,7 @@ import demo.event.EventService;
 import demo.event.Events;
 import demo.order.domain.Order;
 import demo.order.domain.OrderService;
+import demo.order.domain.OrderStatus;
 import demo.order.event.OrderEvent;
 import demo.reservation.domain.Reservations;
 import org.springframework.cloud.client.ServiceInstance;
@@ -143,6 +144,20 @@ public class OrderController {
     @RequestMapping(path = "/orders/{id}/commands/completeReservation")
     public ResponseEntity completeReservation(@PathVariable Long id) {
         return Optional.ofNullable(orderService.get(id).completeReservation())
+                .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/orders/{id}/commands/completeOrder")
+    public ResponseEntity completeOrder(@PathVariable Long id) {
+        return Optional.ofNullable(orderService.get(id).completeOrder())
+                .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
+    @RequestMapping(path = "/order/{id}/commands/updateOrderStatus")
+    public ResponseEntity updateOrderStatus(@PathVariable Long id, @RequestParam(value = "status") OrderStatus status) {
+        return Optional.ofNullable(orderService.get(id).updateOrderStatus(status))
                 .map(e -> new ResponseEntity<>(getOrderResource(e), HttpStatus.OK))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }

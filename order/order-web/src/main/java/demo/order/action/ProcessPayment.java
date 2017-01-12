@@ -33,7 +33,8 @@ public class ProcessPayment extends Action<Order> {
             Assert.isTrue(!Arrays
                     .asList(OrderStatus.PAYMENT_SUCCEEDED, OrderStatus.PAYMENT_PENDING, OrderStatus.PAYMENT_FAILED)
                     .contains(order.getStatus()), "Payment has already been processed");
-            Assert.isTrue(order.getStatus() == OrderStatus.PAYMENT_CONNECTED, "Payment must be connected to an order");
+            Assert.isTrue(order.getStatus() == OrderStatus.PAYMENT_CONNECTED,
+                    "Order must be in a payment connected state");
 
             // Get entity services
             OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
@@ -63,7 +64,7 @@ public class ProcessPayment extends Action<Order> {
                 OrderEvent event = new OrderEvent(OrderEventType.PAYMENT_SUCCEEDED, order);
                 event.add(payment.getLink("self").withRel("payment"));
 
-                // Trigger payment created event
+                // Trigger payment succeeded event
                 order.sendAsyncEvent(event);
             }
 

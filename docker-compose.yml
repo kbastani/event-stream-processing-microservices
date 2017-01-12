@@ -4,7 +4,7 @@ mysql:
    - 3306:3306
   environment:
    - MYSQL_ROOT_PASSWORD=dbpass
-   - MYSQL_DATABASE=dev]
+   - MYSQL_DATABASE=dev
   net: host
 redis:
   container_name: redis

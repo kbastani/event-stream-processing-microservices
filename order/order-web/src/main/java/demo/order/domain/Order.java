@@ -170,6 +170,20 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
                 .apply(this);
     }
 
+    @Command(method = "completeOrder", controller = OrderController.class)
+    public Order completeOrder() {
+        return getAction(CompleteOrder.class)
+                .getFunction()
+                .apply(this);
+    }
+
+    @Command(method = "updateOrderStatus", controller = OrderController.class)
+    public Order updateOrderStatus(OrderStatus orderStatus) {
+        return getAction(UpdateOrderStatus.class)
+                .getFunction()
+                .apply(this, orderStatus);
+    }
+
     public boolean delete() {
         getAction(DeleteOrder.class)
                 .getConsumer()
