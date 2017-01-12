@@ -101,6 +101,13 @@ public class ReservationController {
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
+    @RequestMapping(path = "/reservations/{id}/commands/releaseInventory")
+    public ResponseEntity releaseInventory(@PathVariable Long id) {
+        return Optional.ofNullable(reservationService.get(id))
+                .map(e -> new ResponseEntity<>(getReservationResource(e.releaseInventory()), HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("The command could not be applied"));
+    }
+
     @RequestMapping(path = "/reservations/{id}/commands/connectOrder")
     public ResponseEntity connectOrder(@PathVariable Long id, @RequestParam(value = "orderId") Long orderId) {
         return Optional.ofNullable(reservationService.get(id)

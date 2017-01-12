@@ -8,6 +8,9 @@ import demo.order.event.OrderEventProcessor;
 import demo.order.event.OrderEventType;
 import demo.order.event.OrderEvents;
 import demo.payment.domain.Payment;
+import demo.reservation.domain.Reservation;
+import demo.reservation.domain.ReservationStatus;
+import demo.reservation.domain.Reservations;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -329,13 +332,29 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
     @Bean
     public Action<OrderStatus, OrderEventType> reservationFailed() {
         return context -> applyEvent(context,
-                new ReservationSucceeded(context, event -> {
+                new ReservationFailed(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
                     // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
+
+                    // Release the reservations
+                    Reservations reservations = traverson.follow("self", "reservations")
+                            .toObject(Reservations.class);
+
+                    reservations.getContent().stream()
+                            .filter(r -> r.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED)
+                            .forEach(r -> {
+                                Traverson res = new Traverson(
+                                        URI.create(r.getLink("self").getHref()),
+                                        MediaTypes.HAL_JSON
+                                );
+
+                                res.follow("self", "commands", "releaseInventory")
+                                        .toObject(Reservation.class);
+                            });
 
                     return traverson.follow("self")
                             .toEntity(Order.class)
@@ -359,7 +378,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             .getBody();
                 }));
     }
-
 
 }
 

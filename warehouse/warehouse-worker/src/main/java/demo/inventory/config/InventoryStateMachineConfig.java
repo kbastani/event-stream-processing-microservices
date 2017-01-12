@@ -114,7 +114,13 @@ public class InventoryStateMachineConfig extends EnumStateMachineConfigurerAdapt
                     .source(InventoryStatus.RESERVATION_CONNECTED)
                     .target(InventoryStatus.INVENTORY_RESERVED)
                     .event(InventoryEventType.INVENTORY_RESERVED)
-                    .action(inventoryReserved());
+                    .action(inventoryReserved())
+                    .and()
+                    .withExternal()
+                    .source(InventoryStatus.INVENTORY_RESERVED)
+                    .target(InventoryStatus.RESERVATION_PENDING)
+                    .event(InventoryEventType.INVENTORY_RELEASED)
+                    .action(inventoryReleased());
         } catch (Exception e) {
             throw new RuntimeException("Could not configure state machine transitions", e);
         }
@@ -161,6 +167,23 @@ public class InventoryStateMachineConfig extends EnumStateMachineConfigurerAdapt
     public Action<InventoryStatus, InventoryEventType> inventoryReserved() {
         return context -> applyEvent(context,
                 new InventoryReserved(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("inventory").getHref());
+                    // Get the inventory resource for the event
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("inventory").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Inventory.class)
+                            .getBody();
+                }));
+    }
+
+    @Bean
+    public Action<InventoryStatus, InventoryEventType> inventoryReleased() {
+        return context -> applyEvent(context,
+                new InventoryReleased(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("inventory").getHref());
                     // Get the inventory resource for the event
                     Traverson traverson = new Traverson(
