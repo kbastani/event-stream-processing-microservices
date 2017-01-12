@@ -25,5 +25,6 @@
 
     <modules>
         <module>discovery</module>
+        <module>data-flow-server</module>
     </modules>
 </project>
