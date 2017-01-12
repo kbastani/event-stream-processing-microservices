@@ -34,6 +34,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-redis</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.redisson</groupId>

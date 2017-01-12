@@ -3,4 +3,5 @@ jdk:
 - oraclejdk8
 services:
 - rabbitmq
+- redis
 install: mvn clean install -DskipDockerBuild

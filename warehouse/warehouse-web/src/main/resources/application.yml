@@ -55,9 +55,6 @@ eureka:
 ---
 spring:
   profiles: test
-  redis:
-    host: localhost
-    port: 6379
 eureka:
   client:
     enabled: false
