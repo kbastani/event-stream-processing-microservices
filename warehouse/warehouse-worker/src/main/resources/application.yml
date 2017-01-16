@@ -76,6 +76,13 @@ spring:
 eureka:
   client:
     enabled: false
+logging:
+  level:
+    org:
+      apache:
+        zookeeper:
+          ZooKeeper: error
+    org.apache.kafka.clients.producer.ProducerConfig: error
 ---
 spring:
   profiles: cloud
