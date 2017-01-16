@@ -12,9 +12,8 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-
-import java.util.function.BiFunction;
 
 /**
  * Connects an {@link Order} to an Account.
@@ -22,39 +21,37 @@ import java.util.function.BiFunction;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class AddReservation extends Action<Order> {
     private final Logger log = Logger.getLogger(this.getClass());
 
-    public BiFunction<Order, Long, Order> getFunction() {
-        return (order, reservationId) -> {
-            Assert.isTrue(order
-                    .getStatus() == OrderStatus.RESERVATION_PENDING, "Order must be in a pending reservation state");
-            Assert.isTrue(!order.getReservationIds().contains(reservationId), "Reservation already added to order");
+    public Order apply(Order order, Long reservationId) {
+        Assert.isTrue(order
+                .getStatus() == OrderStatus.RESERVATION_PENDING, "Order must be in a pending reservation state");
+        Assert.isTrue(!order.getReservationIds().contains(reservationId), "Reservation already added to order");
 
-            OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
+        OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
 
-            order.getReservationIds().add(reservationId);
+        order.getReservationIds().add(reservationId);
+        order = orderService.update(order);
+
+        Link reservationLink = new Link(new UriTemplate("http://warehouse-web/v1/reservations/{id}")
+                .with("id", TemplateVariable.VariableType.PATH_VARIABLE)
+                .expand(reservationId)
+                .toString()).withRel("reservation");
+
+        try {
+            // Trigger reservation added event
+            order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_ADDED, order), reservationLink);
+        } catch (Exception ex) {
+            log.error("Could not add reservation to order", ex);
+            order.getReservationIds().remove(reservationId);
+            order.setStatus(OrderStatus.RESERVATION_FAILED);
             order = orderService.update(order);
+            order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_FAILED, order), reservationLink);
+        }
 
-            Link reservationLink = new Link(new UriTemplate("http://warehouse-web/v1/reservations/{id}")
-                    .with("id", TemplateVariable.VariableType.PATH_VARIABLE)
-                    .expand(reservationId)
-                    .toString()).withRel("reservation");
-
-            try {
-                // Trigger reservation added event
-                order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_ADDED, order), reservationLink);
-            } catch (Exception ex) {
-                log.error("Could not add reservation to order", ex);
-                order.getReservationIds().remove(reservationId);
-                order.setStatus(OrderStatus.RESERVATION_FAILED);
-                orderService.update(order);
-                order.sendAsyncEvent(new OrderEvent(OrderEventType.RESERVATION_FAILED, order), reservationLink);
-                throw ex;
-            }
-
-            return order;
-        };
+        return order;
     }
 
 }

@@ -88,42 +88,36 @@ public class Account extends AbstractEntity<AccountEvent, Long> {
     @JsonIgnore
     public Orders getOrders() {
         return getAction(GetOrders.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "activate", controller = AccountController.class)
     public Account activate() {
         return getAction(ActivateAccount.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "archive", controller = AccountController.class)
     public Account archive() {
         return getAction(ArchiveAccount.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "confirm", controller = AccountController.class)
     public Account confirm() {
         return getAction(ConfirmAccount.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "suspend", controller = AccountController.class)
     public Account suspend() {
         return getAction(SuspendAccount.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "postOrder", controller = AccountController.class)
     public Order postOrder(Order order) {
         return getAction(PostOrder.class)
-                .getFunction()
                 .apply(this, order);
     }
 

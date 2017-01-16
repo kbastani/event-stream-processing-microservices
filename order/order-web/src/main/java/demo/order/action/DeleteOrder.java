@@ -7,8 +7,7 @@ import demo.payment.domain.Payment;
 import demo.payment.domain.PaymentService;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-
-import java.util.function.Consumer;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Processes a {@link Payment} for an {@link Order}.
@@ -16,6 +15,7 @@ import java.util.function.Consumer;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class DeleteOrder extends Action<Order> {
 
     private final Logger log = Logger.getLogger(this.getClass());
@@ -25,16 +25,14 @@ public class DeleteOrder extends Action<Order> {
         this.paymentService = paymentService;
     }
 
-    public Consumer<Order> getConsumer() {
-        return (order) -> {
-            // Delete payment
-            if (order.getPaymentId() != null)
-                paymentService.delete(order.getPaymentId());
+    public void apply(Order order) {
+        // Delete payment
+        if (order.getPaymentId() != null)
+            paymentService.delete(order.getPaymentId());
 
-            // Delete order
-            order.getModule(OrderModule.class)
-                    .getDefaultService()
-                    .delete(order.getIdentity());
-        };
+        // Delete order
+        order.getModule(OrderModule.class)
+                .getDefaultService()
+                .delete(order.getIdentity());
     }
 }

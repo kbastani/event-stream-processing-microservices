@@ -2,6 +2,9 @@ language: java
 jdk:
 - oraclejdk8
 services:
-- rabbitmq
 - redis
+- docker
 install: mvn clean install -DskipDockerBuild
+before_install:
+- docker pull spotify/kafka
+- docker run -p 2181:2181 -p 9092:9092 spotify/kafka

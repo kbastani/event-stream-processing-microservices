@@ -375,26 +375,33 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             MediaTypes.HAL_JSON
                     );
 
+                    Order order = traverson.follow("self", "commands", "completeOrder")
+                            .toEntity(Order.class)
+                            .getBody();
+
                     // Release the reservations
                     Reservations reservations = traverson.follow("self", "reservations")
                             .toObject(Reservations.class);
 
                     reservations.getContent().stream()
-                            .filter(r -> r.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED)
+                            .filter(r -> r.getStatus() != ReservationStatus.RESERVATION_FAILED)
                             .parallel()
                             .forEach(r -> {
-                                Traverson res = new Traverson(
-                                        URI.create(r.getLink("self").getHref()),
-                                        MediaTypes.HAL_JSON
-                                );
+                                try {
+                                    Traverson res = new Traverson(
+                                            URI.create(r.getLink("self").getHref()),
+                                            MediaTypes.HAL_JSON
+                                    );
 
-                                res.follow("self", "commands", "releaseInventory")
-                                        .toObject(Reservation.class);
+                                    res.follow("self", "commands", "releaseInventory")
+                                            .toObject(Reservation.class);
+                                } catch (Exception ex) {
+                                    log.error("Could not release inventory for reservation", ex);
+                                }
                             });
 
-                    return traverson.follow("self", "commands", "completeOrder")
-                            .toEntity(Order.class)
-                            .getBody();
+                    return order;
+
                 }));
     }
 

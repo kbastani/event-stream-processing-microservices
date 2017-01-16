@@ -12,8 +12,6 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.function.BiFunction;
-
 import static demo.inventory.domain.InventoryStatus.RESERVATION_CONNECTED;
 
 /**
@@ -33,34 +31,31 @@ public class ReserveInventory extends Action<Inventory> {
         this.inventoryService = inventoryService;
     }
 
-    public BiFunction<Inventory, Long, Inventory> getFunction() {
-        return (inventory, reservationId) -> {
-            Assert.isTrue(inventory.getStatus() == InventoryStatus.RESERVATION_CONNECTED,
-                    "Inventory must be in a reservation connected state");
-            Assert.isTrue(inventory.getReservation() == null,
-                    "There is already a reservation attached to the inventory");
+    public Inventory apply(Inventory inventory, Long reservationId) {
+        Assert.isTrue(inventory.getStatus() == InventoryStatus.RESERVATION_CONNECTED,
+                "Inventory must be in a reservation connected state");
+        Assert.isTrue(inventory.getReservation() == null,
+                "There is already a reservation attached to the inventory");
 
-            Reservation reservation = reservationService.get(reservationId);
-            Assert.notNull(reservation, "Reserve inventory failed, the reservation does not exist");
+        Reservation reservation = reservationService.get(reservationId);
+        Assert.notNull(reservation, "Reserve inventory failed, the reservation does not exist");
 
-            try {
-                // Trigger the reservation connected event
-                inventory.sendAsyncEvent(new InventoryEvent(InventoryEventType.RESERVATION_CONNECTED, inventory));
-            } catch (Exception ex) {
-                log.error("Could not connect reservation to inventory", ex);
-                inventory.setReservation(null);
-                inventory.setStatus(InventoryStatus.RESERVATION_PENDING);
-                inventoryService.update(inventory);
-                throw ex;
-            } finally {
-                if (inventory.getStatus() == RESERVATION_CONNECTED && inventory.getReservation() != null) {
-                    inventory.setStatus(InventoryStatus.INVENTORY_RESERVED);
-                    inventory = inventoryService.update(inventory);
-                    inventory.sendAsyncEvent(new InventoryEvent(InventoryEventType.INVENTORY_RESERVED, inventory));
-                }
+        try {
+            // Trigger the reservation connected event
+            inventory.sendAsyncEvent(new InventoryEvent(InventoryEventType.RESERVATION_CONNECTED, inventory));
+        } catch (Exception ex) {
+            log.error("Could not connect reservation to inventory", ex);
+            inventory.setReservation(null);
+            inventory.setStatus(InventoryStatus.RESERVATION_PENDING);
+            inventory = inventoryService.update(inventory);
+        } finally {
+            if (inventory.getStatus() == RESERVATION_CONNECTED && inventory.getReservation() != null) {
+                inventory.setStatus(InventoryStatus.INVENTORY_RESERVED);
+                inventory = inventoryService.update(inventory);
+                inventory.sendAsyncEvent(new InventoryEvent(InventoryEventType.INVENTORY_RESERVED, inventory));
             }
+        }
 
-            return inventory;
-        };
+        return inventory;
     }
 }

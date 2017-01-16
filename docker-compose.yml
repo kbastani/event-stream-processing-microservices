@@ -10,10 +10,13 @@ redis:
   container_name: redis
   image: redis:latest
   net: host
-rabbit:
-  container_name: rabbit
-  image: rabbitmq:3-management
+kafka:
+  container_name: kafka
+  image: spotify/kafka:latest
   net: host
+  ports:
+     - 2181:2181
+     - 9092:9092
 account-web:
   image: account-web
   environment:

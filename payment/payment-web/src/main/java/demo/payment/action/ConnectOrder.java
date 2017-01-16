@@ -9,42 +9,38 @@ import demo.payment.event.PaymentEvent;
 import demo.payment.event.PaymentEventType;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.function.BiFunction;
-
 @Service
+@Transactional
 public class ConnectOrder extends Action<Payment> {
     private final Logger log = Logger.getLogger(this.getClass());
 
-    public BiFunction<Payment, Long, Payment> getFunction() {
-        return (payment, orderId) -> {
-            Assert.isTrue(payment
-                    .getStatus() == PaymentStatus.PAYMENT_CREATED, "Payment has already been connected to an order");
+    public Payment apply(Payment payment, Long orderId) {
+        Assert.isTrue(payment
+                .getStatus() == PaymentStatus.PAYMENT_CREATED, "Payment has already been connected to an order");
 
-            PaymentService paymentService = payment.getModule(PaymentModule.class)
-                    .getDefaultService();
+        PaymentService paymentService = payment.getModule(PaymentModule.class)
+                .getDefaultService();
 
-            // Connect the payment to the order
-            payment.setOrderId(orderId);
-            payment.setStatus(PaymentStatus.ORDER_CONNECTED);
+        // Connect the payment to the order
+        payment.setOrderId(orderId);
+        payment.setStatus(PaymentStatus.ORDER_CONNECTED);
+        payment = paymentService.update(payment);
+
+        try {
+            // Trigger the payment connected
+            payment.sendAsyncEvent(new PaymentEvent(PaymentEventType.ORDER_CONNECTED, payment));
+        } catch (IllegalStateException ex) {
+            log.error("Payment could not be connected to order", ex);
+
+            // Rollback operation
+            payment.setStatus(PaymentStatus.PAYMENT_CREATED);
+            payment.setOrderId(null);
             payment = paymentService.update(payment);
+        }
 
-            try {
-                // Trigger the payment connected
-                payment.sendAsyncEvent(new PaymentEvent(PaymentEventType.ORDER_CONNECTED, payment));
-            } catch (IllegalStateException ex) {
-                log.error("Payment could not be connected to order", ex);
-
-                // Rollback operation
-                payment.setStatus(PaymentStatus.PAYMENT_CREATED);
-                payment.setOrderId(null);
-                paymentService.update(payment);
-
-                throw ex;
-            }
-
-            return payment;
-        };
+        return payment;
     }
 }

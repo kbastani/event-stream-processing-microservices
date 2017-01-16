@@ -77,8 +77,7 @@ public class Warehouse extends AbstractEntity<WarehouseEvent, Long> {
     @Command(method = "reserveOrder", controller = WarehouseController.class)
     public Warehouse reserveOrder(Order order) {
         getAction(ReserveOrder.class)
-                .getConsumer()
-                .accept(this, order);
+                .apply(this, order);
         return this;
     }
 

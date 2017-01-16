@@ -9,9 +9,8 @@ import demo.order.event.OrderEvent;
 import demo.order.event.OrderEventType;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-
-import java.util.function.BiFunction;
 
 /**
  * Connects an {@link Order} to an Account.
@@ -19,33 +18,31 @@ import java.util.function.BiFunction;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class ConnectAccount extends Action<Order> {
     private final Logger log = Logger.getLogger(this.getClass());
 
-    public BiFunction<Order, Long, Order> getFunction() {
-        return (order, accountId) -> {
-            Assert.isTrue(order.getStatus() == OrderStatus.ORDER_CREATED, "Order must be in a created state");
+    public Order apply(Order order, Long accountId) {
+        Assert.isTrue(order.getStatus() == OrderStatus.ORDER_CREATED, "Order must be in a created state");
 
-            OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
+        OrderService orderService = order.getModule(OrderModule.class).getDefaultService();
 
-            // Connect the account
-            order.setAccountId(accountId);
-            order.setStatus(OrderStatus.ACCOUNT_CONNECTED);
+        // Connect the account
+        order.setAccountId(accountId);
+        order.setStatus(OrderStatus.ACCOUNT_CONNECTED);
+        order = orderService.update(order);
+
+        try {
+            // Trigger the account connected event
+            order.sendAsyncEvent(new OrderEvent(OrderEventType.ACCOUNT_CONNECTED, order));
+        } catch (Exception ex) {
+            log.error("Could not connect order to account", ex);
+            order.setAccountId(null);
+            order.setStatus(OrderStatus.ORDER_CREATED);
             order = orderService.update(order);
+        }
 
-            try {
-                // Trigger the account connected event
-                order.sendAsyncEvent(new OrderEvent(OrderEventType.ACCOUNT_CONNECTED, order));
-            } catch (Exception ex) {
-                log.error("Could not connect order to account", ex);
-                order.setAccountId(null);
-                order.setStatus(OrderStatus.ORDER_CREATED);
-                orderService.update(order);
-                throw ex;
-            }
-
-            return order;
-        };
+        return order;
     }
 
 }

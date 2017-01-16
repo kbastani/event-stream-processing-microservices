@@ -26,6 +26,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import static demo.order.domain.OrderStatus.ORDER_FAILED;
+import static demo.order.domain.OrderStatus.RESERVATION_FAILED;
 import static demo.order.domain.OrderStatus.RESERVATION_PENDING;
 
 /**
@@ -243,12 +245,24 @@ public class ReservationStateMachineConfig extends EnumStateMachineConfigurerAda
                             MediaTypes.HAL_JSON
                     );
 
-                    traverson.follow("self", "order", "commands", "completeReservation")
-                            .toObject(Order.class);
+                    Order order = traverson.follow("self", "order").toObject(Order.class);
+                    Reservation reservation = null;
 
-                    return traverson.follow("self")
-                            .toEntity(Reservation.class)
-                            .getBody();
+                    // Check order status and release inventory if it has failed
+                    if (order.getStatus() == RESERVATION_FAILED || order.getStatus() == ORDER_FAILED) {
+                        reservation = traverson.follow("self", "commands", "releaseInventory")
+                                .toObject(Reservation.class);
+                    } else if (order.getStatus() == RESERVATION_PENDING) {
+                        traverson.follow("self", "order", "commands", "completeReservation")
+                                .toObject(Order.class);
+                    }
+
+                    if (reservation == null)
+                        reservation = traverson.follow("self")
+                                .toEntity(Reservation.class)
+                                .getBody();
+
+                    return reservation;
                 }));
     }
 

@@ -87,14 +87,12 @@ public class Inventory extends AbstractEntity<InventoryEvent, Long> {
     @Command(method = "reserve", controller = InventoryController.class)
     public Inventory reserve(Long reservationId) {
         return getAction(ReserveInventory.class)
-                .getFunction()
                 .apply(this, reservationId);
     }
 
     @Command(method = "updateInventoryStatus", controller = InventoryController.class)
     public Inventory updateStatus(InventoryStatus status) {
         return getAction(UpdateInventoryStatus.class)
-                .getFunction()
                 .apply(this, status);
     }
 

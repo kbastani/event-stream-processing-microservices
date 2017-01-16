@@ -105,7 +105,7 @@ public class InventoryService extends Service<Inventory, Long> {
                 Boolean lock = false;
 
                 try {
-                    lock = inventoryLock.tryLock(30, 5000, TimeUnit.MILLISECONDS);
+                    lock = inventoryLock.tryLock(1, 5000, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     log.error("Interrupted while acquiring lock on inventory", e);
                 }

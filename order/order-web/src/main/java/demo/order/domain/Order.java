@@ -117,77 +117,66 @@ public class Order extends AbstractEntity<OrderEvent, Long> {
     @JsonIgnore
     public Reservations getReservations() {
         return getAction(GetReservations.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "connectAccount", controller = OrderController.class)
     public Order connectAccount(Long accountId) {
         return getAction(ConnectAccount.class)
-                .getFunction()
                 .apply(this, accountId);
     }
 
     @Command(method = "connectPayment", controller = OrderController.class)
     public Order connectPayment(Long paymentId) {
         return getAction(ConnectPayment.class)
-                .getFunction()
                 .apply(this, paymentId);
     }
 
     @Command(method = "createPayment", controller = OrderController.class)
     public Order createPayment() {
         return getAction(CreatePayment.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "processPayment", controller = OrderController.class)
     public Order processPayment() {
         return getAction(ProcessPayment.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "reserveInventory", controller = OrderController.class)
     public Order reserveInventory() {
         return getAction(ReserveInventory.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "addReservation", controller = OrderController.class)
     public Order addReservation(Long reservationId) {
         return getAction(AddReservation.class)
-                .getFunction()
                 .apply(this, reservationId);
     }
 
     @Command(method = "completeReservation", controller = OrderController.class)
     public Order completeReservation() {
         return getAction(CompleteReservation.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "completeOrder", controller = OrderController.class)
     public Order completeOrder() {
         return getAction(CompleteOrder.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "updateOrderStatus", controller = OrderController.class)
     public Order updateOrderStatus(OrderStatus orderStatus) {
         return getAction(UpdateOrderStatus.class)
-                .getFunction()
                 .apply(this, orderStatus);
     }
 
     public boolean delete() {
         getAction(DeleteOrder.class)
-                .getConsumer()
-                .accept(this);
+                .apply(this);
 
         return true;
     }

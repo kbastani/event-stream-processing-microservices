@@ -9,9 +9,8 @@ import demo.account.event.AccountEventType;
 import demo.domain.Action;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-
-import java.util.function.Function;
 
 import static demo.account.domain.AccountStatus.ACCOUNT_CONFIRMED;
 import static demo.account.domain.AccountStatus.ACCOUNT_PENDING;
@@ -22,38 +21,35 @@ import static demo.account.domain.AccountStatus.ACCOUNT_PENDING;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class ConfirmAccount extends Action<Account> {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
-    public Function<Account, Account> getFunction() {
-        return (account) -> {
-            Assert.isTrue(account.getStatus() != ACCOUNT_CONFIRMED, "The account has already been confirmed");
-            Assert.isTrue(account.getStatus() == ACCOUNT_PENDING, "The account has already been confirmed");
+    public Account apply(Account account) {
+        Assert.isTrue(account.getStatus() != ACCOUNT_CONFIRMED, "The account has already been confirmed");
+        Assert.isTrue(account.getStatus() == ACCOUNT_PENDING, "The account has already been confirmed");
 
-            AccountService accountService = account.getModule(AccountModule.class)
-                    .getDefaultService();
+        AccountService accountService = account.getModule(AccountModule.class)
+                .getDefaultService();
 
-            AccountStatus status = account.getStatus();
+        AccountStatus status = account.getStatus();
 
-            // Activate the account
-            account.setStatus(AccountStatus.ACCOUNT_CONFIRMED);
+        // Activate the account
+        account.setStatus(AccountStatus.ACCOUNT_CONFIRMED);
+        account = accountService.update(account);
+
+        try {
+            // Trigger the account confirmed event
+            account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED, account));
+        } catch (Exception ex) {
+            log.error("Account could not be confirmed", ex);
+
+            // Rollback the operation
+            account.setStatus(status);
             account = accountService.update(account);
+        }
 
-            try {
-                // Trigger the account confirmed event
-                account.sendAsyncEvent(new AccountEvent(AccountEventType.ACCOUNT_CONFIRMED, account));
-            } catch (Exception ex) {
-                log.error("Account could not be confirmed", ex);
-
-                // Rollback the operation
-                account.setStatus(status);
-                accountService.update(account);
-
-                throw ex;
-            }
-
-            return account;
-        };
+        return account;
     }
 }

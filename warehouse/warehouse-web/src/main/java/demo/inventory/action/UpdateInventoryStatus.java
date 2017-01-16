@@ -7,8 +7,7 @@ import demo.inventory.domain.InventoryStatus;
 import demo.reservation.domain.ReservationService;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-
-import java.util.function.BiFunction;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Updates the status of a {@link Inventory} entity.
@@ -16,6 +15,7 @@ import java.util.function.BiFunction;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class UpdateInventoryStatus extends Action<Inventory> {
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -27,24 +27,20 @@ public class UpdateInventoryStatus extends Action<Inventory> {
         this.inventoryService = inventoryService;
     }
 
-    public BiFunction<Inventory, InventoryStatus, Inventory> getFunction() {
-        return (inventory, inventoryStatus) -> {
+    public Inventory apply(Inventory inventory, InventoryStatus inventoryStatus) {
+        // Save rollback status
+        InventoryStatus rollbackStatus = inventory.getStatus();
 
-            // Save rollback status
-            InventoryStatus rollbackStatus = inventory.getStatus();
+        try {
+            // Update status
+            inventory.setStatus(inventoryStatus);
+            inventory = inventoryService.update(inventory);
+        } catch (Exception ex) {
+            log.error("Could not update the status", ex);
+            inventory.setStatus(rollbackStatus);
+            inventory = inventoryService.update(inventory);
+        }
 
-            try {
-                // Update status
-                inventory.setStatus(inventoryStatus);
-                inventory = inventoryService.update(inventory);
-            } catch (Exception ex) {
-                log.error("Could not update the status", ex);
-                inventory.setStatus(rollbackStatus);
-                inventory = inventoryService.update(inventory);
-                throw ex;
-            }
-
-            return inventory;
-        };
+        return inventory;
     }
 }

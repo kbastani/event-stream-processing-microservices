@@ -111,21 +111,18 @@ public class Reservation extends AbstractEntity<ReservationEvent, Long> {
     @Command(method = "connectInventory", controller = ReservationController.class)
     public Reservation connectInventory() {
         return getAction(ConnectInventory.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "releaseInventory", controller = ReservationController.class)
     public Reservation releaseInventory() {
         return getAction(ReleaseInventory.class)
-                .getFunction()
                 .apply(this);
     }
 
     @Command(method = "connectOrder", controller = ReservationController.class)
     public Reservation connectOrder(Long orderId) {
         return getAction(ConnectOrder.class)
-                .getFunction()
                 .apply(this, orderId);
     }
 

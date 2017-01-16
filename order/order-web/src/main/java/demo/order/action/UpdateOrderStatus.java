@@ -6,8 +6,7 @@ import demo.order.domain.OrderService;
 import demo.order.domain.OrderStatus;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-
-import java.util.function.BiFunction;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Updates the status of a {@link Order} entity.
@@ -15,6 +14,7 @@ import java.util.function.BiFunction;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class UpdateOrderStatus extends Action<Order> {
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -24,24 +24,21 @@ public class UpdateOrderStatus extends Action<Order> {
         this.orderService = orderService;
     }
 
-    public BiFunction<Order, OrderStatus, Order> getFunction() {
-        return (order, orderStatus) -> {
+    public Order apply(Order order, OrderStatus orderStatus) {
 
-            // Save rollback status
-            OrderStatus rollbackStatus = order.getStatus();
+        // Save rollback status
+        OrderStatus rollbackStatus = order.getStatus();
 
-            try {
-                // Update status
-                order.setStatus(orderStatus);
-                order = orderService.update(order);
-            } catch (Exception ex) {
-                log.error("Could not update the status", ex);
-                order.setStatus(rollbackStatus);
-                order = orderService.update(order);
-                throw ex;
-            }
+        try {
+            // Update status
+            order.setStatus(orderStatus);
+            order = orderService.update(order);
+        } catch (Exception ex) {
+            log.error("Could not update the status", ex);
+            order.setStatus(rollbackStatus);
+            order = orderService.update(order);
+        }
 
-            return order;
-        };
+        return order;
     }
 }

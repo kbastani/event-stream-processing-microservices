@@ -21,7 +21,6 @@ import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Random;
-import java.util.function.Function;
 
 import static demo.reservation.event.ReservationEventType.*;
 
@@ -41,67 +40,73 @@ public class ConnectInventory extends Action<Reservation> {
         this.inventoryService = inventoryService;
     }
 
-    public Function<Reservation, Reservation> getFunction() {
-        return (reservation) -> {
-            Assert.isTrue(reservation.getStatus() == ReservationStatus.ORDER_CONNECTED,
-                    "Reservation must be in an order connected state");
+    public Reservation apply(Reservation reservation) {
+        Assert.isTrue(reservation.getStatus() == ReservationStatus.ORDER_CONNECTED,
+                "Reservation must be in an order connected state");
 
-            ReservationService reservationService = reservation.getModule(ReservationModule.class).getDefaultService();
+        ReservationService reservationService = reservation.getModule(ReservationModule.class).getDefaultService();
 
-            // Set reservation to pending
-            reservation.setStatus(ReservationStatus.RESERVATION_PENDING);
-            reservation = reservationService.update(reservation);
+        // Set reservation to pending
+        reservation.setStatus(ReservationStatus.RESERVATION_PENDING);
+        reservation = reservationService.update(reservation);
 
-            // Get available inventory and connect reservation in an atomic transaction
-            Inventory inventory = inventoryService.findAvailableInventory(reservation);
+        // Get available inventory and connect reservation in an atomic transaction
+        Inventory inventory = inventoryService.findAvailableInventory(reservation);
 
-            try {
-                if (inventory == null) {
-                    // Inventory is out of stock, fail the reservation process
-                    reservation.setStatus(ReservationStatus.RESERVATION_FAILED);
-                    reservation = reservationService.update(reservation);
-
-                    // Trigger reservation failed event
-                    reservation.sendAsyncEvent(new ReservationEvent(RESERVATION_FAILED, reservation));
-
-                    // Throw the out of stock exception
-                    throw new OutOfStockException("Inventory for reservation is unavailable in warehouse: "
-                            .concat(reservation.getId().toString()));
-                }
-
-                // Set inventory on reservation and mark successful
-                reservation.setInventory(inventory);
-                reservation.setStatus(ReservationStatus.RESERVATION_SUCCEEDED);
+        try {
+            if (inventory == null) {
+                // Inventory is out of stock, fail the reservation process
+                reservation.setStatus(ReservationStatus.RESERVATION_FAILED);
                 reservation = reservationService.update(reservation);
 
-                // Trigger the inventory connected event
-                reservation.sendAsyncEvent(new ReservationEvent(INVENTORY_CONNECTED, reservation),
-                        reservation.getInventory().getId().withRel("inventory"));
-            } catch (Exception ex) {
-                log.error("Could not connect reservation to order", ex);
-                if (reservation.getStatus() != ReservationStatus.RESERVATION_FAILED) {
-                    // Rollback the reservation attempt
-                    if (inventory != null) {
-                        inventory.setReservation(null);
-                        inventory.setStatus(InventoryStatus.RESERVATION_PENDING);
-                        inventory = inventoryService.update(inventory);
-                    }
+                // Trigger reservation failed event
+                reservation.sendAsyncEvent(new ReservationEvent(RESERVATION_FAILED, reservation));
 
-                    reservation.setInventory(null);
-                    reservation.setStatus(ReservationStatus.ORDER_CONNECTED);
-                    reservation = reservationService.update(reservation);
-                }
-                throw ex;
-            } finally {
-                if (reservation.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED) {
-                    Link inventoryLink = reservation.getInventory().getId().withRel("inventory");
-                    Link orderLink = getRemoteLink("order-web", "/v1/orders/{id}", reservation.getOrderId(), "order");
-                    reservation.sendAsyncEvent(new ReservationEvent(RESERVATION_SUCCEEDED, reservation), inventoryLink, orderLink);
-                }
+                // Throw the out of stock exception
+                throw new OutOfStockException("Inventory for reservation is unavailable in warehouse: "
+                        .concat(reservation.getId().toString()));
             }
 
-            return reservation;
-        };
+            inventory.setReservation(reservation);
+            inventory.setStatus(InventoryStatus.RESERVATION_CONNECTED);
+            inventory = inventoryService.update(inventory);
+
+            // Set inventory on reservation and mark successful
+            reservation.setInventory(inventory);
+            reservation.setStatus(ReservationStatus.RESERVATION_SUCCEEDED);
+            reservation = reservationService.update(reservation);
+
+
+            // Trigger the inventory connected event
+            reservation.sendAsyncEvent(new ReservationEvent(INVENTORY_CONNECTED, reservation),
+                    reservation.getInventory().getId().withRel("inventory"));
+        } catch (Exception ex) {
+            log.error("Could not connect reservation to order", ex);
+            if (reservation.getStatus() != ReservationStatus.RESERVATION_FAILED) {
+                // Rollback the reservation attempt
+                if (inventory != null) {
+                    inventory.setReservation(null);
+                    inventory.setStatus(InventoryStatus.RESERVATION_PENDING);
+                    inventoryService.update(inventory);
+                }
+
+                reservation.setInventory(null);
+                reservation.setStatus(ReservationStatus.ORDER_CONNECTED);
+                reservation = reservationService.update(reservation);
+            }
+
+            throw ex;
+        } finally {
+            if (reservation.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED) {
+                Link inventoryLink = reservation.getInventory().getId().withRel("inventory");
+                Link orderLink = getRemoteLink("order-web", "/v1/orders/{id}", reservation.getOrderId(), "order");
+                reservation
+                        .sendAsyncEvent(new ReservationEvent(RESERVATION_SUCCEEDED, reservation), inventoryLink,
+                                orderLink);
+            }
+        }
+
+        return reservation;
     }
 
     private Link getRemoteLink(String service, String relative, Object identifier, String rel) {

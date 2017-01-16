@@ -91,14 +91,12 @@ public class Payment extends AbstractEntity<PaymentEvent, Long> {
     @Command(method = "connectOrder", controller = PaymentController.class)
     public Payment connectOrder(Long orderId) {
         return getAction(ConnectOrder.class)
-                .getFunction()
                 .apply(this, orderId);
     }
 
     @Command(method = "processPayment", controller = PaymentController.class)
     public Payment processPayment() {
         return getAction(ProcessPayment.class)
-                .getFunction()
                 .apply(this);
     }
 

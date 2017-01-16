@@ -5,8 +5,7 @@ import demo.order.domain.Order;
 import demo.reservation.domain.ReservationModule;
 import demo.reservation.domain.Reservations;
 import org.springframework.stereotype.Service;
-
-import java.util.function.Function;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Query action to get {@link demo.order.domain.Order}s for an an {@link Order}
@@ -14,6 +13,7 @@ import java.util.function.Function;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class GetReservations extends Action<Order> {
 
     private final ReservationModule reservationModule;
@@ -22,11 +22,9 @@ public class GetReservations extends Action<Order> {
         this.reservationModule = reservationModule;
     }
 
-    public Function<Order, Reservations> getFunction() {
-        return (order) -> {
-            // Get orders from the order service
-            return reservationModule.getDefaultService()
-                    .findReservationsByOrderId(order.getIdentity());
-        };
+    public Reservations apply(Order order) {
+        // Get orders from the order service
+        return reservationModule.getDefaultService()
+                .findReservationsByOrderId(order.getIdentity());
     }
 }

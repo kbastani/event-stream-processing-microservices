@@ -5,8 +5,7 @@ import demo.domain.Action;
 import demo.order.domain.OrderModule;
 import demo.order.domain.Orders;
 import org.springframework.stereotype.Service;
-
-import java.util.function.Function;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Query action to get {@link demo.order.domain.Order}s for an an {@link Account}
@@ -14,6 +13,7 @@ import java.util.function.Function;
  * @author Kenny Bastani
  */
 @Service
+@Transactional
 public class GetOrders extends Action<Account> {
 
     private OrderModule orderModule;
@@ -22,11 +22,9 @@ public class GetOrders extends Action<Account> {
         this.orderModule = orderModule;
     }
 
-    public Function<Account, Orders> getFunction() {
-        return (account) -> {
-            // Get orders from the order service
-            return orderModule.getDefaultService()
-                    .findOrdersByAccountId(account.getIdentity());
-        };
+    public Orders apply(Account account) {
+        // Get orders from the order service
+        return orderModule.getDefaultService()
+                .findOrdersByAccountId(account.getIdentity());
     }
 }
