@@ -1,4 +1,4 @@
-package com.example;
+package demo;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -29,7 +29,7 @@ public class ImportResources implements ApplicationListener<ApplicationReadyEven
 
             // Import RabbitMQ stream apps
             dataFlowTemplate.appRegistryOperations()
-                    .importFromResource("http://bit.ly/stream-applications-rabbit-maven", false);
+                    .importFromResource("http://bit.ly/stream-applications-kafka-maven", false);
 
             // Deploy a set of event stream definitions
             List<StreamApp> streams = Arrays.asList(

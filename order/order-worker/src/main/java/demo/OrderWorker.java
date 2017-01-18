@@ -14,5 +14,3 @@ public class OrderWorker {
         SpringApplication.run(OrderWorker.class, args);
     }
 }
-
-

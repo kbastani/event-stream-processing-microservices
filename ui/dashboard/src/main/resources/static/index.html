@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Dashboard</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="src/css/main.css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata|Lato" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="src/js/util/jquery-2.2.4.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="src/js/util/bootstrap.min.js"></script>
+</head>
+<body ng-app="myApp">
+<!-- Page Content -->
+<div class="container">
+    <div class="ng-view"></div>
+</div>
+
+<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="errorLabel">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">×</span></button>
+                <h4 class="modal-title" id="errorLabel">Error</h4></div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Traverson -->
+<script src="src/js/util/traverson.min.js"></script>
+
+<!-- JSONform -->
+<script src="src/js/util/underscore.js"></script>
+<script src="src/js/util/jsv.js"></script>
+<script src="src/js/util/jsonform.js"></script>
+
+
+<!-- JS clients --->
+<script src="src/js/client/dispatcher/dispatcher.js"></script>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="src/js/util/dagre-d3.min.js"></script>
+<script src="src/js/util/json.tables.1.0.0.js"></script>
+<script src="src/js/client/api/warehouseApi.js"></script>
+<script src="src/js/client/api/orderApi.js"></script>
+<script src="src/js/client/api/accountApi.js"></script>
+<script src="src/js/root.js"></script>
+
+</body>
+
+</html>
