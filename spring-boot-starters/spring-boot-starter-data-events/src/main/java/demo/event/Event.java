@@ -1,5 +1,6 @@
 package demo.event;
 
+import demo.domain.Aggregate;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.core.EvoInflectorRelProvider;
@@ -8,8 +9,6 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * Abstract implementation of the {@link Event} entity.
@@ -21,7 +20,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  * @see org.springframework.stereotype.Repository
  * @see ResourceSupport
  */
-public abstract class Event<T extends ResourceSupport, E, ID extends Serializable> extends ResourceSupport {
+public abstract class Event<T extends Aggregate, E, ID extends Serializable> extends ResourceSupport {
 
     public Event() {
     }
@@ -60,10 +59,5 @@ public abstract class Event<T extends ResourceSupport, E, ID extends Serializabl
     @Override
     public String toString() {
         return String.format("links: %s", getLinks().toString());
-    }
-
-    @Override
-    public Link getId() {
-        return linkTo(EventController.class).slash("events").slash(getEventId()).withSelfRel();
     }
 }

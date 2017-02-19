@@ -8,6 +8,7 @@ public class Payment extends BaseEntity {
     private Double amount;
     private PaymentMethod paymentMethod;
     private PaymentStatus status;
+    private Long orderId;
 
     public Payment() {
     }
@@ -42,6 +43,14 @@ public class Payment extends BaseEntity {
 
     public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
     }
 
     @Override

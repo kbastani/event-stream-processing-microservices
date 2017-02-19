@@ -1,0 +1,44 @@
+<div class="row">
+    <div class="col-md-5 col-sm-12">
+        <div class="row">
+            <legend class="item-title page-title header-title">Order</legend>
+            <div class="well">
+                <div loader domain="order">
+                    <fieldset class="control-group">
+                        <form class="order-form"></form>
+                    </fieldset>
+                    <fieldset class="control-group">
+                        <legend>Commands</legend>
+                        <div class="order-commands"></div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title expanded">
+                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne"
+                               aria-expanded="true" aria-controls="collapseOne">
+                                Event Log
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel"
+                         aria-labelledby="headingOne">
+                        <div class="panel-body">
+                            <fieldset class="control-group">
+                                <div class="order-events"></div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7 col-sm-12 state-machine">
+        <legend class="page-title header-title">State Flow</legend>
+        <svg id="svg-canvas" width="100%" height="550"></svg>
+    </div>
+</div>

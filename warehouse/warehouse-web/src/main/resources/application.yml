@@ -1,0 +1,124 @@
+spring:
+  profiles:
+    active: development
+server:
+  port: 0
+events:
+  worker: http://warehouse-worker/v1/events
+---
+spring:
+  profiles: development
+  cloud:
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
+        output:
+          contentType: 'application/json'
+          destination: warehouse-stream
+  jpa:
+    show_sql: false
+    database: H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    initialize: false
+---
+spring:
+  profiles: docker
+  redis:
+    host: ${DOCKER_IP:192.168.99.100}
+    port: 6379
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: ${DOCKER_IP:192.168.99.100}
+          zk-nodes: ${DOCKER_IP:192.168.99.100}
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
+        output:
+          contentType: 'application/json'
+          destination: warehouse-stream
+  datasource:
+    url: jdbc:mysql://${DOCKER_IP:192.168.99.100}:3306/dev
+    username: root
+    password: dbpass
+    initialize: true
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${DOCKER_IP:192.168.99.100}:8761/eureka
+    registryFetchIntervalSeconds: 5
+  instance:
+    hostname: ${DOCKER_IP:192.168.99.100}
+    instance-id: ${spring.application.name}:${random.int}
+    leaseRenewalIntervalInSeconds: 5
+---
+spring:
+  profiles: test
+  jpa:
+    show_sql: false
+    database: H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    initialize: false
+eureka:
+  client:
+    enabled: false
+logging:
+  level:
+    org:
+      apache:
+        zookeeper:
+          ZooKeeper: error
+    org.apache.kafka.clients.producer.ProducerConfig: error
+---
+spring:
+  profiles: cloud
+  cloud:
+    stream:
+      bindings:
+        warehouse:
+          contentType: 'application/json'
+          destination: warehouse
+        reservation:
+          contentType: 'application/json'
+          destination: reservation
+        inventory:
+          contentType: 'application/json'
+          destination: inventory
+        output:
+          contentType: 'application/json'
+          destination: warehouse-stream
+eureka:
+  instance:
+    hostname: ${vcap.application.uris[0]:localhost}
+    nonSecurePort: 80
+    metadataMap:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+    leaseRenewalIntervalInSeconds: 5
+  client:
+    region: default
+    registryFetchIntervalSeconds: 5
+    serviceUrl:
+      defaultZone: ${vcap.services.discovery-service.credentials.uri:http://localhost:8761}/eureka/

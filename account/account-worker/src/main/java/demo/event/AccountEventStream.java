@@ -16,7 +16,7 @@ import org.springframework.statemachine.StateMachine;
  */
 @EnableAutoConfiguration
 @EnableBinding(Sink.class)
-@Profile({ "cloud", "development" })
+@Profile({ "cloud", "development", "docker" })
 public class AccountEventStream {
 
     private EventService eventService;
@@ -34,7 +34,7 @@ public class AccountEventStream {
      * @param accountEvent is the {@link Account} domain event to process
      */
     @StreamListener(Sink.INPUT)
-    public void streamListerner(AccountEvent accountEvent) {
+    public void streamListener(AccountEvent accountEvent) {
         eventService.apply(accountEvent);
     }
 }

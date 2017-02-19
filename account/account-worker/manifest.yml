@@ -5,6 +5,7 @@ path: ./target/account-worker-0.0.1-SNAPSHOT.jar
 buildpack: java_buildpack
 services:
 - rabbit-events
+- discovery-service
 disk_quota: 1024M
 host: account-event-worker
 domain: cfapps.io

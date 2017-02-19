@@ -1,9 +1,9 @@
 package demo.function;
 
-import demo.order.Order;
-import demo.order.OrderStatus;
-import demo.event.OrderEvent;
-import demo.event.OrderEventType;
+import demo.order.domain.Order;
+import demo.order.domain.OrderStatus;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventType;
 import org.apache.log4j.Logger;
 import org.springframework.statemachine.StateContext;
 
@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 /**
  * The {@link OrderFunction} is an abstraction used to map actions that are triggered by
- * state transitions on a {@link demo.order.Order} resource on to a function. Mapped functions
+ * state transitions on a {@link Order} resource on to a function. Mapped functions
  * can take multiple forms and reside either remotely or locally on the classpath of this application.
  *
  * @author kbastani

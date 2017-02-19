@@ -11,6 +11,7 @@ import demo.payment.PaymentStatus;
  */
 public enum PaymentEventType {
     PAYMENT_CREATED,
+    ORDER_CONNECTED,
     PAYMENT_PENDING,
     PAYMENT_PROCESSED,
     PAYMENT_FAILED,

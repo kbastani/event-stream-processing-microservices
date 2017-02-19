@@ -1,0 +1,8 @@
+name: discovery-service
+memory: 512M
+instances: 1
+path: ./target/discovery-1.0-SNAPSHOT.jar
+buildpack: java_buildpack
+disk_quota: 1024M
+host: event-stream-discovery-service
+domain: cfapps.io

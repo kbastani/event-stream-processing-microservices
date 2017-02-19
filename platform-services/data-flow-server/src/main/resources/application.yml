@@ -1,0 +1,5 @@
+server:
+  port: ${PORT:9393}
+spring:
+  application:
+    name: data-flow-server

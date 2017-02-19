@@ -26,10 +26,12 @@
     </properties>
 
     <modules>
+        <module>platform-services</module>
         <module>spring-boot-starters</module>
         <module>account</module>
         <module>order</module>
         <module>payment</module>
+        <module>warehouse</module>
     </modules>
 
     <dependencies>

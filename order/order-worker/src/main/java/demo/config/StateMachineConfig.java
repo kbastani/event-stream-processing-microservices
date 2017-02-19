@@ -1,12 +1,16 @@
 package demo.config;
 
-import demo.event.OrderEvent;
-import demo.event.OrderEventType;
 import demo.function.*;
-import demo.order.Order;
-import demo.order.OrderStatus;
-import demo.payment.Payment;
-import demo.stream.OrderStream;
+import demo.order.domain.Order;
+import demo.order.domain.OrderStatus;
+import demo.order.event.OrderEvent;
+import demo.order.event.OrderEventProcessor;
+import demo.order.event.OrderEventType;
+import demo.order.event.OrderEvents;
+import demo.payment.domain.Payment;
+import demo.reservation.domain.Reservation;
+import demo.reservation.domain.ReservationStatus;
+import demo.reservation.domain.Reservations;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +34,9 @@ import java.util.Map;
  * expressions. Actions are executed during transitions between a source state and a target state.
  * <p>
  * A state machine provides a robust declarative language for describing the state of an {@link Order}
- * resource given a sequence of ordered {@link demo.event.OrderEvents}. When an event is received
- * in {@link OrderStream}, an in-memory state machine is fully replicated given the
- * {@link demo.event.OrderEvents} attached to an {@link Order} resource.
+ * resource given a sequence of ordered {@link OrderEvents}. When an event is received
+ * in {@link OrderEventProcessor}, an in-memory state machine is fully replicated given the
+ * {@link OrderEvents} attached to an {@link Order} resource.
  *
  * @author kbastani
  */
@@ -50,13 +54,38 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
     @Override
     public void configure(StateMachineStateConfigurer<OrderStatus, OrderEventType> states) {
         try {
-            // Describe the initial condition of the order state machine
             states.withStates()
                     .initial(OrderStatus.ORDER_CREATED)
                     .states(EnumSet.allOf(OrderStatus.class));
         } catch (Exception e) {
             throw new RuntimeException("State machine configuration failed", e);
         }
+    }
+
+    /**
+     * Functions are mapped to actions that are triggered during the replication of a state machine. Functions
+     * should only be executed after the state machine has completed replication. This method checks the state
+     * context of the machine for an {@link OrderEvent}, which signals that the state machine is finished
+     * replication.
+     * <p>
+     * The {@link OrderFunction} argument is only applied if an {@link OrderEvent} is provided as a
+     * message header in the {@link StateContext}.
+     *
+     * @param context       is the state machine context that may include an {@link OrderEvent}
+     * @param orderFunction is the order function to apply after the state machine has completed replication
+     * @return an {@link OrderEvent} only if this event has not yet been processed, otherwise returns null
+     */
+    private OrderEvent applyEvent(StateContext<OrderStatus, OrderEventType> context, OrderFunction orderFunction) {
+        OrderEvent event = null;
+        log.info(String.format("Replicate event: %s", context.getMessage().getPayload()));
+
+        if (context.getMessageHeader("event") != null) {
+            event = context.getMessageHeaders().get("event", OrderEvent.class);
+            log.info(String.format("State replication complete: %s", event.getType()));
+            orderFunction.apply(event);
+        }
+
+        return event;
     }
 
     /**
@@ -91,6 +120,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .and()
                     .withExternal()
                     .source(OrderStatus.RESERVATION_PENDING)
+                    .target(OrderStatus.RESERVATION_PENDING)
+                    .event(OrderEventType.RESERVATION_ADDED)
+                    .action(reservationAdded())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.RESERVATION_PENDING)
                     .target(OrderStatus.RESERVATION_SUCCEEDED)
                     .event(OrderEventType.RESERVATION_SUCCEEDED)
                     .action(reservationSucceeded())
@@ -102,22 +137,22 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .action(reservationFailed())
                     .and()
                     .withExternal()
-                    .source(OrderStatus.ACCOUNT_CONNECTED)
+                    .source(OrderStatus.RESERVATION_FAILED)
+                    .target(OrderStatus.ORDER_FAILED)
+                    .event(OrderEventType.ORDER_FAILED)
+                    .action(orderFailed())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.RESERVATION_SUCCEEDED)
                     .target(OrderStatus.PAYMENT_CREATED)
                     .event(OrderEventType.PAYMENT_CREATED)
                     .action(paymentCreated())
                     .and()
                     .withExternal()
                     .source(OrderStatus.PAYMENT_CREATED)
-                    .target(OrderStatus.PAYMENT_CONNECTED)
+                    .target(OrderStatus.PAYMENT_PENDING)
                     .event(OrderEventType.PAYMENT_CONNECTED)
                     .action(paymentConnected())
-                    .and()
-                    .withExternal()
-                    .source(OrderStatus.PAYMENT_CONNECTED)
-                    .target(OrderStatus.PAYMENT_PENDING)
-                    .event(OrderEventType.PAYMENT_PENDING)
-                    .action(paymentPending())
                     .and()
                     .withExternal()
                     .source(OrderStatus.PAYMENT_PENDING)
@@ -129,7 +164,19 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                     .source(OrderStatus.PAYMENT_PENDING)
                     .target(OrderStatus.PAYMENT_FAILED)
                     .event(OrderEventType.PAYMENT_FAILED)
-                    .action(paymentFailed());
+                    .action(paymentFailed())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.PAYMENT_FAILED)
+                    .target(OrderStatus.ORDER_FAILED)
+                    .event(OrderEventType.ORDER_FAILED)
+                    .action(orderFailed())
+                    .and()
+                    .withExternal()
+                    .source(OrderStatus.PAYMENT_SUCCEEDED)
+                    .target(OrderStatus.ORDER_SUCCEEDED)
+                    .event(OrderEventType.ORDER_SUCCEEDED)
+                    .action(orderSucceeded());
         } catch (Exception e) {
             throw new RuntimeException("Could not configure state machine transitions", e);
         }
@@ -140,7 +187,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new OrderCreated(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -157,7 +204,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentPending(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -174,7 +221,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new ReservationPending(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
@@ -191,13 +238,30 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentFailed(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
+                    // Release the inventory reservations
+                    Reservations reservations = traverson.follow("self", "reservations")
+                            .toObject(Reservations.class);
+
+                    reservations.getContent().stream()
+                            .filter(r -> r.getStatus() == ReservationStatus.RESERVATION_SUCCEEDED)
+                            .parallel()
+                            .forEach(r -> {
+                                Traverson res = new Traverson(
+                                        URI.create(r.getLink("self").getHref()),
+                                        MediaTypes.HAL_JSON
+                                );
+
+                                res.follow("self", "commands", "releaseInventory")
+                                        .toObject(Reservation.class);
+                            });
+
+                    return traverson.follow("self", "commands", "completeOrder")
                             .toEntity(Order.class)
                             .getBody();
                 }));
@@ -205,19 +269,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
 
     @Bean
     public Action<OrderStatus, OrderEventType> paymentSucceeded() {
-        return context -> applyEvent(context,
-                new PaymentSucceeded(context, event -> {
-                    log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
-                    Traverson traverson = new Traverson(
-                            URI.create(event.getLink("order").getHref()),
-                            MediaTypes.HAL_JSON
-                    );
-
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
-                }));
+        return context -> applyEvent(context, new PaymentSucceeded(context));
     }
 
     @Bean
@@ -225,15 +277,16 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentConnected(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+
+                    // Create a traverson for the root order
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                    // Traverse to the process payment link
+                    return traverson.follow("self", "commands", "processPayment")
+                            .toObject(Order.class);
                 }));
     }
 
@@ -242,7 +295,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new PaymentCreated(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson paymentResource = new Traverson(
                             URI.create(event.getLink("payment").getHref()),
                             MediaTypes.HAL_JSON
@@ -253,20 +306,44 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
                             MediaTypes.HAL_JSON
                     );
 
-                    Payment payment = paymentResource.follow("self")
-                            .toEntity(Payment.class)
-                            .getBody();
-
                     Order order = orderResource.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                            .toObject(Order.class);
 
-                    Map<String, Object> template = new HashMap<String, Object>();
+                    Map<String, Object> template = new HashMap<>();
+                    template.put("orderId", order.getIdentity());
+
+                    // Connect payment to order
+                    Payment payment = paymentResource.follow("self", "commands", "connectOrder")
+                            .withTemplateParameters(template)
+                            .toObject(Payment.class);
+
+                    template = new HashMap<>();
                     template.put("paymentId", payment.getPaymentId());
-                    return orderResource.follow("commands", "connectPayment")
+
+                    // Connect order to payment
+                    order = orderResource.follow("commands", "connectPayment")
                             .withTemplateParameters(template)
                             .toObject(Order.class);
 
+                    return order;
+                }));
+    }
+
+    @Bean
+    public Action<OrderStatus, OrderEventType> reservationAdded() {
+        return context -> applyEvent(context,
+                new ReservationAdded(context, event -> {
+                    log.info(event.getType() + ": " + event.getLink("order").getHref());
+
+                    // Create a traverson for the root order
+                    Traverson traverson = new Traverson(
+                            URI.create(event.getLink("order").getHref()),
+                            MediaTypes.HAL_JSON
+                    );
+
+                    return traverson.follow("self")
+                            .toEntity(Order.class)
+                            .getBody();
                 }));
     }
 
@@ -275,82 +352,85 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OrderS
         return context -> applyEvent(context,
                 new ReservationSucceeded(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                    // Create a payment
+                    return traverson.follow("self", "commands", "createPayment")
+                            .toObject(Order.class);
                 }));
     }
 
     @Bean
     public Action<OrderStatus, OrderEventType> reservationFailed() {
         return context -> applyEvent(context,
-                new ReservationSucceeded(context, event -> {
+                new ReservationFailed(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
+                    Order order = traverson.follow("self", "commands", "completeOrder")
                             .toEntity(Order.class)
                             .getBody();
+
+                    // Release the reservations
+                    Reservations reservations = traverson.follow("self", "reservations")
+                            .toObject(Reservations.class);
+
+                    reservations.getContent().stream()
+                            .filter(r -> r.getStatus() != ReservationStatus.RESERVATION_FAILED)
+                            .parallel()
+                            .forEach(r -> {
+                                try {
+                                    Traverson res = new Traverson(
+                                            URI.create(r.getLink("self").getHref()),
+                                            MediaTypes.HAL_JSON
+                                    );
+
+                                    res.follow("self", "commands", "releaseInventory")
+                                            .toObject(Reservation.class);
+                                } catch (Exception ex) {
+                                    log.error("Could not release inventory for reservation", ex);
+                                }
+                            });
+
+                    return order;
+
                 }));
     }
 
     @Bean
     public Action<OrderStatus, OrderEventType> accountConnected() {
         return context -> applyEvent(context,
-                new ReservationFailed(context, event -> {
+                new AccountConnected(context, event -> {
                     log.info(event.getType() + ": " + event.getLink("order").getHref());
-                    // Get the account resource for the event
+                    // Get the order resource for the event
                     Traverson traverson = new Traverson(
                             URI.create(event.getLink("order").getHref()),
                             MediaTypes.HAL_JSON
                     );
 
-                    return traverson.follow("self")
-                            .toEntity(Order.class)
-                            .getBody();
+                    // Reserve inventory for order
+                    return traverson.follow("self", "commands", "reserveInventory")
+                            .toObject(Order.class);
                 }));
     }
 
-    /**
-     * Functions are mapped to actions that are triggered during the replication of a state machine. Functions
-     * should only be executed after the state machine has completed replication. This method checks the state
-     * context of the machine for an {@link OrderEvent}, which signals that the state machine is finished
-     * replication.
-     * <p>
-     * The {@link OrderFunction} argument is only applied if an {@link OrderEvent} is provided as a
-     * message header in the {@link StateContext}.
-     *
-     * @param context       is the state machine context that may include an {@link OrderEvent}
-     * @param orderFunction is the order function to apply after the state machine has completed replication
-     * @return an {@link OrderEvent} only if this event has not yet been processed, otherwise returns null
-     */
-    private OrderEvent applyEvent(StateContext<OrderStatus, OrderEventType> context,
-                                  OrderFunction orderFunction) {
-        OrderEvent orderEvent = null;
-
-        // Log out the progress of the state machine replication
-        log.info("Replicate event: " + context.getMessage().getPayload());
-
-        // The machine is finished replicating when an OrderEvent is found in the message header
-        if (context.getMessageHeader("event") != null) {
-            orderEvent = (OrderEvent) context.getMessageHeader("event");
-            log.info("State machine replicated: " + orderEvent.getType());
-
-            // Apply the provided function to the OrderEvent
-            orderFunction.apply(orderEvent);
-        }
-
-        return orderEvent;
+    @Bean
+    public Action<OrderStatus, OrderEventType> orderFailed() {
+        return context -> applyEvent(context, new OrderFailed(context));
     }
+
+    @Bean
+    public Action<OrderStatus, OrderEventType> orderSucceeded() {
+        return context -> applyEvent(context, new OrderSucceeded(context));
+    }
+
 }
 

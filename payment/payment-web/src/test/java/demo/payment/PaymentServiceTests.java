@@ -1,17 +1,24 @@
 package demo.payment;
 
 import demo.event.EventService;
-import demo.event.PaymentEvent;
+import demo.payment.event.PaymentEvent;
+import demo.payment.domain.Payment;
+import demo.payment.domain.PaymentMethod;
+import demo.payment.repository.PaymentRepository;
+import demo.payment.domain.PaymentService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
+@ActiveProfiles("test")
 public class PaymentServiceTests {
 
     @MockBean
@@ -19,6 +26,9 @@ public class PaymentServiceTests {
 
     @MockBean
     private PaymentRepository paymentRepository;
+
+    @MockBean
+    private DiscoveryClient discoveryClient;
 
     private PaymentService paymentService;
 
@@ -33,7 +43,7 @@ public class PaymentServiceTests {
 
         given(this.paymentRepository.findOne(1L)).willReturn(expected);
 
-        Payment actual = paymentService.getPayment(1L);
+        Payment actual = paymentService.get(1L);
 
         assertThat(actual).isNotNull();
         assertThat(actual.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
