@@ -13,6 +13,15 @@ var warehouseApi = {
     }
 };
 
+var inventoryApi = {
+    get: function (id, callback) {
+        appDispatcher.handle(generate("GET", null, "/warehouse/v1/warehouses/" + id + "/inventory"), callback);
+    },
+    post: function (id, body, callback) {
+        appDispatcher.handle(generate("POST", body, "/warehouse/v1/warehouses/" + id + "/inventory"), callback);
+    }
+};
+
 var warehouseForm = {
     apply: function (selector, value) {
         return {

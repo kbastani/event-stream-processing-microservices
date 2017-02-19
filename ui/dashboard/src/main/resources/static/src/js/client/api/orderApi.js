@@ -227,7 +227,9 @@ var loadOrder = function (id, callback) {
                     updateOrderStatus(eventList[0].type);
                     callback();
                 } else if (lastOrderSize < eventList.length) {
-                    appendRow(".order-events", eventList.filter(function (x) {
+                    appendRow(".order-events", eventList.sort(function (a, b) {
+                        return a.createdAt - b.createdAt;
+                    }).filter(function (x) {
                         return eventList.indexOf(x) > lastOrderSize - 1;
                     }), true, updateOrderStatus);
                     lastOrderSize = eventList.length;
@@ -318,12 +320,14 @@ var renderOrderFlow = function (callback, orderStatus) {
     });
     g.setEdge(2, 3, {
         label: "RESERVATION_ADDED",
-        minlen: 2
+        minlen: 1
     });
     g.setEdge(3, 4, {
-        label: "RESERVATION_SUCCEEDED"
+        label: "RESERVATION_SUCCEEDED",
+        labelpos: 'r',
+        minlen: 2
     });
-    g.setEdge(2, 8, {
+    g.setEdge(3, 8, {
         label: "RESERVATION_FAILED",
         labelpos: 'l'
     });
@@ -366,7 +370,7 @@ var renderOrderFlow = function (callback, orderStatus) {
     inner.call(render, g);
     var draw = function (isUpdate) {
         var graphWidth = g.graph().width + 35;
-        var graphHeight = g.graph().height + 200;
+        var graphHeight = g.graph().height + 100;
         var width = parseInt(svg.style("width").replace(/px/, ""));
         var height = parseInt(svg.style("height").replace(/px/, ""));
         var zoomScale = Math.min(width / graphWidth, height / graphHeight);

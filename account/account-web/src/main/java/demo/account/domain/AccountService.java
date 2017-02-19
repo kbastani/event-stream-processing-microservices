@@ -5,6 +5,8 @@ import demo.account.event.AccountEventType;
 import demo.account.repository.AccountRepository;
 import demo.domain.Service;
 import org.apache.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
 @org.springframework.stereotype.Service
@@ -15,6 +17,10 @@ public class AccountService extends Service<Account, Long> {
 
     public AccountService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
+    }
+
+    public Page<Account> findAll(Pageable pageable) {
+        return accountRepository.findAll(pageable);
     }
 
     /**

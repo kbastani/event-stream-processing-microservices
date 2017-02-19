@@ -11,7 +11,12 @@ var appDispatcher = {
             .success(callback)
             .error(function (err) {
                 $(".modal").modal();
-                $(".modal-body").text($.parseJSON(err.responseText).message);
+                if (err.statusCode().status == 404) {
+                    $(".modal-body").text("The requested resource was not found");
+                    callback(err);
+                } else {
+                    $(".modal-body").text($.parseJSON(err.responseText).message);
+                }
             });
     }
 };

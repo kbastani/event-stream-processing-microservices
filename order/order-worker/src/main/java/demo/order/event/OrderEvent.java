@@ -1,6 +1,8 @@
 package demo.order.event;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import demo.domain.AbstractEntity;
+import org.springframework.hateoas.Link;
 
 public class OrderEvent extends AbstractEntity {
 
@@ -19,6 +21,12 @@ public class OrderEvent extends AbstractEntity {
 
     public void setType(OrderEventType type) {
         this.type = type;
+    }
+
+    @JsonIgnore
+    @Override
+    public Link getId() {
+        return super.getId();
     }
 
     @Override

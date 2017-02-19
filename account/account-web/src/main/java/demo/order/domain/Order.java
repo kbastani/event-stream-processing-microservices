@@ -1,6 +1,7 @@
 package demo.order.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import demo.domain.Aggregate;
 import demo.domain.Module;
 import demo.order.event.OrderEvent;
@@ -105,6 +106,7 @@ public class Order extends Aggregate<OrderEvent, Long> {
         return orderEvents;
     }
 
+    @JsonProperty("orderId")
     @Override
     public Long getIdentity() {
         return id;

@@ -117,12 +117,17 @@ var loadAccount = function (id, callback) {
                     $.each(document._links, function (k, v) {
                         var commandBtn = $("<div class='command-btn'>" + "<input class='command-href' type='hidden' value='" + v.href + "'>" + "<input type='button' class='btn btn-default' value='" + k + "'></div>");
                         $(commandBtn).click(function () {
-                            appDispatcher.handle(generate("GET", null, $(this).find(".command-href").val()), function (cmd) {
-                                accountStatus = cmd.status;
-                                updateAccountStatus(accountStatus);
-                                $(formSelect).text('');
-                                $(formSelect).jsonForm(accountForm.apply(formSelect, cmd));
-                            });
+                            if (k != "postOrder") {
+                                appDispatcher.handle(generate("GET", null, $(this).find(".command-href").val()), function (cmd) {
+                                    accountStatus = cmd.status;
+                                    updateAccountStatus(accountStatus);
+                                    $(formSelect).text('');
+                                    $(formSelect).jsonForm(accountForm.apply(formSelect, cmd));
+                                });
+                            } else {
+                                postOrderCommand($(this).find(".command-href").val());
+                            }
+
                         });
                         $(commandSelect).append(commandBtn);
                     });

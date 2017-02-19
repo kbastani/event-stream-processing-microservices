@@ -76,3 +76,9 @@ discovery:
    - SPRING_PROFILES_ACTIVE=docker
    - DOCKER_IP=$DOCKER_IP
   net: host
+dashboard:
+  image: dashboard
+  environment:
+   - SPRING_PROFILES_ACTIVE=docker
+   - DOCKER_IP=$DOCKER_IP
+  net: host

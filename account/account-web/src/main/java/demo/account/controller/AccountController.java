@@ -2,20 +2,22 @@ package demo.account.controller;
 
 import demo.account.domain.Account;
 import demo.account.domain.AccountService;
+import demo.account.domain.Accounts;
 import demo.account.event.AccountEvent;
 import demo.event.EventService;
 import demo.event.Events;
 import demo.order.domain.Order;
 import demo.order.domain.Orders;
-import org.springframework.hateoas.LinkBuilder;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.hateoas.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -30,6 +32,11 @@ public class AccountController {
     public AccountController(AccountService accountService, EventService<AccountEvent, Long> eventService) {
         this.accountService = accountService;
         this.eventService = eventService;
+    }
+
+    @RequestMapping(path = "/accounts")
+    public ResponseEntity getAccounts(@RequestBody(required = false) PageRequest pageRequest) {
+        return new ResponseEntity<>(getAccountsResource(pageRequest), HttpStatus.OK);
     }
 
     @PostMapping(path = "/accounts")
@@ -89,6 +96,13 @@ public class AccountController {
                 .orElseThrow(() -> new RuntimeException("Could not get account events"));
     }
 
+    @RequestMapping(path = "/accounts/{id}/orders/{orderId}")
+    public ResponseEntity getAccountOrders(@PathVariable Long id, @PathVariable Long orderId) {
+        return Optional.of(getAccountOrderResource(id, orderId))
+                .map(e -> new ResponseEntity<>(e, HttpStatus.OK))
+                .orElseThrow(() -> new RuntimeException("Could not get account events"));
+    }
+
     @RequestMapping(path = "/accounts/{id}/commands")
     public ResponseEntity getCommands(@PathVariable Long id) {
         return Optional.ofNullable(getCommandsResource(id))
@@ -136,7 +150,7 @@ public class AccountController {
     public ResponseEntity postOrder(@PathVariable Long id, @RequestBody Order order) {
         return Optional.ofNullable(accountService.get(id))
                 .map(a -> a.postOrder(order))
-                .map(o -> new ResponseEntity<>(o, HttpStatus.CREATED))
+                .map(o -> new ResponseEntity<>(getAccountOrderResource(id, o.getIdentity()), HttpStatus.CREATED))
                 .orElseThrow(() -> new RuntimeException("The command could not be applied"));
     }
 
@@ -168,6 +182,50 @@ public class AccountController {
     private Resource<Account> updateAccountResource(Long id, Account account) {
         account.setIdentity(id);
         return getAccountResource(accountService.update(account));
+    }
+
+    private Accounts getAccountsResource(PageRequest pageRequest) {
+        if (pageRequest == null) {
+            pageRequest = new PageRequest(1, 20);
+        }
+
+        Page<Account> accountPage = accountService.findAll(pageRequest.first());
+        Accounts accounts = new Accounts(accountPage);
+
+        accounts.add(new Link(new UriTemplate(linkTo(AccountController.class).slash("accounts").toUri().toString())
+                .with("page", TemplateVariable.VariableType.REQUEST_PARAM)
+                .with("size", TemplateVariable.VariableType.REQUEST_PARAM), "self"));
+
+        return accounts;
+    }
+
+    private Order getAccountOrderResource(Long accountId, Long orderId) {
+        Account account = accountService.get(accountId);
+        Assert.notNull(account, "Account could not be found");
+
+        Order order = account.getOrders().getContent().stream().filter(o -> Objects
+                .equals(o.getIdentity(), orderId))
+                .findFirst()
+                .orElseGet(null);
+
+        Assert.notNull(order, "The order for the account could not be found");
+
+        order.removeLinks();
+
+        order.add(
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(accountId)
+                        .slash("orders")
+                        .slash(orderId)
+                        .withSelfRel(),
+                linkTo(AccountController.class)
+                        .slash("accounts")
+                        .slash(accountId)
+                        .withRel("account")
+        );
+
+        return order;
     }
 
     private Orders getAccountOrdersResource(Long accountId) {

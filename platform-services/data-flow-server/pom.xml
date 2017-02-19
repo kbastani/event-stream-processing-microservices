@@ -39,7 +39,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dataflow-dependencies</artifactId>
-                <version>1.1.0.RELEASE</version>
+                <version>1.1.2.RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

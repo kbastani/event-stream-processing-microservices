@@ -12,6 +12,10 @@ zuul:
     account-web: /account/**
     warehouse-web: /warehouse/**
     order-web: /order/**
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
 ---
 spring:
   profiles: docker
@@ -20,6 +24,7 @@ zuul:
   routes:
     account-web: /account/**
     warehouse-web: /warehouse/**
+    order-web: /order/**
 eureka:
   client:
     service-url:

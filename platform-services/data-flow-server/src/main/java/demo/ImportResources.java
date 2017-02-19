@@ -33,19 +33,51 @@ public class ImportResources implements ApplicationListener<ApplicationReadyEven
 
             // Deploy a set of event stream definitions
             List<StreamApp> streams = Arrays.asList(
-                    new StreamApp("account-stream",
-                            "account-web: account-web | account-worker: account-worker"),
-                    new StreamApp("order-stream",
-                            "order-web: order-web | order-worker: order-worker"),
-                    new StreamApp("payment-stream",
-                            "payment-web: payment-web | payment-worker: payment-worker"),
-                    new StreamApp("warehouse-stream",
-                            "warehouse-web: warehouse-web | warehouse-worker: warehouse-worker"));
+                    new StreamApp("account-event-stream",
+                            "account-web > :account-stream"),
+                    new StreamApp("account-event-processor",
+                            ":account-stream > account-worker"),
+                    new StreamApp("account-event-counter",
+                            ":account-stream > field-value-counter --field-name=type --name=account-events"),
+                    new StreamApp("order-event-stream",
+                            "order-web > :order-stream"),
+                    new StreamApp("order-event-processor",
+                            ":order-stream > order-worker"),
+                    new StreamApp("order-event-counter",
+                            ":order-stream > field-value-counter --field-name=type --name=order-events"),
+                    new StreamApp("payment-event-stream",
+                            "payment-web > :payment-stream"),
+                    new StreamApp("payment-event-processor",
+                            ":payment-stream > payment-worker"),
+                    new StreamApp("payment-event-counter",
+                            ":payment-stream > field-value-counter --field-name=type --name=payment-events"),
+                    new StreamApp("warehouse-event-stream",
+                            "warehouse-web > :warehouse-stream"),
+                    new StreamApp("warehouse-event-processor",
+                            ":warehouse-stream > warehouse-worker"),
+                    new StreamApp("warehouse-event-counter",
+                            ":warehouse-stream > field-value-counter --field-name=type --name=warehouse-events"),
+                    new StreamApp("account-load-simulator", "time --time-unit=SECONDS --initial-delay=60 " +
+                            "--fixed-delay=30 | " +
+                            "load-simulator --domain=ACCOUNT --operation=CREATE > :load-log"),
+                    new StreamApp("inventory-load-simulator", "time --time-unit=SECONDS --initial-delay=60 " +
+                            "--fixed-delay=1 | " +
+                            "load-simulator --domain=INVENTORY --operation=CREATE --range=10 > :load-log"),
+                    new StreamApp("order-load-simulator", "time --time-unit=SECONDS --initial-delay=80 " +
+                            "--fixed-delay=5 | " +
+                            "load-simulator --command=POST_ORDER --domain=ACCOUNT --operation=CREATE --range=5 > :load-log"),
+                    new StreamApp("account-counter",
+                            ":account-stream > counter --name-expression=payload.type.toString()"),
+                    new StreamApp("order-counter",
+                            ":order-stream > counter --name-expression=payload.type.toString()"),
+                    new StreamApp("warehouse-counter",
+                            ":warehouse-stream > counter --name-expression=payload.type.toString()"));
 
             // Deploy the streams in parallel
             streams.parallelStream()
                     .forEach(stream -> dataFlowTemplate.streamOperations()
                             .createStream(stream.getName(), stream.getDefinition(), true));
+
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }

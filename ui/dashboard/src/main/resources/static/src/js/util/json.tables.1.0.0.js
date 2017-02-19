@@ -29,6 +29,7 @@ function appendRow(selector, array, replay, statusCallback) {
         var tbl_body = "";
 
         var tbl_row = "";
+
         $.each(item, function (k, v) {
             if (k != "_links" && k != "lastModified") {
                 tbl_row += "<td>" + ((k == "createdAt") ? new Date(v).toLocaleString() : v) + "</td>";
