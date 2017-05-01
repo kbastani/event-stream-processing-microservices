@@ -11,7 +11,7 @@
 
     <parent>
         <groupId>org.kbastani</groupId>
-        <artifactId>account</artifactId>
+        <artifactId>ui</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
