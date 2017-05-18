@@ -88,21 +88,21 @@ Trade-offs:
 
 This repository is in an experimental state. To build and run the experimental project, run the following command:
 
-  mvn clean install -DskipTests -DskipDockerBuild
+    mvn clean install -DskipTests -DskipDockerBuild
 
 You will need to run _Apache Kafka_, _Apache Zookeeper_, and _Redis_ on your local machine. After the build process has completed, you can start the Spring Cloud Data Flow server on your local machine, which will orchestrate each one of the microservice applications.
 
 Before starting Spring Cloud Data Flow, make sure you're running each one of the backing services, as stated above. Also, you will need to start the Eureka server.
 
-  cd ./platform-services/discovery
-  mvn spring-boot:run
+    cd ./platform-services/discovery
+    mvn spring-boot:run
 
 Once Eureka has started, you can start up the Spring Cloud Data Flow server, which will bootstrap the Spring Cloud Stream modules.
 
 From the root of the project:
 
-  cd ./platform-services/data-flow-server
-  mvn spring-boot:run
+    cd ./platform-services/data-flow-server
+    mvn spring-boot:run
 
 The Spring Cloud Stream applications will be imported and the event streams will be available in the streams section of the data flow server. The load simulator stream module will begin to slowly pump events into the system and you'll be able to see the activity in the analytics section where you can see counters measuring the event load over time.
 
