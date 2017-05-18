@@ -1,7 +1,5 @@
 # Event Stream Processing Microservice Example
 
-[![Build Status](https://travis-ci.org/kbastani/event-stream-processing-microservices.svg?branch=master)](https://travis-ci.org/kbastani/event-stream-processing-microservices)
-
 In an event-driven microservices architecture, the concept of a domain event is central to the behavior of each service. Popular practices such as _CQRS_ (Command Query Responsibility Segregation) in combination with _Event Sourcing_ are becoming more common in applications as microservice architectures continue to rise in popularity.
 
 This reference architecture and sample project demonstrates an end-to-end example of building event-driven microservices that use Spring Boot and Spring Cloud. The project aims to show what an ideal development process might look like for building microservices that handle both HTTP and AMQP protocols for exchanging messages.
@@ -86,6 +84,29 @@ Trade-offs:
 * Higher operational complexity
 * Requires two independent CI/CD pipelines
 
+#### Running the Example
+
+This repository is in an experimental state. To build and run the experimental project, run the following command:
+
+  mvn clean install -DskipTests -DskipDockerBuild
+
+You will need to run _Apache Kafka_, _Apache Zookeeper_, and _Redis_ on your local machine. After the build process has completed, you can start the Spring Cloud Data Flow server on your local machine, which will orchestrate each one of the microservice applications.
+
+Before starting Spring Cloud Data Flow, make sure you're running each one of the backing services, as stated above. Also, you will need to start the Eureka server.
+
+  cd ./platform-services/discovery
+  mvn spring-boot:run
+
+Once Eureka has started, you can start up the Spring Cloud Data Flow server, which will bootstrap the Spring Cloud Stream modules.
+
+From the root of the project:
+
+  cd ./platform-services/data-flow-server
+  mvn spring-boot:run
+
+The Spring Cloud Stream applications will be imported and the event streams will be available in the streams section of the data flow server. The load simulator stream module will begin to slowly pump events into the system and you'll be able to see the activity in the analytics section where you can see counters measuring the event load over time.
+
+This project is working off of snapshots, so there may be issued running the data flow server. Please submit a issue or a pull request with a fix. (Thanks!)
 
 #### Serverless Functions
 
