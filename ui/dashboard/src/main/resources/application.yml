@@ -12,6 +12,7 @@ zuul:
     account-web: /account/**
     warehouse-web: /warehouse/**
     order-web: /order/**
+  host.socket-timeout-millis: 30000
 eureka:
   client:
     service-url:

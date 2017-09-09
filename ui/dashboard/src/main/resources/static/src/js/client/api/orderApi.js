@@ -362,7 +362,7 @@ var renderOrderFlow = function (callback, orderStatus) {
     var svg = d3.select("svg"),
         svgGroup = svg.append("g"),
         inner = svg.select("g"),
-        zoom = d3.behavior.zoom().on("zoom", function () {
+        zoom = d3.zoom().on("zoom", function () {
             inner.attr("transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")");
         });
     render(d3.select("svg g"), g);
