@@ -17,6 +17,14 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          strategy: THREAD
+          thread:
+            timeoutInMilliseconds: 10000
 ---
 spring:
   profiles: docker
